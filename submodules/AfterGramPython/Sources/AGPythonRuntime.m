@@ -1,5 +1,6 @@
 #import "AGPythonRuntime.h"
 #import <Python/Python.h>
+#import <mach-o/dyld.h>
 
 @interface AGPythonRuntime ()
 + (NSString *)executeJSON:(NSString *)request;
@@ -53,6 +54,17 @@
                 NSString *manifest = [resources pathForResource:@"native-modules" ofType:@"json"];
                 NSString *map = [NSString stringWithContentsOfFile:manifest encoding:NSUTF8StringEncoding error:nil];
                 NSString *frameworkDir = NSBundle.mainBundle.privateFrameworksPath;
+                // XCTest may embed dependencies in its test bundle instead of the
+                // runner's main bundle. Locate the already-loaded Python image.
+                for (uint32_t i = 0; i < _dyld_image_count(); i++) {
+                    const char *image = _dyld_get_image_name(i);
+                    if (!image) continue;
+                    NSString *path = [NSString stringWithUTF8String:image];
+                    if ([path hasSuffix:@"/Python.framework/Python"]) {
+                        frameworkDir = [[path stringByDeletingLastPathComponent] stringByDeletingLastPathComponent];
+                        break;
+                    }
+                }
                 if (!map || !frameworkDir) {
                     startupError = @"Python native module manifest is missing";
                     PyEval_SaveThread();

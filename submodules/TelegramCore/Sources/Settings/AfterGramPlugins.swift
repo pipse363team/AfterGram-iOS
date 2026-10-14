@@ -40,12 +40,12 @@ public final class AfterGramPluginManager {
         let root = self.root
         let accountId = self.accountId
         if self.initialized {
-        Self.queue.async {
-            let request: [String: Any] = ["op": "close", "root": root, "account": accountId]
-            if let data = try? JSONSerialization.data(withJSONObject: request), let text = String(data: data, encoding: .utf8) {
-                _ = AGPythonRuntime.dispatchJSON(text)
+            Self.queue.async {
+                let request: [String: Any] = ["op": "close", "root": root, "account": accountId]
+                if let data = try? JSONSerialization.data(withJSONObject: request), let text = String(data: data, encoding: .utf8) {
+                    _ = AGPythonRuntime.dispatchJSON(text)
+                }
             }
-        }
         }
     }
     private var isActive: Bool {
@@ -152,7 +152,7 @@ public final class AfterGramPluginManager {
             let text = action["text"] as? String ?? ""
             DispatchQueue.main.async { UIPasteboard.general.string = text }
         case "send":
-            guard let raw = action["peer"] as? String, let dialogId = Int64(raw), dialogId != Int64.min, let text = action["text"] as? String else { return }
+            guard let raw = action["peer"] as? String, let dialogId = Int64(raw), dialogId != Int64.min, abs(dialogId) <= 0x00ffffffffffffff, let text = action["text"] as? String else { return }
             let signal = account.postbox.transaction { transaction -> PeerId? in
                 if let rawPeer = action["native_peer"] as? String, let value = Int64(rawPeer) {
                     let id = PeerId(value)
@@ -160,12 +160,12 @@ public final class AfterGramPluginManager {
                     return nil
                 }
                 if dialogId > 0 {
-                    let id = PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id(dialogId))
+                    let id = PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(dialogId))
                     return transaction.getPeer(id) == nil ? nil : id
                 }
                 var candidates: [PeerId] = []
                 for namespace in [Namespaces.Peer.CloudChannel, Namespaces.Peer.CloudGroup] {
-                    let id = PeerId(namespace: namespace, id: PeerId.Id(-dialogId))
+                    let id = PeerId(namespace: namespace, id: PeerId.Id._internalFromInt64Value(-dialogId))
                     if transaction.getPeer(id) != nil { candidates.append(id) }
                 }
                 return candidates.count == 1 ? candidates[0] : nil
