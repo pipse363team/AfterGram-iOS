@@ -1,0 +1,35 @@
+name: Telegram 13.0 with retained messages
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_tests:
+        description: Run retention tests before building
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 350
+    env:
+      TELEGRAM_API_ID: ${{ secrets.TELEGRAM_API_ID }}
+      TELEGRAM_API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
+      RETENTION_RUN_TESTS: ${{ inputs.run_tests }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+      - name: Fetch upstream submodules
+        run: git submodule update --init --recursive --depth 1 --jobs 4
+      - name: Build and test
+        run: bash scripts/build-retention.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: TelegramRetention-13.0
+          path: build/artifacts/TelegramRetention.ipa
+          if-no-files-found: error
+          retention-days: 7
