@@ -62,4 +62,4 @@ Mac не обязателен: сборку можно запустить чер
 
 [Как устроено сохранение](docs/deleted-message-retention.md) · [Оригинальная инструкция сборки](docs/upstream-build-guide.md)
 
-Основано на [Telegram iOS](https://github.com/TelegramMessenger/Telegram-iOS), тег `release-13.0.0`. Функция сохранения реализована в этом проекте; остальные функции WhiteGram сюда не перенесены.
+Основано на [Telegram iOS](https://github.com/TelegramMessenger/Telegram-iOS), тег `release-13.0.0`. 
