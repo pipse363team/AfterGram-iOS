@@ -1,116 +1,97 @@
-# Telegram iOS Source Code Compilation Guide
+<div align="center">
 
-We welcome all developers to use our API and source code to create applications on our platform.
-There are several things we require from **all developers** for the moment.
+# AfterGram · iOS
 
-# Creating your Telegram Application
+**Локальное сохранение удалённых сообщений и медиа в Telegram для iPhone и iPad.**
 
-1. [**Obtain your own api_id**](https://core.telegram.org/api/obtaining_api_id) for your application.
-2. Please **do not** use the name Telegram for your app — or make sure your users understand that it is unofficial.
-3. Kindly **do not** use our standard logo (white paper plane in a blue circle) as your app's logo.
-3. Please study our [**security guidelines**](https://core.telegram.org/mtproto/security_guidelines) and take good care of your users' data and privacy.
-4. Please remember to publish **your** code too in order to comply with the licences.
+![Platform](https://img.shields.io/badge/platform-iOS%20%2F%20iPadOS-black)
+![Base](https://img.shields.io/badge/Telegram-13.0-26A5E4)
+![Status](https://img.shields.io/badge/status-experimental-orange)
 
-# Quick Compilation Guide
+**Русский** · [English](README.en.md)
 
-## Get the Code
+</div>
 
-```
-git clone --recursive -j8 https://github.com/TelegramMessenger/Telegram-iOS.git
-```
+---
 
-## Setup Xcode
+AfterGram — экспериментальная модификация официальных исходников Telegram iOS 13.0. Сообщения, удалённые собеседником, сохраняются в локальной истории: они остаются на своём месте, становятся полупрозрачными и получают отметку удаления.
 
-Install Xcode (directly from https://developer.apple.com/download/applications or using the App Store).
+**Только iOS/iPadOS.** Для Android, Windows и macOS клиент не выпускается. Windows можно использовать для подготовки репозитория и запуска удалённой сборки; сама компиляция выполняется на macOS.
 
-## Adjust Configuration
+> **Статус:** реализация подготовлена в исходниках. Компиляция iOS, запуск XCTest и проверка на устройстве пока не подтверждены. Готового проверенного IPA нет. Проект не связан с Telegram и не является официальным клиентом.
 
-1. Generate a random identifier:
-```
-openssl rand -hex 8
-```
-2. Create a new Xcode project. Use `Telegram` as the Product Name. Use `org.{identifier from step 1}` as the Organization Identifier.
-3. Open `Keychain Access` and navigate to `Certificates`. Locate `Apple Development: your@email.address (XXXXXXXXXX)` and double tap the certificate. Under `Details`, locate `Organizational Unit`. This is the Team ID.
-4. Edit `build-system/template_minimal_development_configuration.json`. Use data from the previous steps.
+## Возможности
 
-## Generate an Xcode project
+| Возможность | Реализация |
+| --- | --- |
+| Сохранение в чате | Загруженное сообщение остаётся в истории после получения события удаления |
+| Отметка удаления | Прозрачность 50%, иконка корзины и подпись «Удалено» снизу |
+| Медиа | Подготовлены сохранение текста, фотографий, GIF, видео и видеосообщений |
+| Копии файлов | Полные медиа сохраняются отдельно от обычного кэша Telegram |
+| Предварительная загрузка | Медиа отображаемых сообщений скачиваются заранее, по два ресурса одновременно |
+| Альбомы | Удалённый элемент отделяется, чтобы не менять прозрачность остальных |
+| Настройки | «Удалённые сообщения» в настройках аккаунта позволяет отключить функцию |
+| Сборка | GitHub Actions: macOS, тесты и IPA для последующей переподписи |
 
-```
-python3 build-system/Make/Make.py \
-    --cacheDir="$HOME/telegram-bazel-cache" \
-    generateProject \
-    --configurationPath=build-system/template_minimal_development_configuration.json \
-    --xcodeManagedCodesigning
-```
+## Что нужно понимать
 
-# Advanced Compilation Guide
+Сохранение работает с сообщениями, которые клиент уже загрузил. Для воспроизведения после удаления файл должен успеть полностью скачаться или ещё быть доступным на сервере. Восстановить никогда не загруженные сообщения и недоступные файлы нельзя.
 
-## Xcode
+Предварительная загрузка начинается для сообщений, отображаемых в чате; вся история всех чатов автоматически не скачивается. Она расходует трафик и место на устройстве.
 
-1. Copy and edit `build-system/appstore-configuration.json`.
-2. Copy `build-system/fake-codesigning`. Create and download provisioning profiles, using the `profiles` folder as a reference for the entitlements.
-3. Generate an Xcode project:
-```
-python3 build-system/Make/Make.py \
-    --cacheDir="$HOME/telegram-bazel-cache" \
-    generateProject \
-    --configurationPath=configuration_from_step_1.json \
-    --codesigningInformationPath=directory_from_step_2
-```
+Отдельные копии файлов не удаляются при обычной очистке кэша Telegram. Ручное удаление сообщения убирает запись из чата, но не гарантирует очистку всех резервных файлов. Они удаляются вместе с данными аккаунта/приложения.
 
-## IPA
+Секретные чаты, запланированные сообщения и массовая очистка истории через `min_available_id` пока не покрыты. Операции сервера над уже удалённым сообщением могут быть недоступны.
 
-1. Repeat the steps from the previous section. Use distribution provisioning profiles.
-2. Run:
-```
-python3 build-system/Make/Make.py \
-    --cacheDir="$HOME/telegram-bazel-cache" \
-    build \
-    --configurationPath=...see previous section... \
-    --codesigningInformationPath=...see previous section... \
-    --buildNumber=100001 \
-    --configuration=release_arm64
-```
+## Собрать IPA без собственного Mac
 
-# FAQ
+Исходники и workflow должны находиться в основной ветке вашего GitHub-репозитория.
 
-## Xcode is stuck at "build-request.json not updated yet"
+### 1. Получить Telegram API ID и API hash
 
-Occasionally, you might observe the following message in your build log:
-```
-"/Users/xxx/Library/Developer/Xcode/DerivedData/Telegram-xxx/Build/Intermediates.noindex/XCBuildData/xxx.xcbuilddata/build-request.json" not updated yet, waiting...
-```
+1. Откройте [my.telegram.org](https://my.telegram.org/auth?to=apps).
+2. Введите номер своего Telegram в международном формате.
+3. Введите код, который придёт в Telegram, и войдите.
+4. Откройте **API development tools** и заполните форму создания приложения. Например: название `AfterGram iOS`, короткое имя `aftergramios`, платформа **iOS**, описание `Personal iOS Telegram client build`.
+5. Сохраните значения **App api_id** и **App api_hash**. Если приложение уже создано, используйте показанные значения.
 
-Should this occur, simply cancel the ongoing build and initiate a new one.
+API ID — идентификатор приложения, API hash — строка из 32 символов. Это не токен бота и не код входа в Telegram.
 
-## Telegram_xcodeproj: no such package 
+### 2. Добавить секреты GitHub Actions
 
-Following a system restart, the auto-generated Xcode project might encounter a build failure accompanied by this error:
-```
-ERROR: Skipping '@rules_xcodeproj_generated//generator/Telegram/Telegram_xcodeproj:Telegram_xcodeproj': no such package '@rules_xcodeproj_generated//generator/Telegram/Telegram_xcodeproj': BUILD file not found in directory 'generator/Telegram/Telegram_xcodeproj' of external repository @rules_xcodeproj_generated. Add a BUILD file to a directory to mark it as a package.
-```
+Откройте **Settings → Secrets and variables → Actions → Secrets → New repository secret** и создайте два секрета:
 
-If you encounter this issue, re-run the project generation steps in the README.
+| Name | Secret |
+| --- | --- |
+| `TELEGRAM_API_ID` | Значение **App api_id** |
+| `TELEGRAM_API_HASH` | Значение **App api_hash** |
 
+Не добавляйте реальные значения в README, коммиты или публичные сообщения.
 
-# Tips
+### 3. Запустить сборку
 
-## Codesigning is not required for simulator-only builds
+1. Откройте вкладку **Actions**.
+2. Выберите **Telegram 13.0 with retained messages**.
+3. Нажмите **Run workflow**, выберите ветку **main** и оставьте тесты включёнными.
+4. Нажмите зелёную кнопку **Run workflow**.
+5. После успешного завершения откройте запуск и скачайте artifact **TelegramRetention-13.0**.
 
-Add `--disableProvisioningProfiles`:
-```
-python3 build-system/Make/Make.py \
-    --cacheDir="$HOME/telegram-bazel-cache" \
-    generateProject \
-    --configurationPath=path-to-configuration.json \
-    --codesigningInformationPath=path-to-provisioning-data \
-    --disableProvisioningProfiles
-```
+Внутри будет `TelegramRetention.ipa`. Он подписан ad hoc для последующей переподписи и не готов к прямой установке из App Store. Подпись для установки на iPhone настраивается отдельно. Расширения и Watch-приложение в этой сборке отключены; push-уведомления зависят от профиля переподписи.
 
-## Versions
+Если workflow не виден, убедитесь, что `.github/workflows/retention-build.yml` загружен в основную ветку, и разрешите Actions, если GitHub предлагает это сделать.
 
-Each release is built using a specific Xcode version (see `versions.json`). The helper script checks the versions of the installed software and reports an error if they don't match the ones specified in `versions.json`. It is possible to bypass these checks:
+## Проверка и разработка
 
-```
-python3 build-system/Make/Make.py --overrideXcodeVersion build ... # Don't check the version of Xcode
-```
+Исходная база: [TelegramMessenger/Telegram-iOS](https://github.com/TelegramMessenger/Telegram-iOS), тег `release-13.0.0`, commit `f1dd7a2dbd02cbbf513e75d5695d8d36d1cf5838`.
+
+Проверены применение патча к указанной базе, синтаксис изменённых Swift-файлов относительно upstream, YAML и скрипты подготовки сборки. Подготовлено пять тестов для метки удаления, сохранности файлов, GIF/видео/видеосообщений и поведения удаления. Их выполнение требует macOS.
+
+[Описание реализации и сценарии проверки](docs/deleted-message-retention.md) · [Оригинальная инструкция сборки Telegram](docs/upstream-build-guide.md) · [Workflow](.github/workflows/retention-build.yml)
+
+При сообщении об ошибке приложите версию iOS, тип сообщения, шаги воспроизведения и лог упавшего шага Actions, если ошибка относится к сборке.
+
+## Благодарности
+
+Проект основан на официальных исходниках [Telegram iOS](https://github.com/TelegramMessenger/Telegram-iOS). [WhiteGram](https://github.com/WhiteGram/WhiteGram-iOS) изучался как возможный источник функции; в проверенной опубликованной ветке anti-delete не обнаружен. Остальные возможности WhiteGram в эту реализацию не перенесены.
+
+Telegram — торговая марка её правообладателя. Название AfterGram обозначает неофициальную модификацию, а не продукт команды Telegram.
