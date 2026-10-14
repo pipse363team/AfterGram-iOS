@@ -13,7 +13,7 @@ Telegram for iPhone and iPad that keeps deleted messages.
 
 When someone deletes a message, AfterGram keeps it in its original place in the chat. It appears at 50% opacity, with a trash icon and a “Deleted” label underneath.
 
-Based on the official Telegram iOS 13.0 source. The first build completed successfully in GitHub Actions, and a user confirmed installation and launch on an iPhone. Testing across media types and other scenarios is ongoing.
+Based on the official Telegram iOS 13.0 client. Adds deleted message retention.
 
 ## Features
 
@@ -28,11 +28,9 @@ Based on the official Telegram iOS 13.0 source. The first build completed succes
 ## Installation
 
 1. Download **AfterGram-13.0.ipa** from [Releases](https://github.com/pipse363team/AfterGram-iOS/releases).
-2. Install [Sideloadly](https://sideloadly.io/) on Windows or macOS.
-3. Connect your iPhone, drag the IPA into Sideloadly, select your device, and sign it with your Apple ID.
-4. If prompted, trust the app in your iPhone settings and enable Developer Mode.
-
-A free Apple ID provides a 7-day signature. You need to renew it; Sideloadly supports automatic renewal. You can keep using the same IPA without rebuilding the app.
+2. Sign the IPA with your own signing certificate using a compatible installation tool, or use free Apple ID signing through [Sideloadly](https://sideloadly.io/) on Windows or macOS.
+3. Install the signed IPA on your iPhone or iPad.
+4. If prompted, trust the app in your device settings and enable Developer Mode.
 
 The release IPA needs to be re-signed before installation. App extensions and the Apple Watch app are disabled in this build. Push notification availability depends on the signing setup and provisioning profile.
 
