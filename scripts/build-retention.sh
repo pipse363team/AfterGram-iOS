@@ -18,7 +18,6 @@ python3 scripts/prepare-retention-build.py
 RETENTION_BUILD_NUMBER="${GITHUB_RUN_NUMBER:-10000}"
 RETENTION_BAZEL_FLAGS=(
   --define="buildNumber=$RETENTION_BUILD_NUMBER"
-  --//Telegram:disableProvisioningProfiles
   --//Telegram:disableExtensions
   --ios_signing_cert_name=-
   --verbose_failures
