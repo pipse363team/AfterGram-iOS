@@ -13,6 +13,7 @@ swift_library(
     ],
     deps = [
         "//submodules/TelegramApi:TelegramApi",
+        "//submodules/AfterGramPython:AfterGramPython",
         "//submodules/MtProtoKit:MtProtoKit",
         "//submodules/MediaPreuploadRegistry:MediaPreuploadRegistry",
         "//submodules/WebProxyTransport:WebProxyTransport",
@@ -44,6 +45,7 @@ swift_library(
     ]),
     deps = [
         ":TelegramCore",
+        "//submodules/AfterGramPython:AfterGramPython",
         "//submodules/SSignalKit/SwiftSignalKit:SwiftSignalKit",
         "//submodules/TelegramApi:TelegramApi",
         "//submodules/MtProtoKit:MtProtoKit",

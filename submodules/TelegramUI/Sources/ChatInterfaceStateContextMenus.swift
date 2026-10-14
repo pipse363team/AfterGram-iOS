@@ -2479,6 +2479,17 @@ func contextMenuForChatPresentationInterfaceState(chatPresentationInterfaceState
             }
         }
         
+        if let message = messages.first, message.id.namespace == Namespaces.Message.Cloud, message.id.peerId.namespace != Namespaces.Peer.SecretChat {
+            let pluginMenus = context.account.afterGramPlugins.menus.filter { $0["type"] as? String == "message" }.sorted { ($0["priority"] as? Int ?? 0) > ($1["priority"] as? Int ?? 0) }
+            for menu in pluginMenus {
+                guard let pluginId = menu["plugin"] as? String, let menuId = menu["id"] as? String, let title = menu["text"] as? String else { continue }
+                actions.append(.action(ContextMenuActionItem(text: title, icon: { _ in nil }, action: { _, completion in
+                    completion(.default)
+                    let dialogId = afterGramDialogId(message.id.peerId)
+                    context.account.afterGramPlugins.request(["op": "menu", "id": pluginId, "menu": menuId, "peer": String(dialogId), "native_peer": String(message.id.peerId.toInt64()), "context": ["dialog_id": dialogId], "message": ["id": message.id.id, "messageText": message.text, "dialog_id": dialogId, "messageOwner": ["id": message.id.id, "message": message.text]]]) { _ in }
+                })))
+            }
+        }
         return ContextController.Items(content: .list(actions), tip: nil)
     }
 }

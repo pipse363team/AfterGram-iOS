@@ -1185,6 +1185,7 @@ public enum NetworkSpeedLimitedEvent {
 }
 
 public class Account {
+    public lazy var afterGramPlugins = AfterGramPluginManager(account: self)
     public lazy var deletedMessageMediaPrefetcher = DeletedMessageMediaPrefetcher(account: self)
     static let sharedQueue = Queue(name: "Account-Shared")
     
@@ -1588,6 +1589,7 @@ public class Account {
             print("debugFetchAllStickers done")
         }))
         #endif*/
+        self.afterGramPlugins.start()
     }
     
     deinit {

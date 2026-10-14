@@ -695,6 +695,20 @@ private func opportunisticallyTransformOutgoingMedia(network: Network, postbox: 
 }
 
 public func enqueueMessages(account: Account, peerId: PeerId, messages: [EnqueueMessage]) -> Signal<[MessageId?], NoError> {
+    return account.afterGramPlugins.transform(peerId: peerId, messages: messages)
+    |> mapToSignal { transformed -> Signal<[MessageId?], NoError> in
+        let indices = transformed.indices.filter { transformed[$0] != nil }
+        if indices.isEmpty { return .single(Array(repeating: nil, count: transformed.count)) }
+        return enqueueMessagesWithoutPlugins(account: account, peerId: peerId, messages: indices.compactMap { transformed[$0] })
+        |> map { ids in
+            var result: [MessageId?] = Array(repeating: nil, count: transformed.count)
+            for (offset, index) in indices.enumerated() where offset < ids.count { result[index] = ids[offset] }
+            return result
+        }
+    }
+}
+
+func enqueueMessagesWithoutPlugins(account: Account, peerId: PeerId, messages: [EnqueueMessage]) -> Signal<[MessageId?], NoError> {
     let signal: Signal<[(Bool, EnqueueMessage)], NoError>
     if let transformOutgoingMessageMedia = account.transformOutgoingMessageMedia {
         signal = opportunisticallyTransformOutgoingMedia(network: account.network, postbox: account.postbox, transformOutgoingMessageMedia: transformOutgoingMessageMedia, messages: messages, userInteractive: true)

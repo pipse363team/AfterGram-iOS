@@ -62,4 +62,4 @@ Keep API hash values out of source files and README files.
 
 [How retention is implemented](docs/deleted-message-retention.md) · [Original build guide](docs/upstream-build-guide.md)
 
-Based on [Telegram iOS](https://github.com/TelegramMessenger/Telegram-iOS), tag `release-13.0.0`. Message retention was implemented in this project; other WhiteGram features are not included.
+Based on [Telegram iOS](https://github.com/TelegramMessenger/Telegram-iOS), tag `release-13.0.0`. Message retention was implemented in this project.

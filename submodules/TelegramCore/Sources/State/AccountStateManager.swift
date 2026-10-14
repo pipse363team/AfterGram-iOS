@@ -241,6 +241,8 @@ public final class AccountStateManager {
             return self.isUpdatingValue.get()
         }
         
+        private let pluginIncomingMessagesPipe = ValuePipe<[Message]>()
+        var pluginIncomingMessages: Signal<[Message], NoError> { return self.pluginIncomingMessagesPipe.signal() }
         private let notificationMessagesPipe = ValuePipe<[([Message], PeerGroupId, Bool, MessageHistoryThreadData?)]>()
         public var notificationMessages: Signal<[([Message], PeerGroupId, Bool, MessageHistoryThreadData?)], NoError> {
             return self.notificationMessagesPipe.signal()
@@ -1227,7 +1229,7 @@ public final class AccountStateManager {
                     let _ = self.delayNotificatonsUntil.swap(events.delayNotificatonsUntil)
                 }
                 
-                let signal = self.postbox.transaction { transaction -> [([Message], PeerGroupId, Bool, MessageHistoryThreadData?)] in
+                let signal = self.postbox.transaction { transaction -> ([([Message], PeerGroupId, Bool, MessageHistoryThreadData?)], [Message]) in
                     var messageList: [([Message], PeerGroupId, Bool, MessageHistoryThreadData?)] = []
                     
                     for id in events.addedIncomingMessageIds {
@@ -1254,13 +1256,14 @@ public final class AccountStateManager {
                         }
                         messageList.append((wasScheduledMessages, .root, true, threadData))
                     }
-                    return messageList
+                    return (messageList, events.addedIncomingMessageIds.compactMap { transaction.getMessage($0) })
                 }
                 
                 let _ = (signal
                 |> deliverOn(self.queue)).start(next: { [weak self] messages in
                     if let strongSelf = self {
-                        strongSelf.notificationMessagesPipe.putNext(messages)
+                        strongSelf.notificationMessagesPipe.putNext(messages.0)
+                        strongSelf.pluginIncomingMessagesPipe.putNext(messages.1)
                     }
                 }, completed: {
                     completed()
@@ -1931,6 +1934,12 @@ public final class AccountStateManager {
         }
     }
     
+    public var pluginIncomingMessages: Signal<[Message], NoError> {
+        return self.impl.signalWith { impl, subscriber in
+            return impl.pluginIncomingMessages.start(next: subscriber.putNext, error: subscriber.putError, completed: subscriber.putCompletion)
+        }
+    }
+
     public var notificationMessages: Signal<[([Message], PeerGroupId, Bool, MessageHistoryThreadData?)], NoError> {
         return self.impl.signalWith { impl, subscriber in
             return impl.notificationMessages.start(next: subscriber.putNext, error: subscriber.putError, completed: subscriber.putCompletion)

@@ -236,3 +236,7 @@ local_path_override(
     module_name = "build_configuration",
     path = "./build-input/configuration-repository",
 )
+
+# Prepared by scripts/prepare-plugin-python.py before Bazel starts.
+local_repository = use_repo_rule("@bazel_tools//tools/build_defs/repo:local.bzl", "local_repository")
+local_repository(name="aftergram_python", path="build-input/aftergram-python")

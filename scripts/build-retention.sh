@@ -14,6 +14,8 @@ export USE_BAZEL_VERSION="$(python3 -c 'import json; print(json.load(open("versi
 RETENTION_BAZEL_PATH="$(command -v bazelisk)"
 export RETENTION_BAZEL_PATH
 python3 scripts/prepare-retention-build.py
+python3 scripts/prepare-plugin-python.py
+python3 -m unittest discover -s scripts/tests -p test_plugin_host.py
 
 RETENTION_BUILD_NUMBER="${GITHUB_RUN_NUMBER:-10000}"
 RETENTION_BAZEL_FLAGS=(
@@ -27,7 +29,7 @@ RETENTION_BAZEL_FLAGS=(
 if [[ "${RETENTION_RUN_TESTS:-true}" == true ]]; then
   "$RETENTION_BAZEL_PATH" test //submodules/TelegramCore:TelegramCoreTests \
     "${RETENTION_BAZEL_FLAGS[@]}" --ios_multi_cpus=sim_arm64 \
-    --test_filter=DeletedMessageRetentionTests --test_output=errors
+    --test_filter="DeletedMessageRetentionTests|AfterGramPluginTests" --test_output=errors
 fi
 
 "$RETENTION_BAZEL_PATH" build //Telegram:Telegram \
@@ -36,4 +38,5 @@ fi
   --features=swift.opt_uses_osize
 mkdir -p build/artifacts
 cp bazel-bin/Telegram/Telegram.ipa build/artifacts/TelegramRetention.ipa
+python3 scripts/verify-plugin-ipa.py build/artifacts/TelegramRetention.ipa
 echo "IPA prepared for re-signing: build/artifacts/TelegramRetention.ipa"
