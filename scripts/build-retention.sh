@@ -29,7 +29,7 @@ RETENTION_BAZEL_FLAGS=(
 if [[ "${RETENTION_RUN_TESTS:-true}" == true ]]; then
   "$RETENTION_BAZEL_PATH" test //submodules/TelegramCore:TelegramCoreTests \
     "${RETENTION_BAZEL_FLAGS[@]}" --ios_multi_cpus=sim_arm64 \
-    --test_filter="DeletedMessageRetentionTests|AfterGramPluginTests" --test_output=errors
+    --test_filter="DeletedMessageRetentionTests,AfterGramPluginTests" --test_output=errors
 fi
 
 "$RETENTION_BAZEL_PATH" build //Telegram:Telegram \
