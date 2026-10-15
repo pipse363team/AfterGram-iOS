@@ -16,6 +16,8 @@ import threading
 import traceback
 import types
 import zipfile
+from aftergram_resources import install as _install_resources
+_install_resources()
 
 _CONTEXT = contextvars.ContextVar('aftergram_plugin_context')
 _HOSTS = {}

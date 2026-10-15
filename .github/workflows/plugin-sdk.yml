@@ -1,0 +1,56 @@
+name: AfterGram Python SDK update
+
+on:
+  workflow_dispatch:
+    inputs:
+      native_run_id:
+        description: Successful full native build run ID
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  package:
+    runs-on: macos-26
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      NATIVE_RUN_ID: ${{ inputs.native_run_id }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Download successful native build
+        run: |
+          set -euo pipefail
+          [[ "$NATIVE_RUN_ID" =~ ^[0-9]+$ ]]
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$NATIVE_RUN_ID" --jq .conclusion)" = success
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$NATIVE_RUN_ID" --jq .head_sha > native-source.txt
+          gh run download "$NATIVE_RUN_ID" --repo "$GITHUB_REPOSITORY" --name TelegramRetention-13.0 --dir build/native
+      - name: Verify bundled SDK and run Python tests
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import zipfile
+          with zipfile.ZipFile('build/native/TelegramRetention.ipa') as ipa:
+              sdk = next(name for name in ipa.namelist() if name.endswith('AfterGramPython.bundle/aftergram_sdk.zip'))
+              target = Path('build-input/aftergram-python/resources/aftergram_sdk.zip')
+              target.parent.mkdir(parents=True,exist_ok=True)
+              target.write_bytes(ipa.read(sdk))
+          PY
+          python3 -m unittest discover -s scripts/tests -p test_plugin_host.py
+      - name: Repackage Python resources and reseal IPA
+        run: |
+          set -euo pipefail
+          native_source_sha="$(cat native-source.txt)"
+          python3 scripts/repackage-plugin-sdk.py --ipa build/native/TelegramRetention.ipa --output build/artifacts/AfterGram-13.0-plugins.ipa --native-sha "$native_source_sha"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AfterGram-13.0-plugins
+          path: build/artifacts/*
+          if-no-files-found: error
+          retention-days: 7

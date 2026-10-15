@@ -1,4 +1,6 @@
 import json
+import importlib.util
+import io
 from pathlib import Path
 import sys
 import tempfile
@@ -62,6 +64,29 @@ class PluginHostTests(unittest.TestCase):
     def test_plugin_initialization_has_time_for_cold_imports(self):
         self.install(plugin("import time\ntime.sleep(1.05)\nclass TestPlugin(BasePlugin): pass\n"))
         self.assertTrue(self.call('list')['plugins'][0]['enabled'])
+    def test_timezone_resources_work_from_sdk_archive(self):
+        import pytz
+        self.assertEqual(pytz.timezone('Europe/Moscow').zone,'Europe/Moscow')
+        self.assertIn('Europe/Moscow',pytz.country_timezones['RU'])
+        with self.assertRaises(ValueError): pytz.open_resource('../outside')
+    def test_sdk_overlay_preserves_vendors_and_rejects_wire_changes(self):
+        script = SDK.parents[2] / 'scripts/repackage-plugin-sdk.py'
+        spec = importlib.util.spec_from_file_location('aftergram_sdk_packaging',script)
+        module = importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+        original = io.BytesIO()
+        schema = (SDK/'aftergram_tl_schema.json').read_bytes()
+        with zipfile.ZipFile(original,'w') as z:
+            z.writestr('aftergram_tl_schema.json',schema)
+            z.writestr('vendor/data.bin',b'unchanged')
+            z.writestr('aftergram_host.py',b'old host')
+        packed = module.overlay_sdk(original.getvalue())
+        with zipfile.ZipFile(io.BytesIO(packed)) as z:
+            self.assertEqual(z.read('vendor/data.bin'),b'unchanged')
+            self.assertEqual(z.read('aftergram_host.py'),(SDK/'aftergram_host.py').read_bytes())
+            self.assertIn('aftergram_resources.py',z.namelist())
+        invalid = io.BytesIO()
+        with zipfile.ZipFile(invalid,'w') as z: z.writestr('aftergram_tl_schema.json','[]')
+        with self.assertRaises(ValueError): module.overlay_sdk(invalid.getvalue())
     def test_import_errors_are_short_and_full_trace_is_logged(self):
         self.source.write_text('invalid python syntax :')
         response = self.call('inspect', path=str(self.source))
