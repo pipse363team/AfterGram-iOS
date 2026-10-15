@@ -40,6 +40,16 @@ jobs:
         run: bash scripts/build-retention.sh prepare
       - name: Run iOS retention and plugin tests
         run: bash scripts/build-retention.sh test
+      - name: Upload iOS test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: AfterGram-iOS-test-results
+          path: |
+            bazel-testlogs/submodules/TelegramCore/**/test.log
+            bazel-testlogs/submodules/TelegramCore/**/test.xml
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Build IPA
         run: bash scripts/build-retention.sh build
       - uses: actions/upload-artifact@v4
@@ -47,14 +57,4 @@ jobs:
           name: TelegramRetention-13.0
           path: build/artifacts/TelegramRetention.ipa
           if-no-files-found: error
-          retention-days: 7
-      - name: Upload iOS test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: AfterGram-iOS-test-results
-          path: |
-            bazel-testlogs/submodules/TelegramCore/TelegramCoreTests/test.log
-            bazel-testlogs/submodules/TelegramCore/TelegramCoreTests/test.xml
-          if-no-files-found: ignore
           retention-days: 7

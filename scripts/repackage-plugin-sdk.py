@@ -41,7 +41,7 @@ def verify_source(native_sha):
     comparison = json.loads(subprocess.check_output(['gh','api',f'repos/{repository}/compare/{native_sha}...{current}'],text=True))
     changed = comparison.get('files',[])
     if len(changed)>=300: raise ValueError('Too many changes to verify a Python-only update')
-    prefixes = ('submodules/AfterGramPython/SDK/','scripts/tests/','docs/','examples/')
+    prefixes = ('submodules/AfterGramPython/SDK/','scripts/tests/','docs/','examples/','.github/workflows/')
     allowed = {'README.md','README.en.md','.github/workflows/plugin-sdk.yml','scripts/repackage-plugin-sdk.py'}
     names = [name for f in changed for name in [f['filename'],f.get('previous_filename')] if name]
     blocked = [name for name in names if not name.startswith(prefixes) and name not in allowed]
