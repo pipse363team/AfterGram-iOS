@@ -201,12 +201,13 @@ class Host:
         except Exception: pass
         if plugin_id in self.registry:
             self.registry[plugin_id]['enabled'] = False;self.save()
-    def invoke(self, plugin_id, fn, *args, account=None, dialog_id=0, native_peer=None, background=False, generation=None):
+    def invoke(self, plugin_id, fn, *args, account=None, dialog_id=0, native_peer=None, background=False, generation=None, budget=None):
         context = {'host': self, 'plugin': plugin_id, 'account': self.account if account is None else account,
                    'dialog_id': dialog_id, 'native_peer': native_peer, 'directory': self.root / plugin_id, 'actions': [],
                    'background':background, 'generation':self.generations.get(plugin_id,0) if generation is None else generation}
         token = _CONTEXT.set(context)
-        deadline = time.monotonic() + (30.0 if background else 1.0)
+        budget = (30.0 if background else 1.0) if budget is None else float(budget)
+        deadline = time.monotonic() + budget
         opcodes = 0
         def trace(frame, event, arg):
             nonlocal opcodes
@@ -217,7 +218,7 @@ class Host:
                 opcodes += 1
                 if opcodes % 256: return trace
             if background and self.generations.get(plugin_id,0) != context['generation']: raise RuntimeError('Plugin was stopped')
-            if time.monotonic() > deadline: raise TimeoutError('Plugin callback exceeded ' + ('30 seconds' if background else 'one second'))
+            if time.monotonic() > deadline: raise TimeoutError('Plugin callback exceeded ' + ('one second' if budget == 1 else f'{budget:g} seconds'))
             return trace
         old_trace = sys.gettrace()
         sys.settrace(trace)
@@ -261,14 +262,14 @@ class Host:
         module_name = self.namespace + '.' + plugin_id.encode('utf-8').hex()
         spec = importlib.util.spec_from_file_location(module_name, main, submodule_search_locations=[str(main.parent)])
         module = importlib.util.module_from_spec(spec);sys.modules[module_name] = module
-        self.invoke(plugin_id, spec.loader.exec_module, module)
+        self.invoke(plugin_id, spec.loader.exec_module, module, budget=10)
         classes = [c for c in vars(module).values() if isinstance(c, type) and issubclass(c, BasePlugin) and c is not BasePlugin and c.__module__ == module.__name__]
         if len(classes) != 1: raise ValueError('Expected exactly one BasePlugin subclass')
-        plugin = self.invoke(plugin_id, classes[0])
+        plugin = self.invoke(plugin_id, classes[0], budget=10)
         if not hasattr(plugin, '_host'): plugin._attach(self, plugin_id)
         self.plugins[plugin_id] = plugin
-        self.invoke(plugin_id, plugin.on_plugin_load)
-        self.invoke(plugin_id, plugin.on_app_event, AppEvent.START)
+        self.invoke(plugin_id, plugin.on_plugin_load, budget=10)
+        self.invoke(plugin_id, plugin.on_app_event, AppEvent.START, budget=10)
         self.errors.pop(plugin_id, None)
         self.error_details.pop(plugin_id, None)
     def unload(self, plugin_id):

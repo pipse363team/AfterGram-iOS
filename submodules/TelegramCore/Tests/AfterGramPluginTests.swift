@@ -100,8 +100,13 @@ final class AfterGramPluginTests: XCTestCase {
         from client_utils import send_text
         __id__ = 'format_test'
         __name__ = 'Format'
+        import mpmath
+        from bs4 import BeautifulSoup
         class FormatPlugin(BasePlugin):
-            def on_plugin_load(self): self.add_on_send_message_hook()
+            def on_plugin_load(self):
+                assert mpmath.sqrt(4) == 2
+                assert BeautifulSoup('<b>ok</b>', 'html.parser').get_text() == 'ok'
+                self.add_on_send_message_hook()
             def on_send_message_hook(self, account, params):
                 if params.message == '.loop':
                     while True: pass

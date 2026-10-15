@@ -309,15 +309,20 @@ public final class AfterGramPluginManager {
             if let value = action["media"] as? [String: Any] {
                 Task { [weak self] in
                     let media = await afterGramPluginMedia(account: account, value: value)
-                    Self.queue.async { [weak self] in
-                        guard let self, let owner = action["plugin"] as? String, self.enabledPluginIds.contains(owner), let generation = action["generation"] as? Int, self.pluginGenerations[owner] == generation else { return }
-                        guard let media else { self.execute(["op":"native_error", "text":"Cannot prepare plugin media file"]);return }
-                        self.enqueuePluginMessage(account: account, action: action, media: media)
-                    }
+                    self?.deliverPreparedMedia(action: action, media: media)
                 }
             } else { self.enqueuePluginMessage(account: account, action: action, media: nil) }
         default:
             break
+        }
+    }
+    // Queue entry point: the asynchronous loader only hands off its immutable
+    // result. Account state, generations and enqueueing stay on the host queue.
+    private func deliverPreparedMedia(action: [String: Any], media: AnyMediaReference?) {
+        Self.queue.async { [weak self] in
+            guard let self, let account = self.account, let owner = action["plugin"] as? String, self.enabledPluginIds.contains(owner), let generation = action["generation"] as? Int, self.pluginGenerations[owner] == generation else { return }
+            guard let media else { self.execute(["op":"native_error", "text":"Cannot prepare plugin media file"]);return }
+            self.enqueuePluginMessage(account: account, action: action, media: media)
         }
     }
     private func enqueuePluginMessage(account: Account, action: [String: Any], media: AnyMediaReference?) {

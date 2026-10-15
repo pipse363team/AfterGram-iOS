@@ -59,6 +59,9 @@ class PluginHostTests(unittest.TestCase):
         self.assertEqual(self.outgoing('.hello iPhone')['text'], 'Hello, iPhone!')
         self.call('close')
         self.assertEqual(self.outgoing('.hello Again')['text'], 'Hello, Again!')
+    def test_plugin_initialization_has_time_for_cold_imports(self):
+        self.install(plugin("import time\ntime.sleep(1.05)\nclass TestPlugin(BasePlugin): pass\n"))
+        self.assertTrue(self.call('list')['plugins'][0]['enabled'])
     def test_import_errors_are_short_and_full_trace_is_logged(self):
         self.source.write_text('invalid python syntax :')
         response = self.call('inspect', path=str(self.source))
