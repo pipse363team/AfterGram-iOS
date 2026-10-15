@@ -14,6 +14,7 @@ import subprocess
 import sys
 import tempfile
 import zipfile
+import stat
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -48,6 +49,34 @@ def verify_source(native_sha):
     if blocked: raise ValueError('Native inputs changed; run a full build: ' + ', '.join(blocked))
     return current
 
+def archive_payload(native_ipa, payload, output, sdk_metadata_path, metadata):
+    """Rebuild an IPA while retaining the upstream ZIP layout and compression.
+
+    In particular, Python's own ZIP resources must stay stored as ZIP files
+    inside the IPA. Recompressing them makes the resulting IPA needlessly
+    different from the native build and complicates third-party installers.
+    """
+    with zipfile.ZipFile(native_ipa) as source, zipfile.ZipFile(output, 'w') as target:
+        source_names = source.namelist()
+        for original in source.infolist():
+            path = payload.parent / original.filename
+            if original.is_dir():
+                data = b''
+            elif path.is_symlink():
+                data = os.readlink(path).encode('utf-8')
+            else:
+                if not path.is_file():
+                    raise ValueError('Native IPA entry disappeared during repackaging: ' + original.filename)
+                data = path.read_bytes()
+            target.writestr(original, data)
+        relative = sdk_metadata_path.relative_to(payload.parent).as_posix()
+        if relative in source_names:
+            raise ValueError('SDK build metadata unexpectedly exists in native IPA')
+        info = zipfile.ZipInfo(relative)
+        info.compress_type = zipfile.ZIP_DEFLATED
+        info.external_attr = (stat.S_IFREG | 0o644) << 16
+        target.writestr(info, json.dumps(metadata, indent=2).encode() + b'\n')
+
 def repackage(ipa, output, native_sha):
     if sys.platform != 'darwin': raise RuntimeError('IPA resealing requires macOS codesign and ditto')
     current = verify_source(native_sha)
@@ -68,7 +97,7 @@ def repackage(ipa, output, native_sha):
         subprocess.run(['codesign','--verify','--deep','--strict',str(app)],check=True)
         output = output.resolve();output.parent.mkdir(parents=True,exist_ok=True)
         output.unlink(missing_ok=True)
-        subprocess.run(['ditto','-c','-k','--norsrc','--keepParent',str(stage/'Payload'),str(output)],check=True)
+        archive_payload(ipa.resolve(), stage/'Payload', output, sdk.parent/'sdk-build.json', metadata)
         (output.parent/'sdk-build.json').write_text(json.dumps(metadata,indent=2)+'\n')
     subprocess.run([sys.executable,str(ROOT/'scripts/verify-plugin-ipa.py'),str(output)],check=True)
     print('Repackaged SDK; native source',native_sha,'SDK source',current)
