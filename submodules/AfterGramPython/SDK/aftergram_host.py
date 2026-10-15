@@ -44,6 +44,7 @@ def emit(action):
     if ctx.get('background') and ctx['host'].generations.get(ctx['plugin'],0) != ctx['generation']: return
     action['plugin'] = ctx['plugin']
     action['account'] = ctx['account']
+    action['generation'] = ctx['generation']
     ctx['actions'].append(action)
 
 def schedule(fn, delay=0, background=False):
@@ -200,10 +201,10 @@ class Host:
         except Exception: pass
         if plugin_id in self.registry:
             self.registry[plugin_id]['enabled'] = False;self.save()
-    def invoke(self, plugin_id, fn, *args, account=None, dialog_id=0, native_peer=None, background=False):
+    def invoke(self, plugin_id, fn, *args, account=None, dialog_id=0, native_peer=None, background=False, generation=None):
         context = {'host': self, 'plugin': plugin_id, 'account': self.account if account is None else account,
                    'dialog_id': dialog_id, 'native_peer': native_peer, 'directory': self.root / plugin_id, 'actions': [],
-                   'background':background, 'generation':self.generations.get(plugin_id,0)}
+                   'background':background, 'generation':self.generations.get(plugin_id,0) if generation is None else generation}
         token = _CONTEXT.set(context)
         deadline = time.monotonic() + (30.0 if background else 1.0)
         opcodes = 0
@@ -437,7 +438,7 @@ class Host:
                     generation = self.generations.get(plugin_id,0)
                     def work(key=plugin_id, task=fn, account_id=account, peer=dialog, native=native_peer, gen=generation):
                         if self.generations.get(key,0) != gen or key not in self.plugins: return
-                        try: self.invoke(key,task,account=account_id,dialog_id=peer,native_peer=native,background=True)
+                        try: self.invoke(key,task,account=account_id,dialog_id=peer,native_peer=native,background=True,generation=gen)
                         except Exception as error:
                             with self.state_lock: self.worker_results.append((key,gen,[],error,traceback.format_exc(limit=8)[-6000:]))
                     self.futures.add(self.executor.submit(work))
@@ -466,7 +467,7 @@ class Host:
             from aftergram_tl import native_fixtures
             return {'fixtures': native_fixtures()}
         if op == 'list':
-            return {'plugins': [{'id': key, **value, 'enabled': key in self.plugins, 'error': self.errors.get(key, '')} for key, value in self.registry.items()], 'callbacks': list(self.callbacks), 'dialogs': list(self.dialogs), 'hooks':[{'name':hook,'substring':substring} for plugin in self.plugins.values() for hook,substring,_ in plugin._hooks]}
+            return {'plugins': [{'id': key, **value, 'enabled': key in self.plugins, 'error': self.errors.get(key, '')} for key, value in self.registry.items()], 'callbacks': list(self.callbacks), 'dialogs': list(self.dialogs), 'generations':dict(self.generations), 'hooks':[{'name':hook,'substring':substring} for plugin in self.plugins.values() for hook,substring,_ in plugin._hooks]}
         if op == 'request_hook':
             from aftergram_tl import BY_NAME, decode, encode, encode_result, TLRPC
             from base_plugin import HookResult, HookStrategy

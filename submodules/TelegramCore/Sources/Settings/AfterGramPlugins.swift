@@ -63,6 +63,7 @@ public final class AfterGramPluginManager {
     private let pluginUI = AfterGramPluginUI()
     private var selfUser: [String: Any]?
     private var enabledPluginIds: Set<String> = []
+    private var pluginGenerations: [String: Int] = [:]
     public var notice: ((String) -> Void)?
 
     public init(account: Account) {
@@ -182,6 +183,7 @@ public final class AfterGramPluginManager {
             self.requests.removeValue(forKey: key)?.dispose()
         }
         self.enabledPluginIds = Set((status["plugins"] as? [[String: Any]] ?? []).filter { $0["enabled"] as? Bool == true }.compactMap { $0["id"] as? String })
+        self.pluginGenerations = status["generations"] as? [String: Int] ?? [:]
         self.lock.lock()
         self.active = (status["plugins"] as? [[String: Any]] ?? []).contains { $0["enabled"] as? Bool == true }
         self.menuSnapshot = menuStatus["menus"] as? [[String: Any]] ?? []
@@ -308,7 +310,7 @@ public final class AfterGramPluginManager {
                 Task { [weak self] in
                     let media = await afterGramPluginMedia(account: account, value: value)
                     Self.queue.async { [weak self] in
-                        guard let self, let owner = action["plugin"] as? String, self.enabledPluginIds.contains(owner) else { return }
+                        guard let self, let owner = action["plugin"] as? String, self.enabledPluginIds.contains(owner), let generation = action["generation"] as? Int, self.pluginGenerations[owner] == generation else { return }
                         guard let media else { self.execute(["op":"native_error", "text":"Cannot prepare plugin media file"]);return }
                         self.enqueuePluginMessage(account: account, action: action, media: media)
                     }
