@@ -8,6 +8,7 @@ import argparse
 import hashlib
 import io
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -35,10 +36,8 @@ def overlay_sdk(original):
 def verify_source(native_sha):
     if len(native_sha)!=40 or any(c not in '0123456789abcdef' for c in native_sha): raise ValueError('Invalid native source SHA')
     current = subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip()
-    repository = subprocess.check_output(['gh','repo','view','--json','nameWithOwner','--jq','.nameWithOwner'],cwd=ROOT,text=True).strip()
-    # In Actions, use its explicit repository rather than a local checkout remote.
-    import os
-    repository = os.environ.get('GITHUB_REPOSITORY',repository)
+    repository = os.environ.get('GITHUB_REPOSITORY')
+    if not repository: repository = subprocess.check_output(['gh','repo','view','--json','nameWithOwner','--jq','.nameWithOwner'],cwd=ROOT,text=True).strip()
     comparison = json.loads(subprocess.check_output(['gh','api',f'repos/{repository}/compare/{native_sha}...{current}'],text=True))
     changed = comparison.get('files',[])
     if len(changed)>=300: raise ValueError('Too many changes to verify a Python-only update')
