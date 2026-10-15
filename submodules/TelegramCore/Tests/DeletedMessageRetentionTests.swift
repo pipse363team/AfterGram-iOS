@@ -80,6 +80,16 @@ final class DeletedMessageRetentionTests: XCTestCase {
         XCTAssertEqual(stored.timestamp, message.timestamp)
     }
 
+    func testEditedMessageHistoryIsPersistentAndBounded() {
+        let original = AfterGramEditedMessageHistoryAttribute(versions: (0 ..< 25).map { "version-\($0)" })
+        let encoder = PostboxEncoder()
+        original.encode(encoder)
+        let decoded = AfterGramEditedMessageHistoryAttribute(decoder: PostboxDecoder(buffer: MemoryBuffer(data: encoder.makeData())))
+        XCTAssertEqual(decoded.versions.count, 20)
+        XCTAssertEqual(decoded.versions.first, "version-5")
+        XCTAssertEqual(decoded.versions.last, "version-24")
+    }
+
     func testRemoteDeleteRetainsRowAndManualDeleteStillRemovesIt() throws {
         let ready = expectation(description: "open account database")
         var postbox: Postbox?
@@ -96,15 +106,22 @@ final class DeletedMessageRetentionTests: XCTestCase {
         let updated = expectation(description: "remote delete transaction")
         let id = SparseFixtures.messageId(SparseFixtures.channelId, 42)
         let missingId = SparseFixtures.messageId(SparseFixtures.channelId, 43)
+        let viewOnceId = SparseFixtures.messageId(SparseFixtures.channelId, 44)
         let transaction = box.transaction { transaction -> Void in
             let message = SparseFixtures.message(SparseFixtures.channelId, 42, timestamp: 10).withUpdatedText("kept")
             let _ = transaction.addMessages([retentionStoreMessage(message, attributes: [], media: [], groupingKey: nil)], location: .Random)
+            let viewOnceMessage = SparseFixtures.message(SparseFixtures.channelId, 44, timestamp: 10).withUpdatedAttributes([AutoclearTimeoutMessageAttribute(timeout: viewOnceTimeout, countdownBeginTime: nil)])
+            XCTAssertTrue(afterGramIsViewOnceMessage(viewOnceMessage))
+            let _ = transaction.addMessages([retentionStoreMessage(viewOnceMessage, attributes: viewOnceMessage.attributes, media: [], groupingKey: nil)], location: .Random)
             let remove = retainRemotelyDeletedMessages(transaction: transaction, mediaBox: box.mediaBox, ids: [id, missingId])
             XCTAssertEqual(remove, [missingId])
             transaction.deleteMessages(remove, forEachMedia: nil)
             XCTAssertEqual(transaction.getMessage(id)?.text, "kept")
             XCTAssertEqual(transaction.getMessage(id)?.isRemotelyDeleted, true)
             XCTAssertTrue(retainRemotelyDeletedMessages(transaction: transaction, mediaBox: box.mediaBox, ids: [id]).isEmpty)
+            let viewOnceRemoval = retainRemotelyDeletedMessages(transaction: transaction, mediaBox: box.mediaBox, ids: [viewOnceId])
+            XCTAssertEqual(viewOnceRemoval, [viewOnceId])
+            XCTAssertNotEqual(transaction.getMessage(viewOnceId)?.isRemotelyDeleted, true)
             transaction.deleteMessages([id], forEachMedia: nil)
             XCTAssertNil(transaction.getMessage(id))
         }.start(completed: { updated.fulfill() })

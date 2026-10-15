@@ -2480,6 +2480,15 @@ func contextMenuForChatPresentationInterfaceState(chatPresentationInterfaceState
         }
         
         if let message = messages.first, message.id.namespace == Namespaces.Message.Cloud, message.id.peerId.namespace != Namespaces.Peer.SecretChat {
+            if let history = message.attributes.first(where: { $0 is AfterGramEditedMessageHistoryAttribute }) as? AfterGramEditedMessageHistoryAttribute,
+               let previousText = history.versions.last {
+                let isRussian = chatPresentationInterfaceState.strings.baseLanguageCode.lowercased().hasPrefix("ru")
+                actions.append(.action(ContextMenuActionItem(text: isRussian ? "Посмотреть изменения" : "View changes", icon: { _ in nil }, action: { _, completion in
+                    completion(.default)
+                    let presentationData = context.sharedContext.currentPresentationData.with { $0 }
+                    controllerInteraction.presentController(textAlertController(context: context, title: isRussian ? "Предыдущая версия" : "Previous version", text: previousText.isEmpty ? (isRussian ? "Пустое сообщение" : "Empty message") : previousText, actions: [TextAlertAction(type: .defaultAction, title: presentationData.strings.Common_OK, action: {})]), nil)
+                })))
+            }
             let pluginMenus = context.account.afterGramPlugins.menus.filter { $0["type"] as? String == "message" }.sorted { ($0["priority"] as? Int ?? 0) > ($1["priority"] as? Int ?? 0) }
             for menu in pluginMenus {
                 guard let pluginId = menu["plugin"] as? String, let menuId = menu["id"] as? String, let title = menu["text"] as? String else { continue }

@@ -173,6 +173,48 @@ private class ApplicationStatusBarHost: StatusBarHost {
     }
 }
 
+private final class AfterGramScreenshotBadge: UIView {
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        self.translatesAutoresizingMaskIntoConstraints = false
+        self.backgroundColor = UIColor(white: 0.08, alpha: 0.96)
+        self.layer.cornerRadius = 16.0
+        self.layer.borderWidth = 1.0
+        self.layer.borderColor = UIColor(white: 1.0, alpha: 0.22).cgColor
+
+        let logo = UILabel()
+        logo.translatesAutoresizingMaskIntoConstraints = false
+        logo.text = "A/G"
+        logo.textColor = .white
+        logo.font = UIFont.systemFont(ofSize: 11.0, weight: .black)
+        logo.textAlignment = .center
+        logo.backgroundColor = UIColor(white: 0.24, alpha: 1.0)
+        logo.layer.cornerRadius = 11.0
+        logo.clipsToBounds = true
+
+        let title = UILabel()
+        title.translatesAutoresizingMaskIntoConstraints = false
+        title.text = "AfterGram"
+        title.textColor = .white
+        title.font = UIFont.systemFont(ofSize: 13.0, weight: .semibold)
+
+        self.addSubview(logo)
+        self.addSubview(title)
+        NSLayoutConstraint.activate([
+            self.heightAnchor.constraint(equalToConstant: 34.0),
+            logo.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 7.0),
+            logo.centerYAnchor.constraint(equalTo: self.centerYAnchor),
+            logo.widthAnchor.constraint(equalToConstant: 22.0),
+            logo.heightAnchor.constraint(equalToConstant: 22.0),
+            title.leadingAnchor.constraint(equalTo: logo.trailingAnchor, constant: 6.0),
+            title.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -11.0),
+            title.centerYAnchor.constraint(equalTo: self.centerYAnchor)
+        ])
+    }
+
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+}
+
 private func legacyDocumentsPath() -> String {
     return NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0] + "/legacy"
 }
@@ -244,6 +286,8 @@ private func extractAccountManagerState(records: AccountRecordsView<TelegramAcco
     var mainWindow: Window1!
     private var hasSharedAppGroupContainer = false
     private var statusBarHost: ApplicationStatusBarHost?
+    private var screenshotObserver: NSObjectProtocol?
+    private var screenshotBadge: AfterGramScreenshotBadge?
     private var dataImportSplash: LegacyDataImportSplash?
     private var memoryUsageOverlayView: UILabel?
     
@@ -426,6 +470,9 @@ private func extractAccountManagerState(records: AccountRecordsView<TelegramAcco
         let statusBarHost = ApplicationStatusBarHost(scene: window.windowScene)
         self.statusBarHost = statusBarHost
         self.mainWindow = Window1(hostView: hostView, statusBarHost: statusBarHost)
+        self.screenshotObserver = NotificationCenter.default.addObserver(forName: UIApplication.userDidTakeScreenshotNotification, object: nil, queue: .main, using: { [weak self] _ in
+            self?.showAfterGramScreenshotBadge()
+        })
         if let traitCollection = window.rootViewController?.traitCollection {
             if #available(iOS 13.0, *) {
                 switch traitCollection.userInterfaceStyle {
@@ -3322,6 +3369,27 @@ private func extractAccountManagerState(records: AccountRecordsView<TelegramAcco
                 })
             }
         }).start()
+    }
+
+    private func showAfterGramScreenshotBadge() {
+        guard let container = self.mainWindow?.hostView.containerView else { return }
+        self.screenshotBadge?.removeFromSuperview()
+        let badge = AfterGramScreenshotBadge(frame: .zero)
+        badge.alpha = 0.0
+        container.addSubview(badge)
+        NSLayoutConstraint.activate([
+            badge.centerXAnchor.constraint(equalTo: container.centerXAnchor),
+            badge.topAnchor.constraint(equalTo: container.safeAreaLayoutGuide.topAnchor, constant: 6.0)
+        ])
+        self.screenshotBadge = badge
+        UIView.animate(withDuration: 0.2) { badge.alpha = 1.0 }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.2, execute: { [weak self, weak badge] in
+            guard let badge else { return }
+            UIView.animate(withDuration: 0.2, animations: { badge.alpha = 0.0 }, completion: { _ in
+                badge.removeFromSuperview()
+                if self?.screenshotBadge === badge { self?.screenshotBadge = nil }
+            })
+        })
     }
 }
 

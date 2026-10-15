@@ -29,3 +29,42 @@ class ConnectionsManager:
 class ApplicationLoader:
     from aftergram_ui import NativeContext
     applicationContext = NativeContext()
+
+class LocaleController:
+    @staticmethod
+    def getString(key, resource_id=None): return str(resource_id or key)
+    @staticmethod
+    def getInstance(): return LocaleController()
+    @property
+    def isRTL(self): return False
+    @property
+    def currentLocale(self): return 'en'
+
+class NotificationCenter:
+    MESSAGE_RECEIVED = 'message_received'
+    MESSAGE_EDITED = 'message_edited'
+    MESSAGE_DELETED = 'message_deleted'
+    @staticmethod
+    def getInstance(account=0): return NotificationCenter()
+    def addObserver(self, *args): raise NotImplementedError('Telegram UI notifications require a native plugin event hook')
+    def removeObserver(self, *args): return None
+
+class FileLoader:
+    @staticmethod
+    def getInstance(account=0): return FileLoader()
+    def getPathToAttach(self, *args, **kwargs): raise NotImplementedError('Android media paths are not available on iOS')
+    def isLoadingFile(self, *args, **kwargs): return False
+
+class BuildVars:
+    DEBUG_VERSION = False
+    APP_VERSION_STRING = 'AfterGram iOS'
+    APP_VERSION = 1300
+
+class SendMessagesHelper: pass
+class MessageObject: pass
+class MediaController: pass
+class ChatObject: pass
+class R:
+    class drawable: pass
+    class string: pass
+    class color: pass

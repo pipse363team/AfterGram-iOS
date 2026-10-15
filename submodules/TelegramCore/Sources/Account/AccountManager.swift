@@ -141,6 +141,7 @@ private var declaredEncodables: Void = {
     declareEncodable(SourceAuthorInfoMessageAttribute.self, f: { SourceAuthorInfoMessageAttribute(decoder: $0) })
     declareEncodable(EditedMessageAttribute.self, f: { EditedMessageAttribute(decoder: $0) })
     declareEncodable(RemotelyDeletedMessageAttribute.self, f: { RemotelyDeletedMessageAttribute(decoder: $0) })
+    declareEncodable(AfterGramEditedMessageHistoryAttribute.self, f: { AfterGramEditedMessageHistoryAttribute(decoder: $0) })
     declareEncodable(ReplyMarkupMessageAttribute.self, f: { ReplyMarkupMessageAttribute(decoder: $0) })
     declareEncodable(OutgoingChatContextResultMessageAttribute.self, f: { OutgoingChatContextResultMessageAttribute(decoder: $0) })
     declareEncodable(HttpReferenceMediaResource.self, f: { HttpReferenceMediaResource(decoder: $0) })

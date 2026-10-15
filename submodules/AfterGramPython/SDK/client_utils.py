@@ -102,6 +102,24 @@ class _ConnectionsManager:
 
 def get_connections_manager(account=None): return _ConnectionsManager(account)
 
+class _SendMessagesHelper:
+    def generatePhotoSizes(self, path, *args):
+        from pathlib import Path
+        file = Path(path)
+        if not file.is_file(): return None
+        return {'path':str(file.resolve()), 'kind':'photo'}
+
+def get_send_messages_helper(): return _SendMessagesHelper()
+
+class _MessagesStorage:
+    def updateUserInfo(self, *args, **kwargs): return None
+
+def get_messages_storage(): return _MessagesStorage()
+
+def get_java_class(name):
+    from aftergram_hooks import find_class
+    return find_class(name)
+
 def _account_context(account):
     ctx = current()
     if account is not None and account != ctx['account']: raise ValueError('This account is not in plugin callback scope')

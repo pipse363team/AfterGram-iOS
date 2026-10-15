@@ -18,6 +18,10 @@ class View:
     def setBackgroundColor(self, value): self.background_color = value
     def setLayoutParams(self, value): self.layout_params = value
     def setOnClickListener(self, value): self.listener = value
+    def setOnTouchListener(self, value): self.touch_listener = value
+    def getVisibility(self): return self.visibility
+    def getWidth(self): return getattr(self, 'width', 0)
+    def getHeight(self): return getattr(self, 'height', 0)
     def post(self, runnable):
         from android_utils import run_on_ui_thread
         return run_on_ui_thread(runnable)
@@ -40,6 +44,8 @@ class EditText(TextView):
     def setSelection(self, *args): self.selection = args
 
 class Button(TextView): pass
+class ButtonWithCounterView(Button):
+    def setSubtext(self, value): self.subtext = str(value)
 
 class LinearLayout(View):
     VERTICAL = 1
@@ -53,6 +59,26 @@ class LinearLayout(View):
     def getChildCount(self): return len(self.children)
 
 class FrameLayout(LinearLayout): pass
+
+class ViewGroup(FrameLayout):
+    class LayoutParams:
+        MATCH_PARENT = -1
+        WRAP_CONTENT = -2
+        def __init__(self, width, height): self.width,self.height = width,height
+
+class ScrollView(FrameLayout):
+    def setFillViewport(self, value): self.fill_viewport = bool(value)
+    def setVerticalScrollBarEnabled(self, value): self.vertical_scrollbar = bool(value)
+
+class MotionEvent:
+    ACTION_DOWN = 0
+    ACTION_UP = 1
+    ACTION_MOVE = 2
+    ACTION_CANCEL = 3
+
+class _Listener: pass
+View.OnClickListener = _Listener
+View.OnTouchListener = _Listener
 
 class Gravity:
     CENTER = 17
@@ -92,3 +118,24 @@ class NativeFragment:
     def getContext(self): return NativeContext()
     def showDialog(self, dialog): return dialog.show()
     def getResourceProvider(self): return None
+
+class ActionBar:
+    def __init__(self): self.title = ''
+    def setTitle(self, value): self.title = str(value)
+
+class AlertDialog:
+    class Builder:
+        def __init__(self, context=None, *args, **kwargs):
+            from ui.alert import AlertDialogBuilder
+            self._builder = AlertDialogBuilder(context)
+        def setTitle(self, value): self._builder.set_title(value);return self
+        def setMessage(self, value): self._builder.set_message(value);return self
+        def setPositiveButton(self, text, listener=None): self._builder.set_positive_button(text, listener);return self
+        def setNegativeButton(self, text, listener=None): self._builder.set_negative_button(text, listener);return self
+        def setNeutralButton(self, text, listener=None): self._builder.set_neutral_button(text, listener);return self
+        def setItems(self, values, listener=None): self._builder.set_items(values, listener);return self
+        def setCancelable(self, value): self._builder.set_cancelable(value);return self
+        def create(self): return self._builder
+        def show(self): return self._builder.show()
+
+BaseFragment = NativeFragment

@@ -22,20 +22,36 @@ _install_resources()
 _CONTEXT = contextvars.ContextVar('aftergram_plugin_context')
 _HOSTS = {}
 MAX_SOURCE = 2 * 1024 * 1024
-SUPPORTED = {'base_plugin', 'client_utils', 'android_utils', 'file_utils', 'ui', 'ui.settings', 'ui.bulletin', 'ui.alert', 'extera_utils', 'extera_utils.text_formatting', 'aftergram_android', 'aftergram_java', 'java', 'org.telegram.tgnet', 'org.telegram.tgnet.TLRPC', 'org.telegram.tgnet.tl'}
+SUPPORTED = {'base_plugin', 'client_utils', 'android_utils', 'file_utils', 'markdown_utils', 'ui', 'ui.settings', 'ui.bulletin', 'ui.alert', 'extera_utils', 'extera_utils.text_formatting', 'aftergram_android', 'aftergram_java', 'java', 'org.telegram.tgnet', 'org.telegram.tgnet.TLRPC', 'org.telegram.tgnet.tl'}
 VENDORED = {'requests', 'packaging', 'urllib3', 'idna', 'certifi', 'charset_normalizer', 'yaml'}
 VERSIONS = {'requests': '2.32.5', 'packaging': '25.0', 'urllib3': '2.5.0', 'idna': '3.11', 'certifi': '2025.10.5', 'charset-normalizer': '3.4.4', 'pyyaml': '6.0.3'}
 VENDORED.update({'mpmath','tinydb','bs4','soupsieve','typing_extensions','markdown','dateutil','six','pytz'})
 VERSIONS.update({'mpmath':'1.3.0','tinydb':'4.8.2','beautifulsoup4':'4.13.5','soupsieve':'2.8','typing-extensions':'4.15.0','markdown':'3.9','python-dateutil':'2.9.0.post0','six':'1.17.0','pytz':'2025.2'})
-ADAPTERS = {'org.telegram.messenger': ('aftergram_android', {'AndroidUtilities', 'UserConfig', 'MessagesController', 'ConnectionsManager', 'ApplicationLoader'}),
-            'java.lang': ('aftergram_java', {'String', 'Integer', 'Long', 'Object', 'Double', 'Boolean'}),
-            'android.widget': ('aftergram_ui', {'TextView','EditText','Button','LinearLayout','FrameLayout'}),
-            'android.view': ('aftergram_ui', {'View','Gravity'}),
+ADAPTERS = {'org.telegram.messenger': ('aftergram_android', {'AndroidUtilities', 'UserConfig', 'MessagesController', 'ConnectionsManager', 'ApplicationLoader', 'LocaleController', 'NotificationCenter', 'FileLoader', 'BuildVars', 'R', 'SendMessagesHelper', 'MessageObject', 'MediaController', 'ChatObject'}),
+            'java.lang': ('aftergram_java', {'String', 'Integer', 'Long', 'Object', 'Double', 'Float', 'Boolean', 'Math', 'Class'}),
+            'java': ('aftergram_java', {'dynamic_proxy'}),
+            'java.lang.reflect': ('aftergram_reflect', {'Array', 'Modifier'}),
+            'java.io': ('aftergram_java', {'File', 'ByteArrayInputStream', 'ByteArrayOutputStream', 'InputStream', 'OutputStream'}),
+            'java.util': ('aftergram_java', {'ArrayList', 'HashMap', 'HashSet', 'Date', 'UUID', 'Locale', 'Objects'}),
+            'android.widget': ('aftergram_ui', {'TextView','EditText','Button','LinearLayout','FrameLayout','ScrollView'}),
+            'android.view': ('aftergram_ui', {'View','ViewGroup','Gravity','MotionEvent'}),
             'android.text': ('aftergram_ui', {'InputType'}),
             'android.content': ('aftergram_intents', {'Intent','Context'}),
+            'android.content.res': ('aftergram_resources', {'Resources', 'ColorStateList'}),
+            'android.graphics': ('aftergram_graphics', {'Color', 'Typeface', 'Paint', 'Bitmap', 'Canvas', 'Rect', 'PorterDuff'}),
+            'android.graphics.drawable': ('aftergram_graphics', {'Drawable', 'ColorDrawable', 'GradientDrawable'}),
+            'android.media': ('aftergram_media', {'AudioManager', 'MediaPlayer'}),
+            'android.os': ('aftergram_os', {'Handler', 'Looper', 'Build', 'Bundle', 'SystemClock', 'Environment'}),
             'android.net': ('aftergram_intents', {'Uri'}),
-            'org.telegram.ui.Components': ('aftergram_ui', {'LayoutHelper'})}
-UNSUPPORTED_NAMES = {'hook_method', 'hook_all_methods', 'hook_all_constructors', 'find_class', 'Custom', 'java_subclass'}
+            'org.telegram.ui.Components': ('aftergram_ui', {'LayoutHelper'}),
+            'org.telegram.ui.ActionBar': ('aftergram_ui', {'ActionBar', 'AlertDialog', 'BaseFragment'}),
+            'org.telegram.ui': ('aftergram_ui', {'ChatActivity'}),
+            'org.telegram.ui.Stories.recorder': ('aftergram_ui', {'ButtonWithCounterView'}),
+            'com.exteragram.messenger.plugins': ('aftergram_extera', {'PluginsController'}),
+            'com.exteragram.messenger.plugins.ui': ('aftergram_extera', {'PluginSettingsActivity'}),
+            'com.exteragram.messenger.utils': ('aftergram_extera', {'AppUtils'}),
+            'hook_utils': ('aftergram_hooks', {'MethodHook', 'find_class', 'hook_all_methods', 'hook_all_constructors', 'set_private_field', 'get_private_field'})}
+UNSUPPORTED_NAMES = {'hook_all_methods', 'hook_all_constructors', 'Custom', 'java_subclass'}
 
 def current():
     try: return _CONTEXT.get()

@@ -21,8 +21,31 @@ public func updateDeletedMessageRetentionSettings(postbox: Postbox, enabled: Boo
     |> ignoreValues
 }
 
+public struct AfterGramEditedMessageHistorySettings: Codable, Equatable {
+    public var enabled: Bool
+    public static let defaultValue = AfterGramEditedMessageHistorySettings(enabled: true)
+}
+
+public let afterGramEditedMessageHistoryKey = applicationSpecificPreferencesKey(0x574742)
+
+public func afterGramEditedMessageHistorySettings(postbox: Postbox) -> Signal<AfterGramEditedMessageHistorySettings, NoError> {
+    return postbox.preferencesView(keys: [afterGramEditedMessageHistoryKey])
+    |> map { $0.values[afterGramEditedMessageHistoryKey]?.get(AfterGramEditedMessageHistorySettings.self) ?? .defaultValue }
+}
+
+public func updateAfterGramEditedMessageHistorySettings(postbox: Postbox, enabled: Bool) -> Signal<Never, NoError> {
+    return postbox.transaction { transaction -> Void in
+        transaction.setPreferencesEntry(key: afterGramEditedMessageHistoryKey, value: PreferencesEntry(AfterGramEditedMessageHistorySettings(enabled: enabled)))
+    }
+    |> ignoreValues
+}
+
 func retentionStoreMessage(_ message: Message, attributes: [MessageAttribute], media: [Media], groupingKey: Int64?) -> StoreMessage {
     return StoreMessage(id: message.id, customStableId: nil, globallyUniqueId: message.globallyUniqueId, groupingKey: groupingKey, threadId: message.threadId, timestamp: message.timestamp, flags: StoreMessageFlags(message.flags), tags: message.tags, globalTags: message.globalTags, localTags: message.localTags, forwardInfo: message.forwardInfo.flatMap(StoreMessageForwardInfo.init), authorId: message.author?.id, text: message.text, attributes: attributes, media: media)
+}
+
+func afterGramIsViewOnceMessage(_ message: Message) -> Bool {
+    return message.attributes.contains(where: { ($0 as? AutoclearTimeoutMessageAttribute)?.timeout == viewOnceTimeout })
 }
 
 /// Returns only IDs which still require deletion. Call before replaying remote deletes.
@@ -36,6 +59,11 @@ func retainRemotelyDeletedMessages(transaction: Transaction, mediaBox: MediaBox,
         guard id.namespace == Namespaces.Message.Cloud,
               id.peerId.namespace != Namespaces.Peer.SecretChat,
               let message = transaction.getMessage(id) else {
+            remove.append(id)
+            continue
+        }
+        // Respect Telegram's view-once contract; it is distinct from ordinary remote deletion.
+        if afterGramIsViewOnceMessage(message) {
             remove.append(id)
             continue
         }
@@ -142,6 +170,7 @@ public final class DeletedMessageMediaPrefetcher {
         Queue.mainQueue().async { [weak self] in
             guard let self, let account = self.account,
                   message.id.namespace == Namespaces.Message.Cloud else { return }
+            guard !afterGramIsViewOnceMessage(message) else { return }
             guard let enabled = self.enabled else {
                 self.initialMessages.append(message)
                 return

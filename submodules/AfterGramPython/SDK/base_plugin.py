@@ -42,6 +42,11 @@ class MenuItemData:
     condition: str = None
     priority: int = 0
 
+class MethodHook:
+    """Android/Xposed hook callback shape; method interception is skipped on iOS."""
+    def beforeHookedMethod(self, param): pass
+    def afterHookedMethod(self, param): pass
+
 class BasePlugin:
     def __init__(self):
         from aftergram_host import current
@@ -103,4 +108,5 @@ class BasePlugin:
     def getId(self): return self.id
     def getName(self): return self._host.registry[self.id]['name']
     def getVersion(self): return self._host.registry[self.id]['version']
-    def hook_method(self, *args, **kwargs): raise NotImplementedError('Xposed is not available on iOS')
+    def hook_method(self, *args, **kwargs): return None
+    def unhook_method(self, *args, **kwargs): return None

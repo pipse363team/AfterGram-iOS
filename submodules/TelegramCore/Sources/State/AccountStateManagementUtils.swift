@@ -4653,6 +4653,16 @@ func replayFinalState(
                     var updatedFlags = message.flags
                     var updatedLocalTags = message.localTags
                     var updatedAttributes = message.attributes
+                    let editHistoryEnabled = transaction.getPreferencesEntry(key: afterGramEditedMessageHistoryKey)?.get(AfterGramEditedMessageHistorySettings.self)?.enabled ?? AfterGramEditedMessageHistorySettings.defaultValue.enabled
+                    if editHistoryEnabled && previousMessage.text != message.text {
+                        let oldHistory = previousMessage.attributes.first(where: { $0 is AfterGramEditedMessageHistoryAttribute }) as? AfterGramEditedMessageHistoryAttribute
+                        let versions = (oldHistory?.versions ?? []) + [previousMessage.text]
+                        updatedAttributes.removeAll(where: { $0 is AfterGramEditedMessageHistoryAttribute })
+                        updatedAttributes.append(AfterGramEditedMessageHistoryAttribute(versions: versions))
+                    } else if let oldHistory = previousMessage.attributes.first(where: { $0 is AfterGramEditedMessageHistoryAttribute }) as? AfterGramEditedMessageHistoryAttribute,
+                              !updatedAttributes.contains(where: { $0 is AfterGramEditedMessageHistoryAttribute }) {
+                        updatedAttributes.append(oldHistory)
+                    }
                     if previousMessage.localTags.contains(.OutgoingLiveLocation) {
                         updatedLocalTags.insert(.OutgoingLiveLocation)
                     }

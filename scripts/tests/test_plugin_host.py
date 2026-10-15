@@ -122,6 +122,27 @@ class PluginHostTests(unittest.TestCase):
         report = self.call('inspect', path=str(self.source))['report']
         self.assertTrue(any('android.widget' in x for x in report['issues']))
         self.assertFalse(self.call('install', path=str(self.source))['installed'])
+    def test_android_plugin_portability_adapters_cover_common_source_imports(self):
+        source = plugin("""from android.graphics import Color
+from android.graphics.drawable import GradientDrawable
+from android.view import ViewGroup, MotionEvent
+from android.widget import ScrollView
+from android.os import Handler, Looper
+from java import dynamic_proxy
+from java.lang import Math, Float
+from java.lang.reflect import Array, Modifier
+from org.telegram.messenger import AndroidUtilities, SendMessagesHelper
+from hook_utils import find_class, get_private_field, set_private_field
+class TestPlugin(BasePlugin):
+ def on_plugin_load(self):
+  self.portable = [Color.WHITE, MotionEvent.ACTION_DOWN, Math.toIntExact(7), Float.TYPE, Modifier.PUBLIC]
+""")
+        self.source.write_text(source)
+        report = self.call('inspect', path=str(self.source))['report']
+        self.assertFalse(report['issues'], report['issues'])
+        self.assertGreaterEqual(len(report['changes']), 10)
+        self.install(source, adapt=True)
+        self.assertTrue(self.call('list')['plugins'][0]['enabled'])
     def test_cancel_and_default_rollback(self):
         source = plugin("class TestPlugin(BasePlugin):\n def on_plugin_load(self): self.add_on_send_message_hook()\n def on_send_message_hook(self, account, params):\n  if params.message == 'cancel': return HookResult(strategy=HookStrategy.CANCEL)\n  params.message = 'ignored'\n  return HookResult()\n")
         self.install(source)
