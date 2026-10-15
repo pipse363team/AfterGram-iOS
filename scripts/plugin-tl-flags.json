@@ -1,0 +1,7169 @@
+{
+  "source": "https://github.com/telegramdesktop/tdesktop/blob/d36272b193057a114ef3a9fe7f15a8f8b587c489/Telegram/SourceFiles/mtproto/scheme/api.tl",
+  "sha256": "3bc699f8b5d31262609720c0a6e88291d953ae12bb5132484db57207c72c25fd",
+  "constructors": {
+    "2105767386": {
+      "name": "inputMediaUploadedPhoto",
+      "fields": {
+        "spoiler": [
+          "flags",
+          2
+        ],
+        "live_photo": [
+          "flags",
+          3
+        ]
+      }
+    },
+    "3819914292": {
+      "name": "inputMediaPhoto",
+      "fields": {
+        "spoiler": [
+          "flags",
+          1
+        ],
+        "live_photo": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "58495792": {
+      "name": "inputMediaUploadedDocument",
+      "fields": {
+        "nosound_video": [
+          "flags",
+          3
+        ],
+        "force_file": [
+          "flags",
+          4
+        ],
+        "spoiler": [
+          "flags",
+          5
+        ]
+      }
+    },
+    "2826320565": {
+      "name": "inputMediaDocument",
+      "fields": {
+        "spoiler": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "3854302746": {
+      "name": "inputMediaPhotoExternal",
+      "fields": {
+        "spoiler": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "2006319353": {
+      "name": "inputMediaDocumentExternal",
+      "fields": {
+        "spoiler": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "2535434307": {
+      "name": "inputMediaGeoLive",
+      "fields": {
+        "stopped": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "3256584265": {
+      "name": "inputMediaWebPage",
+      "fields": {
+        "force_large_media": [
+          "flags",
+          0
+        ],
+        "force_small_media": [
+          "flags",
+          1
+        ],
+        "optional": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "925204121": {
+      "name": "inputPeerPhotoFileLocation",
+      "fields": {
+        "big": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "2981678211": {
+      "name": "user",
+      "fields": {
+        "self": [
+          "flags",
+          10
+        ],
+        "contact": [
+          "flags",
+          11
+        ],
+        "mutual_contact": [
+          "flags",
+          12
+        ],
+        "deleted": [
+          "flags",
+          13
+        ],
+        "bot": [
+          "flags",
+          14
+        ],
+        "bot_chat_history": [
+          "flags",
+          15
+        ],
+        "bot_nochats": [
+          "flags",
+          16
+        ],
+        "verified": [
+          "flags",
+          17
+        ],
+        "restricted": [
+          "flags",
+          18
+        ],
+        "min": [
+          "flags",
+          20
+        ],
+        "bot_inline_geo": [
+          "flags",
+          21
+        ],
+        "support": [
+          "flags",
+          23
+        ],
+        "scam": [
+          "flags",
+          24
+        ],
+        "apply_min_photo": [
+          "flags",
+          25
+        ],
+        "fake": [
+          "flags",
+          26
+        ],
+        "bot_attach_menu": [
+          "flags",
+          27
+        ],
+        "premium": [
+          "flags",
+          28
+        ],
+        "attach_menu_enabled": [
+          "flags",
+          29
+        ],
+        "bot_can_edit": [
+          "flags2",
+          1
+        ],
+        "close_friend": [
+          "flags2",
+          2
+        ],
+        "stories_hidden": [
+          "flags2",
+          3
+        ],
+        "stories_unavailable": [
+          "flags2",
+          4
+        ],
+        "contact_require_premium": [
+          "flags2",
+          10
+        ],
+        "bot_business": [
+          "flags2",
+          11
+        ],
+        "bot_has_main_app": [
+          "flags2",
+          13
+        ],
+        "bot_forum_view": [
+          "flags2",
+          16
+        ],
+        "bot_forum_can_manage_topics": [
+          "flags2",
+          17
+        ],
+        "bot_can_manage_bots": [
+          "flags2",
+          18
+        ],
+        "bot_guestchat": [
+          "flags2",
+          19
+        ],
+        "bot_guard": [
+          "flags2",
+          20
+        ]
+      }
+    },
+    "2194798342": {
+      "name": "userProfilePhoto",
+      "fields": {
+        "has_video": [
+          "flags",
+          0
+        ],
+        "personal": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "2065268168": {
+      "name": "userStatusRecently",
+      "fields": {
+        "by_me": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "1410997530": {
+      "name": "userStatusLastWeek",
+      "fields": {
+        "by_me": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "1703516023": {
+      "name": "userStatusLastMonth",
+      "fields": {
+        "by_me": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "1103884886": {
+      "name": "chat",
+      "fields": {
+        "creator": [
+          "flags",
+          0
+        ],
+        "left": [
+          "flags",
+          2
+        ],
+        "deactivated": [
+          "flags",
+          5
+        ],
+        "call_active": [
+          "flags",
+          23
+        ],
+        "call_not_empty": [
+          "flags",
+          24
+        ],
+        "noforwards": [
+          "flags",
+          25
+        ]
+      }
+    },
+    "3567203526": {
+      "name": "channel",
+      "fields": {
+        "creator": [
+          "flags",
+          0
+        ],
+        "left": [
+          "flags",
+          2
+        ],
+        "broadcast": [
+          "flags",
+          5
+        ],
+        "verified": [
+          "flags",
+          7
+        ],
+        "megagroup": [
+          "flags",
+          8
+        ],
+        "restricted": [
+          "flags",
+          9
+        ],
+        "signatures": [
+          "flags",
+          11
+        ],
+        "min": [
+          "flags",
+          12
+        ],
+        "scam": [
+          "flags",
+          19
+        ],
+        "has_link": [
+          "flags",
+          20
+        ],
+        "has_geo": [
+          "flags",
+          21
+        ],
+        "slowmode_enabled": [
+          "flags",
+          22
+        ],
+        "call_active": [
+          "flags",
+          23
+        ],
+        "call_not_empty": [
+          "flags",
+          24
+        ],
+        "fake": [
+          "flags",
+          25
+        ],
+        "gigagroup": [
+          "flags",
+          26
+        ],
+        "noforwards": [
+          "flags",
+          27
+        ],
+        "join_to_send": [
+          "flags",
+          28
+        ],
+        "join_request": [
+          "flags",
+          29
+        ],
+        "forum": [
+          "flags",
+          30
+        ],
+        "stories_hidden": [
+          "flags2",
+          1
+        ],
+        "stories_hidden_min": [
+          "flags2",
+          2
+        ],
+        "stories_unavailable": [
+          "flags2",
+          3
+        ],
+        "signature_profiles": [
+          "flags2",
+          12
+        ],
+        "autotranslation": [
+          "flags2",
+          15
+        ],
+        "broadcast_messages_allowed": [
+          "flags2",
+          16
+        ],
+        "monoforum": [
+          "flags2",
+          17
+        ],
+        "forum_tabs": [
+          "flags2",
+          19
+        ]
+      }
+    },
+    "399807445": {
+      "name": "channelForbidden",
+      "fields": {
+        "broadcast": [
+          "flags",
+          5
+        ],
+        "megagroup": [
+          "flags",
+          8
+        ],
+        "monoforum": [
+          "flags",
+          10
+        ]
+      }
+    },
+    "1710221652": {
+      "name": "community",
+      "fields": {
+        "creator": [
+          "flags",
+          0
+        ],
+        "left": [
+          "flags",
+          2
+        ],
+        "min": [
+          "flags",
+          12
+        ],
+        "collapsed_in_dialogs": [
+          "flags2",
+          20
+        ]
+      }
+    },
+    "640893467": {
+      "name": "chatFull",
+      "fields": {
+        "can_set_username": [
+          "flags",
+          7
+        ],
+        "has_scheduled": [
+          "flags",
+          8
+        ],
+        "translations_disabled": [
+          "flags",
+          19
+        ],
+        "has_welcome_messages": [
+          "flags",
+          21
+        ]
+      }
+    },
+    "2689502522": {
+      "name": "channelFull",
+      "fields": {
+        "can_view_participants": [
+          "flags",
+          3
+        ],
+        "can_set_username": [
+          "flags",
+          6
+        ],
+        "can_set_stickers": [
+          "flags",
+          7
+        ],
+        "hidden_prehistory": [
+          "flags",
+          10
+        ],
+        "can_set_location": [
+          "flags",
+          16
+        ],
+        "has_scheduled": [
+          "flags",
+          19
+        ],
+        "can_view_stats": [
+          "flags",
+          20
+        ],
+        "blocked": [
+          "flags",
+          22
+        ],
+        "can_delete_channel": [
+          "flags2",
+          0
+        ],
+        "antispam": [
+          "flags2",
+          1
+        ],
+        "participants_hidden": [
+          "flags2",
+          2
+        ],
+        "translations_disabled": [
+          "flags2",
+          3
+        ],
+        "stories_pinned_available": [
+          "flags2",
+          5
+        ],
+        "view_forum_as_messages": [
+          "flags2",
+          6
+        ],
+        "restricted_sponsored": [
+          "flags2",
+          11
+        ],
+        "can_view_revenue": [
+          "flags2",
+          12
+        ],
+        "paid_media_allowed": [
+          "flags2",
+          14
+        ],
+        "can_view_stars_revenue": [
+          "flags2",
+          15
+        ],
+        "paid_reactions_available": [
+          "flags2",
+          16
+        ],
+        "stargifts_available": [
+          "flags2",
+          19
+        ],
+        "paid_messages_available": [
+          "flags2",
+          20
+        ],
+        "has_welcome_messages": [
+          "flags2",
+          24
+        ]
+      }
+    },
+    "476978193": {
+      "name": "chatPhoto",
+      "fields": {
+        "has_video": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "1979759059": {
+      "name": "message",
+      "fields": {
+        "out": [
+          "flags",
+          1
+        ],
+        "mentioned": [
+          "flags",
+          4
+        ],
+        "media_unread": [
+          "flags",
+          5
+        ],
+        "silent": [
+          "flags",
+          13
+        ],
+        "post": [
+          "flags",
+          14
+        ],
+        "from_scheduled": [
+          "flags",
+          18
+        ],
+        "legacy": [
+          "flags",
+          19
+        ],
+        "edit_hide": [
+          "flags",
+          21
+        ],
+        "pinned": [
+          "flags",
+          24
+        ],
+        "noforwards": [
+          "flags",
+          26
+        ],
+        "invert_media": [
+          "flags",
+          27
+        ],
+        "offline": [
+          "flags2",
+          1
+        ],
+        "video_processing_pending": [
+          "flags2",
+          4
+        ],
+        "paid_suggested_post_stars": [
+          "flags2",
+          8
+        ],
+        "paid_suggested_post_ton": [
+          "flags2",
+          9
+        ]
+      }
+    },
+    "2055212554": {
+      "name": "messageService",
+      "fields": {
+        "out": [
+          "flags",
+          1
+        ],
+        "mentioned": [
+          "flags",
+          4
+        ],
+        "media_unread": [
+          "flags",
+          5
+        ],
+        "reactions_are_possible": [
+          "flags",
+          9
+        ],
+        "silent": [
+          "flags",
+          13
+        ],
+        "post": [
+          "flags",
+          14
+        ],
+        "legacy": [
+          "flags",
+          19
+        ]
+      }
+    },
+    "3793152867": {
+      "name": "messageMediaPhoto",
+      "fields": {
+        "spoiler": [
+          "flags",
+          3
+        ],
+        "live_photo": [
+          "flags",
+          4
+        ]
+      }
+    },
+    "1389939929": {
+      "name": "messageMediaDocument",
+      "fields": {
+        "nopremium": [
+          "flags",
+          3
+        ],
+        "spoiler": [
+          "flags",
+          4
+        ],
+        "video": [
+          "flags",
+          6
+        ],
+        "round": [
+          "flags",
+          7
+        ],
+        "voice": [
+          "flags",
+          8
+        ]
+      }
+    },
+    "3723562043": {
+      "name": "messageMediaWebPage",
+      "fields": {
+        "force_large_media": [
+          "flags",
+          0
+        ],
+        "force_small_media": [
+          "flags",
+          1
+        ],
+        "manual": [
+          "flags",
+          3
+        ],
+        "safe": [
+          "flags",
+          4
+        ]
+      }
+    },
+    "4138027219": {
+      "name": "messageMediaInvoice",
+      "fields": {
+        "shipping_address_requested": [
+          "flags",
+          1
+        ],
+        "test": [
+          "flags",
+          3
+        ]
+      }
+    },
+    "1758159491": {
+      "name": "messageMediaStory",
+      "fields": {
+        "via_mention": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "2852600811": {
+      "name": "messageMediaGiveaway",
+      "fields": {
+        "only_new_subscribers": [
+          "flags",
+          0
+        ],
+        "winners_are_visible": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "3467263649": {
+      "name": "messageMediaGiveawayResults",
+      "fields": {
+        "only_new_subscribers": [
+          "flags",
+          0
+        ],
+        "refunded": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "3395070857": {
+      "name": "messageMediaVideoStream",
+      "fields": {
+        "rtmp_stream": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "4288679116": {
+      "name": "messageActionPaymentSentMe",
+      "fields": {
+        "recurring_init": [
+          "flags",
+          2
+        ],
+        "recurring_used": [
+          "flags",
+          3
+        ]
+      }
+    },
+    "3324293486": {
+      "name": "messageActionPaymentSent",
+      "fields": {
+        "recurring_init": [
+          "flags",
+          2
+        ],
+        "recurring_used": [
+          "flags",
+          3
+        ]
+      }
+    },
+    "2162236031": {
+      "name": "messageActionPhoneCall",
+      "fields": {
+        "video": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "3306608249": {
+      "name": "messageActionBotAllowed",
+      "fields": {
+        "attach_menu": [
+          "flags",
+          1
+        ],
+        "from_request": [
+          "flags",
+          3
+        ]
+      }
+    },
+    "228168278": {
+      "name": "messageActionTopicCreate",
+      "fields": {
+        "title_missing": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "1348510708": {
+      "name": "messageActionSetChatWallPaper",
+      "fields": {
+        "same": [
+          "flags",
+          0
+        ],
+        "for_both": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "834962247": {
+      "name": "messageActionGiftCode",
+      "fields": {
+        "via_giveaway": [
+          "flags",
+          0
+        ],
+        "unclaimed": [
+          "flags",
+          5
+        ]
+      }
+    },
+    "2279797077": {
+      "name": "messageActionGiveawayResults",
+      "fields": {
+        "stars": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "2953594786": {
+      "name": "messageActionPrizeStars",
+      "fields": {
+        "unclaimed": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "3928764883": {
+      "name": "messageActionStarGift",
+      "fields": {
+        "name_hidden": [
+          "flags",
+          0
+        ],
+        "saved": [
+          "flags",
+          2
+        ],
+        "converted": [
+          "flags",
+          3
+        ],
+        "upgraded": [
+          "flags",
+          5
+        ],
+        "refunded": [
+          "flags",
+          9
+        ],
+        "can_upgrade": [
+          "flags",
+          10
+        ],
+        "prepaid_upgrade": [
+          "flags",
+          13
+        ],
+        "upgrade_separate": [
+          "flags",
+          16
+        ],
+        "auction_acquired": [
+          "flags",
+          17
+        ]
+      }
+    },
+    "2115768711": {
+      "name": "messageActionStarGiftUnique",
+      "fields": {
+        "upgrade": [
+          "flags",
+          0
+        ],
+        "transferred": [
+          "flags",
+          1
+        ],
+        "saved": [
+          "flags",
+          2
+        ],
+        "refunded": [
+          "flags",
+          5
+        ],
+        "prepaid_upgrade": [
+          "flags",
+          11
+        ],
+        "assigned": [
+          "flags",
+          13
+        ],
+        "from_offer": [
+          "flags",
+          14
+        ],
+        "craft": [
+          "flags",
+          16
+        ],
+        "name_hidden": [
+          "flags",
+          17
+        ]
+      }
+    },
+    "2226685304": {
+      "name": "messageActionPaidMessagesPrice",
+      "fields": {
+        "broadcast_messages_allowed": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "805187450": {
+      "name": "messageActionConferenceCall",
+      "fields": {
+        "missed": [
+          "flags",
+          0
+        ],
+        "active": [
+          "flags",
+          1
+        ],
+        "video": [
+          "flags",
+          4
+        ]
+      }
+    },
+    "4000978326": {
+      "name": "messageActionSuggestedPostApproval",
+      "fields": {
+        "rejected": [
+          "flags",
+          0
+        ],
+        "balance_too_low": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "1777932024": {
+      "name": "messageActionSuggestedPostRefund",
+      "fields": {
+        "payer_initiated": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "2000845012": {
+      "name": "messageActionStarGiftPurchaseOffer",
+      "fields": {
+        "accepted": [
+          "flags",
+          0
+        ],
+        "declined": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "1940760427": {
+      "name": "messageActionStarGiftPurchaseOfferDeclined",
+      "fields": {
+        "expired": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "1042781114": {
+      "name": "messageActionNoForwardsRequest",
+      "fields": {
+        "expired": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "2468997683": {
+      "name": "messageActionGramTransfer",
+      "fields": {
+        "comment_encrypted": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "1773716671": {
+      "name": "messageActionWalletTonConnectRequest",
+      "fields": {
+        "accepted": [
+          "flags",
+          2
+        ],
+        "declined": [
+          "flags",
+          3
+        ]
+      }
+    },
+    "4236900339": {
+      "name": "dialog",
+      "fields": {
+        "pinned": [
+          "flags",
+          2
+        ],
+        "unread_mark": [
+          "flags",
+          3
+        ],
+        "view_forum_as_messages": [
+          "flags",
+          6
+        ]
+      }
+    },
+    "1908216652": {
+      "name": "dialogFolder",
+      "fields": {
+        "pinned": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "4153018739": {
+      "name": "dialogCommunity",
+      "fields": {
+        "pinned": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "4212750949": {
+      "name": "photo",
+      "fields": {
+        "has_stickers": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "782418132": {
+      "name": "auth.authorization",
+      "fields": {
+        "setup_password_required": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "4101456375": {
+      "name": "peerSettings",
+      "fields": {
+        "report_spam": [
+          "flags",
+          0
+        ],
+        "add_contact": [
+          "flags",
+          1
+        ],
+        "block_contact": [
+          "flags",
+          2
+        ],
+        "share_contact": [
+          "flags",
+          3
+        ],
+        "need_contacts_exception": [
+          "flags",
+          4
+        ],
+        "report_geo": [
+          "flags",
+          5
+        ],
+        "autoarchived": [
+          "flags",
+          7
+        ],
+        "invite_members": [
+          "flags",
+          8
+        ],
+        "request_chat_broadcast": [
+          "flags",
+          10
+        ],
+        "business_bot_paused": [
+          "flags",
+          11
+        ],
+        "business_bot_can_reply": [
+          "flags",
+          12
+        ]
+      }
+    },
+    "2755118061": {
+      "name": "wallPaper",
+      "fields": {
+        "creator": [
+          "flags",
+          0
+        ],
+        "default": [
+          "flags",
+          1
+        ],
+        "pattern": [
+          "flags",
+          3
+        ],
+        "dark": [
+          "flags",
+          4
+        ]
+      }
+    },
+    "3766501654": {
+      "name": "wallPaperNoFile",
+      "fields": {
+        "default": [
+          "flags",
+          1
+        ],
+        "dark": [
+          "flags",
+          4
+        ]
+      }
+    },
+    "114026053": {
+      "name": "userFull",
+      "fields": {
+        "blocked": [
+          "flags",
+          0
+        ],
+        "phone_calls_available": [
+          "flags",
+          4
+        ],
+        "phone_calls_private": [
+          "flags",
+          5
+        ],
+        "can_pin_message": [
+          "flags",
+          7
+        ],
+        "has_scheduled": [
+          "flags",
+          12
+        ],
+        "video_calls_available": [
+          "flags",
+          13
+        ],
+        "voice_messages_forbidden": [
+          "flags",
+          20
+        ],
+        "translations_disabled": [
+          "flags",
+          23
+        ],
+        "stories_pinned_available": [
+          "flags",
+          26
+        ],
+        "blocked_my_stories_from": [
+          "flags",
+          27
+        ],
+        "wallpaper_overridden": [
+          "flags",
+          28
+        ],
+        "contact_require_premium": [
+          "flags",
+          29
+        ],
+        "read_dates_private": [
+          "flags",
+          30
+        ],
+        "sponsored_enabled": [
+          "flags2",
+          7
+        ],
+        "can_view_revenue": [
+          "flags2",
+          9
+        ],
+        "bot_can_manage_emoji_status": [
+          "flags2",
+          10
+        ],
+        "display_gifts_button": [
+          "flags2",
+          16
+        ],
+        "noforwards_my_enabled": [
+          "flags2",
+          23
+        ],
+        "noforwards_peer_enabled": [
+          "flags2",
+          24
+        ],
+        "unofficial_security_risk": [
+          "flags2",
+          26
+        ]
+      }
+    },
+    "1595959062": {
+      "name": "messages.messagesSlice",
+      "fields": {
+        "inexact": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "3346446926": {
+      "name": "messages.channelMessages",
+      "fields": {
+        "inexact": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "2160695144": {
+      "name": "inputMessagesFilterPhoneCalls",
+      "fields": {
+        "missed": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "2303831023": {
+      "name": "updateNewAuthorization",
+      "fields": {
+        "unconfirmed": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "3957614617": {
+      "name": "updateServiceNotification",
+      "fields": {
+        "popup": [
+          "flags",
+          0
+        ],
+        "invert_media": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "196268545": {
+      "name": "updateStickerSetsOrder",
+      "fields": {
+        "masks": [
+          "flags",
+          0
+        ],
+        "emojis": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "834816008": {
+      "name": "updateStickerSets",
+      "fields": {
+        "masks": [
+          "flags",
+          0
+        ],
+        "emojis": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "1852826908": {
+      "name": "updateDialogPinned",
+      "fields": {
+        "pinned": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "3059282494": {
+      "name": "updateDialogUnreadMark",
+      "fields": {
+        "unread": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "3957356370": {
+      "name": "updatePeerBlocked",
+      "fields": {
+        "blocked": [
+          "flags",
+          0
+        ],
+        "blocked_my_stories_from": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "3984976565": {
+      "name": "updatePinnedMessages",
+      "fields": {
+        "pinned": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "1538885128": {
+      "name": "updatePinnedChannelMessages",
+      "fields": {
+        "pinned": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "2636256992": {
+      "name": "updateGroupCall",
+      "fields": {
+        "live_story": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "2556246715": {
+      "name": "updateChannelParticipant",
+      "fields": {
+        "via_chatlist": [
+          "flags",
+          3
+        ]
+      }
+    },
+    "192428418": {
+      "name": "updateGroupCallConnection",
+      "fields": {
+        "presentation": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "8703322": {
+      "name": "updateTranscribedAudio",
+      "fields": {
+        "pending": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "2264715141": {
+      "name": "updateMoveStickerSetToTop",
+      "fields": {
+        "masks": [
+          "flags",
+          0
+        ],
+        "emojis": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "2923368477": {
+      "name": "updatePeerWallpaper",
+      "fields": {
+        "wallpaper_overridden": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "2930744948": {
+      "name": "updateSavedDialogPinned",
+      "fields": {
+        "pinned": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "2676042504": {
+      "name": "updateMonoForumNoPaidException",
+      "fields": {
+        "exception": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "1748708434": {
+      "name": "updatePinnedForumTopic",
+      "fields": {
+        "pinned": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "2988475302": {
+      "name": "updateNewBotConnection",
+      "fields": {
+        "confirmed": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "3281660638": {
+      "name": "updateWebBrowserSettings",
+      "fields": {
+        "open_external_browser": [
+          "flags",
+          0
+        ],
+        "display_close_button": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "335872721": {
+      "name": "updateWebBrowserException",
+      "fields": {
+        "delete": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "1812827683": {
+      "name": "updateBotStarsSubscription",
+      "fields": {
+        "canceled": [
+          "flags",
+          0
+        ],
+        "payment_failed": [
+          "flags",
+          1
+        ],
+        "restored": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "2973977930": {
+      "name": "updateSentWalletTransaction",
+      "fields": {
+        "gasless": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "2829982892": {
+      "name": "updateWalletGaslessInfo",
+      "fields": {
+        "available": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "826001400": {
+      "name": "updateShortMessage",
+      "fields": {
+        "out": [
+          "flags",
+          1
+        ],
+        "mentioned": [
+          "flags",
+          4
+        ],
+        "media_unread": [
+          "flags",
+          5
+        ],
+        "silent": [
+          "flags",
+          13
+        ]
+      }
+    },
+    "1299050149": {
+      "name": "updateShortChatMessage",
+      "fields": {
+        "out": [
+          "flags",
+          1
+        ],
+        "mentioned": [
+          "flags",
+          4
+        ],
+        "media_unread": [
+          "flags",
+          5
+        ],
+        "silent": [
+          "flags",
+          13
+        ]
+      }
+    },
+    "2417352961": {
+      "name": "updateShortSentMessage",
+      "fields": {
+        "out": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "414687501": {
+      "name": "dcOption",
+      "fields": {
+        "ipv6": [
+          "flags",
+          0
+        ],
+        "media_only": [
+          "flags",
+          1
+        ],
+        "tcpo_only": [
+          "flags",
+          2
+        ],
+        "cdn": [
+          "flags",
+          3
+        ],
+        "static": [
+          "flags",
+          4
+        ],
+        "this_port_only": [
+          "flags",
+          5
+        ]
+      }
+    },
+    "3424265246": {
+      "name": "config",
+      "fields": {
+        "default_p2p_contacts": [
+          "flags",
+          3
+        ],
+        "preload_featured_stickers": [
+          "flags",
+          4
+        ],
+        "revoke_pm_inbox": [
+          "flags",
+          6
+        ],
+        "blocked_mode": [
+          "flags",
+          8
+        ],
+        "force_try_ipv6": [
+          "flags",
+          14
+        ]
+      }
+    },
+    "3434860080": {
+      "name": "help.appUpdate",
+      "fields": {
+        "can_not_skip": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "505183301": {
+      "name": "encryptedChatDiscarded",
+      "fields": {
+        "history_deleted": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "909162586": {
+      "name": "sendMessageTextDraftAction",
+      "fields": {
+        "can_stop": [
+          "flags",
+          0
+        ],
+        "keep_on_stop": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "2839005118": {
+      "name": "inputSendMessageRichMessageDraftAction",
+      "fields": {
+        "can_stop": [
+          "flags",
+          0
+        ],
+        "keep_on_stop": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "1381386387": {
+      "name": "sendMessageRichMessageDraftAction",
+      "fields": {
+        "can_stop": [
+          "flags",
+          0
+        ],
+        "keep_on_stop": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "1662637586": {
+      "name": "documentAttributeSticker",
+      "fields": {
+        "mask": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "1137015880": {
+      "name": "documentAttributeVideo",
+      "fields": {
+        "round_message": [
+          "flags",
+          0
+        ],
+        "supports_streaming": [
+          "flags",
+          1
+        ],
+        "nosound": [
+          "flags",
+          3
+        ]
+      }
+    },
+    "2555574726": {
+      "name": "documentAttributeAudio",
+      "fields": {
+        "voice": [
+          "flags",
+          10
+        ]
+      }
+    },
+    "4245985433": {
+      "name": "documentAttributeCustomEmoji",
+      "fields": {
+        "free": [
+          "flags",
+          0
+        ],
+        "text_color": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "3902555570": {
+      "name": "webPage",
+      "fields": {
+        "has_large_media": [
+          "flags",
+          13
+        ],
+        "video_cover_photo": [
+          "flags",
+          14
+        ]
+      }
+    },
+    "2902578717": {
+      "name": "authorization",
+      "fields": {
+        "current": [
+          "flags",
+          0
+        ],
+        "official_app": [
+          "flags",
+          1
+        ],
+        "password_pending": [
+          "flags",
+          2
+        ],
+        "encrypted_requests_disabled": [
+          "flags",
+          3
+        ],
+        "call_requests_disabled": [
+          "flags",
+          4
+        ],
+        "unconfirmed": [
+          "flags",
+          5
+        ]
+      }
+    },
+    "2507886843": {
+      "name": "account.password",
+      "fields": {
+        "has_recovery": [
+          "flags",
+          0
+        ],
+        "has_secure_values": [
+          "flags",
+          1
+        ],
+        "has_password": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "2720841110": {
+      "name": "chatInviteExported",
+      "fields": {
+        "revoked": [
+          "flags",
+          0
+        ],
+        "permanent": [
+          "flags",
+          5
+        ],
+        "request_needed": [
+          "flags",
+          6
+        ]
+      }
+    },
+    "1553807106": {
+      "name": "chatInvite",
+      "fields": {
+        "channel": [
+          "flags",
+          0
+        ],
+        "broadcast": [
+          "flags",
+          1
+        ],
+        "public": [
+          "flags",
+          2
+        ],
+        "megagroup": [
+          "flags",
+          3
+        ],
+        "request_needed": [
+          "flags",
+          6
+        ],
+        "verified": [
+          "flags",
+          7
+        ],
+        "scam": [
+          "flags",
+          8
+        ],
+        "fake": [
+          "flags",
+          9
+        ],
+        "can_refulfill_subscription": [
+          "flags",
+          11
+        ]
+      }
+    },
+    "768691932": {
+      "name": "stickerSet",
+      "fields": {
+        "archived": [
+          "flags",
+          1
+        ],
+        "official": [
+          "flags",
+          2
+        ],
+        "masks": [
+          "flags",
+          3
+        ],
+        "emojis": [
+          "flags",
+          7
+        ],
+        "text_color": [
+          "flags",
+          9
+        ],
+        "channel_emoji_status": [
+          "flags",
+          10
+        ],
+        "creator": [
+          "flags",
+          11
+        ]
+      }
+    },
+    "2555565778": {
+      "name": "botCommand",
+      "fields": {
+        "ephemeral": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "1300890265": {
+      "name": "botInfo",
+      "fields": {
+        "has_preview_medias": [
+          "flags",
+          6
+        ]
+      }
+    },
+    "2688441221": {
+      "name": "replyKeyboardHide",
+      "fields": {
+        "selective": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "2259946248": {
+      "name": "replyKeyboardForceReply",
+      "fields": {
+        "single_use": [
+          "flags",
+          1
+        ],
+        "selective": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "2245892561": {
+      "name": "replyKeyboardMarkup",
+      "fields": {
+        "resize": [
+          "flags",
+          0
+        ],
+        "single_use": [
+          "flags",
+          1
+        ],
+        "selective": [
+          "flags",
+          2
+        ],
+        "persistent": [
+          "flags",
+          4
+        ],
+        "force_reply": [
+          "flags",
+          5
+        ]
+      }
+    },
+    "2997966704": {
+      "name": "replyInlineMarkup",
+      "fields": {
+        "force_reply": [
+          "flags",
+          5
+        ]
+      }
+    },
+    "4056722092": {
+      "name": "messageEntityBlockquote",
+      "fields": {
+        "collapsed": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "2420819911": {
+      "name": "messageEntityFormattedDate",
+      "fields": {
+        "relative": [
+          "flags",
+          0
+        ],
+        "short_time": [
+          "flags",
+          1
+        ],
+        "long_time": [
+          "flags",
+          2
+        ],
+        "short_date": [
+          "flags",
+          3
+        ],
+        "long_date": [
+          "flags",
+          4
+        ],
+        "day_of_week": [
+          "flags",
+          5
+        ]
+      }
+    },
+    "1041346555": {
+      "name": "updates.channelDifferenceEmpty",
+      "fields": {
+        "final": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "2763835134": {
+      "name": "updates.channelDifferenceTooLong",
+      "fields": {
+        "final": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "543450958": {
+      "name": "updates.channelDifference",
+      "fields": {
+        "final": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "3447183703": {
+      "name": "channelMessagesFilter",
+      "fields": {
+        "exclude_new_messages": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "2840037914": {
+      "name": "channelParticipantSelf",
+      "fields": {
+        "via_request": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "885242707": {
+      "name": "channelParticipantAdmin",
+      "fields": {
+        "can_edit": [
+          "flags",
+          0
+        ],
+        "self": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "3589320081": {
+      "name": "channelParticipantBanned",
+      "fields": {
+        "left": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "2013922064": {
+      "name": "help.termsOfService",
+      "fields": {
+        "popup": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "864077702": {
+      "name": "inputBotInlineMessageMediaAuto",
+      "fields": {
+        "invert_media": [
+          "flags",
+          3
+        ]
+      }
+    },
+    "1036876423": {
+      "name": "inputBotInlineMessageText",
+      "fields": {
+        "no_webpage": [
+          "flags",
+          0
+        ],
+        "invert_media": [
+          "flags",
+          3
+        ]
+      }
+    },
+    "3185362192": {
+      "name": "inputBotInlineMessageMediaWebPage",
+      "fields": {
+        "invert_media": [
+          "flags",
+          3
+        ],
+        "force_large_media": [
+          "flags",
+          4
+        ],
+        "force_small_media": [
+          "flags",
+          5
+        ],
+        "optional": [
+          "flags",
+          6
+        ]
+      }
+    },
+    "1984755728": {
+      "name": "botInlineMessageMediaAuto",
+      "fields": {
+        "invert_media": [
+          "flags",
+          3
+        ]
+      }
+    },
+    "2357159394": {
+      "name": "botInlineMessageText",
+      "fields": {
+        "no_webpage": [
+          "flags",
+          0
+        ],
+        "invert_media": [
+          "flags",
+          3
+        ]
+      }
+    },
+    "894081801": {
+      "name": "botInlineMessageMediaInvoice",
+      "fields": {
+        "shipping_address_requested": [
+          "flags",
+          1
+        ],
+        "test": [
+          "flags",
+          3
+        ]
+      }
+    },
+    "2157631910": {
+      "name": "botInlineMessageMediaWebPage",
+      "fields": {
+        "invert_media": [
+          "flags",
+          3
+        ],
+        "force_large_media": [
+          "flags",
+          4
+        ],
+        "force_small_media": [
+          "flags",
+          5
+        ],
+        "manual": [
+          "flags",
+          7
+        ],
+        "safe": [
+          "flags",
+          8
+        ]
+      }
+    },
+    "3760321270": {
+      "name": "messages.botResults",
+      "fields": {
+        "gallery": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "1313731771": {
+      "name": "messageFwdHeader",
+      "fields": {
+        "imported": [
+          "flags",
+          7
+        ],
+        "saved_out": [
+          "flags",
+          11
+        ]
+      }
+    },
+    "4098946459": {
+      "name": "auth.sentCodeTypeEmailCode",
+      "fields": {
+        "apple_signin_allowed": [
+          "flags",
+          0
+        ],
+        "google_signin_allowed": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "2773032426": {
+      "name": "auth.sentCodeTypeSetUpEmailRequired",
+      "fields": {
+        "apple_signin_allowed": [
+          "flags",
+          0
+        ],
+        "google_signin_allowed": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "911761060": {
+      "name": "messages.botCallbackAnswer",
+      "fields": {
+        "alert": [
+          "flags",
+          1
+        ],
+        "has_url": [
+          "flags",
+          3
+        ],
+        "native_ui": [
+          "flags",
+          4
+        ]
+      }
+    },
+    "649453030": {
+      "name": "messages.messageEditData",
+      "fields": {
+        "caption": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "1627271828": {
+      "name": "draftMessage",
+      "fields": {
+        "no_webpage": [
+          "flags",
+          1
+        ],
+        "invert_media": [
+          "flags",
+          6
+        ]
+      }
+    },
+    "3191351558": {
+      "name": "messages.featuredStickers",
+      "fields": {
+        "premium": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "2780061227": {
+      "name": "textDate",
+      "fields": {
+        "relative": [
+          "flags",
+          0
+        ],
+        "short_time": [
+          "flags",
+          1
+        ],
+        "long_time": [
+          "flags",
+          2
+        ],
+        "short_date": [
+          "flags",
+          3
+        ],
+        "long_date": [
+          "flags",
+          4
+        ],
+        "day_of_week": [
+          "flags",
+          5
+        ]
+      }
+    },
+    "1724999435": {
+      "name": "pageBlockBlockquote",
+      "fields": {
+        "collapsed": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "391759200": {
+      "name": "pageBlockPhoto",
+      "fields": {
+        "spoiler": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "2089805750": {
+      "name": "pageBlockVideo",
+      "fields": {
+        "autoplay": [
+          "flags",
+          0
+        ],
+        "loop": [
+          "flags",
+          1
+        ],
+        "spoiler": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "2826014149": {
+      "name": "pageBlockEmbed",
+      "fields": {
+        "full_width": [
+          "flags",
+          0
+        ],
+        "allow_scrolling": [
+          "flags",
+          3
+        ]
+      }
+    },
+    "3209554562": {
+      "name": "pageBlockTable",
+      "fields": {
+        "bordered": [
+          "flags",
+          0
+        ],
+        "striped": [
+          "flags",
+          1
+        ],
+        "compact": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "534181569": {
+      "name": "pageBlockOrderedList",
+      "fields": {
+        "reversed": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "1987480557": {
+      "name": "pageBlockDetails",
+      "fields": {
+        "open": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "1835270936": {
+      "name": "pageBlockButtonRow",
+      "fields": {
+        "align_left": [
+          "flags",
+          0
+        ],
+        "align_center": [
+          "flags",
+          1
+        ],
+        "align_right": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "77522308": {
+      "name": "invoice",
+      "fields": {
+        "test": [
+          "flags",
+          0
+        ],
+        "name_requested": [
+          "flags",
+          1
+        ],
+        "phone_requested": [
+          "flags",
+          2
+        ],
+        "email_requested": [
+          "flags",
+          3
+        ],
+        "shipping_address_requested": [
+          "flags",
+          4
+        ],
+        "flexible": [
+          "flags",
+          5
+        ],
+        "phone_to_provider": [
+          "flags",
+          6
+        ],
+        "email_to_provider": [
+          "flags",
+          7
+        ],
+        "recurring": [
+          "flags",
+          9
+        ]
+      }
+    },
+    "4100974884": {
+      "name": "inputWebFileAudioAlbumThumbLocation",
+      "fields": {
+        "small": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "2684716881": {
+      "name": "payments.paymentForm",
+      "fields": {
+        "can_save_credentials": [
+          "flags",
+          2
+        ],
+        "password_missing": [
+          "flags",
+          3
+        ]
+      }
+    },
+    "4220511292": {
+      "name": "payments.savedInfo",
+      "fields": {
+        "has_saved_credentials": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "873977640": {
+      "name": "inputPaymentCredentials",
+      "fields": {
+        "save": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "3307368215": {
+      "name": "phoneCallWaiting",
+      "fields": {
+        "video": [
+          "flags",
+          6
+        ]
+      }
+    },
+    "347139340": {
+      "name": "phoneCallRequested",
+      "fields": {
+        "video": [
+          "flags",
+          6
+        ]
+      }
+    },
+    "912311057": {
+      "name": "phoneCallAccepted",
+      "fields": {
+        "video": [
+          "flags",
+          6
+        ]
+      }
+    },
+    "810769141": {
+      "name": "phoneCall",
+      "fields": {
+        "p2p_allowed": [
+          "flags",
+          5
+        ],
+        "video": [
+          "flags",
+          6
+        ],
+        "conference_supported": [
+          "flags",
+          8
+        ]
+      }
+    },
+    "1355435489": {
+      "name": "phoneCallDiscarded",
+      "fields": {
+        "need_rating": [
+          "flags",
+          2
+        ],
+        "need_debug": [
+          "flags",
+          3
+        ],
+        "video": [
+          "flags",
+          6
+        ]
+      }
+    },
+    "2629903303": {
+      "name": "phoneConnection",
+      "fields": {
+        "tcp": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "1667228533": {
+      "name": "phoneConnectionWebrtc",
+      "fields": {
+        "turn": [
+          "flags",
+          0
+        ],
+        "stun": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "4236742600": {
+      "name": "phoneCallProtocol",
+      "fields": {
+        "udp_p2p": [
+          "flags",
+          0
+        ],
+        "udp_reflector": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "4006239459": {
+      "name": "langPackLanguage",
+      "fields": {
+        "official": [
+          "flags",
+          0
+        ],
+        "rtl": [
+          "flags",
+          2
+        ],
+        "beta": [
+          "flags",
+          3
+        ]
+      }
+    },
+    "4271882584": {
+      "name": "channelAdminLogEventActionParticipantJoinByInvite",
+      "fields": {
+        "via_chatlist": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "3926948580": {
+      "name": "channelAdminLogEventsFilter",
+      "fields": {
+        "join": [
+          "flags",
+          0
+        ],
+        "leave": [
+          "flags",
+          1
+        ],
+        "invite": [
+          "flags",
+          2
+        ],
+        "ban": [
+          "flags",
+          3
+        ],
+        "unban": [
+          "flags",
+          4
+        ],
+        "kick": [
+          "flags",
+          5
+        ],
+        "unkick": [
+          "flags",
+          6
+        ],
+        "promote": [
+          "flags",
+          7
+        ],
+        "demote": [
+          "flags",
+          8
+        ],
+        "info": [
+          "flags",
+          9
+        ],
+        "settings": [
+          "flags",
+          10
+        ],
+        "pinned": [
+          "flags",
+          11
+        ],
+        "edit": [
+          "flags",
+          12
+        ],
+        "delete": [
+          "flags",
+          13
+        ],
+        "group_call": [
+          "flags",
+          14
+        ],
+        "invites": [
+          "flags",
+          15
+        ],
+        "send": [
+          "flags",
+          16
+        ],
+        "forums": [
+          "flags",
+          17
+        ],
+        "sub_extend": [
+          "flags",
+          18
+        ],
+        "edit_rank": [
+          "flags",
+          19
+        ]
+      }
+    },
+    "1783556146": {
+      "name": "help.deepLinkInfo",
+      "fields": {
+        "update_app": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "2191366618": {
+      "name": "secureRequiredType",
+      "fields": {
+        "native_names": [
+          "flags",
+          0
+        ],
+        "selfie_required": [
+          "flags",
+          1
+        ],
+        "translation_required": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "878078826": {
+      "name": "pageTableCell",
+      "fields": {
+        "header": [
+          "flags",
+          0
+        ],
+        "align_center": [
+          "flags",
+          3
+        ],
+        "align_right": [
+          "flags",
+          4
+        ],
+        "valign_middle": [
+          "flags",
+          5
+        ],
+        "valign_bottom": [
+          "flags",
+          6
+        ]
+      }
+    },
+    "794323004": {
+      "name": "pageListItemText",
+      "fields": {
+        "checkbox": [
+          "flags",
+          0
+        ],
+        "checked": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "1674209194": {
+      "name": "pageListItemBlocks",
+      "fields": {
+        "checkbox": [
+          "flags",
+          0
+        ],
+        "checked": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "352522633": {
+      "name": "pageListOrderedItemText",
+      "fields": {
+        "checkbox": [
+          "flags",
+          0
+        ],
+        "checked": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "2415056368": {
+      "name": "pageListOrderedItemBlocks",
+      "fields": {
+        "checkbox": [
+          "flags",
+          0
+        ],
+        "checked": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "2556788493": {
+      "name": "page",
+      "fields": {
+        "part": [
+          "flags",
+          0
+        ],
+        "rtl": [
+          "flags",
+          1
+        ],
+        "v2": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "2523803071": {
+      "name": "poll",
+      "fields": {
+        "closed": [
+          "flags",
+          0
+        ],
+        "public_voters": [
+          "flags",
+          1
+        ],
+        "multiple_choice": [
+          "flags",
+          2
+        ],
+        "quiz": [
+          "flags",
+          3
+        ],
+        "open_answers": [
+          "flags",
+          6
+        ],
+        "revoting_disabled": [
+          "flags",
+          7
+        ],
+        "shuffle_answers": [
+          "flags",
+          8
+        ],
+        "hide_results_until_close": [
+          "flags",
+          9
+        ],
+        "creator": [
+          "flags",
+          10
+        ],
+        "subscribers_only": [
+          "flags",
+          11
+        ]
+      }
+    },
+    "910500618": {
+      "name": "pollAnswerVoters",
+      "fields": {
+        "chosen": [
+          "flags",
+          0
+        ],
+        "correct": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "3128668510": {
+      "name": "pollResults",
+      "fields": {
+        "min": [
+          "flags",
+          0
+        ],
+        "has_unread_votes": [
+          "flags",
+          6
+        ],
+        "can_view_stats": [
+          "flags",
+          7
+        ]
+      }
+    },
+    "1605510357": {
+      "name": "chatAdminRights",
+      "fields": {
+        "change_info": [
+          "flags",
+          0
+        ],
+        "post_messages": [
+          "flags",
+          1
+        ],
+        "edit_messages": [
+          "flags",
+          2
+        ],
+        "delete_messages": [
+          "flags",
+          3
+        ],
+        "ban_users": [
+          "flags",
+          4
+        ],
+        "invite_users": [
+          "flags",
+          5
+        ],
+        "pin_messages": [
+          "flags",
+          7
+        ],
+        "add_admins": [
+          "flags",
+          9
+        ],
+        "anonymous": [
+          "flags",
+          10
+        ],
+        "manage_call": [
+          "flags",
+          11
+        ],
+        "other": [
+          "flags",
+          12
+        ],
+        "manage_topics": [
+          "flags",
+          13
+        ],
+        "post_stories": [
+          "flags",
+          14
+        ],
+        "edit_stories": [
+          "flags",
+          15
+        ],
+        "delete_stories": [
+          "flags",
+          16
+        ],
+        "manage_direct_messages": [
+          "flags",
+          17
+        ],
+        "manage_ranks": [
+          "flags",
+          18
+        ],
+        "manage_linked_peers": [
+          "flags",
+          19
+        ],
+        "manage_welcome_messages": [
+          "flags",
+          20
+        ]
+      }
+    },
+    "2668758040": {
+      "name": "chatBannedRights",
+      "fields": {
+        "view_messages": [
+          "flags",
+          0
+        ],
+        "send_messages": [
+          "flags",
+          1
+        ],
+        "send_media": [
+          "flags",
+          2
+        ],
+        "send_stickers": [
+          "flags",
+          3
+        ],
+        "send_gifs": [
+          "flags",
+          4
+        ],
+        "send_games": [
+          "flags",
+          5
+        ],
+        "send_inline": [
+          "flags",
+          6
+        ],
+        "embed_links": [
+          "flags",
+          7
+        ],
+        "send_polls": [
+          "flags",
+          8
+        ],
+        "change_info": [
+          "flags",
+          10
+        ],
+        "invite_users": [
+          "flags",
+          15
+        ],
+        "pin_messages": [
+          "flags",
+          17
+        ],
+        "manage_topics": [
+          "flags",
+          18
+        ],
+        "send_photos": [
+          "flags",
+          19
+        ],
+        "send_videos": [
+          "flags",
+          20
+        ],
+        "send_roundvideos": [
+          "flags",
+          21
+        ],
+        "send_audios": [
+          "flags",
+          22
+        ],
+        "send_voices": [
+          "flags",
+          23
+        ],
+        "send_docs": [
+          "flags",
+          24
+        ],
+        "send_plain": [
+          "flags",
+          25
+        ],
+        "edit_rank": [
+          "flags",
+          26
+        ],
+        "send_reactions": [
+          "flags",
+          27
+        ],
+        "manage_linked_peers": [
+          "flags",
+          28
+        ]
+      }
+    },
+    "2904898936": {
+      "name": "codeSettings",
+      "fields": {
+        "allow_flashcall": [
+          "flags",
+          0
+        ],
+        "current_number": [
+          "flags",
+          1
+        ],
+        "allow_app_hash": [
+          "flags",
+          4
+        ],
+        "allow_missed_call": [
+          "flags",
+          5
+        ],
+        "allow_firebase": [
+          "flags",
+          7
+        ],
+        "unknown_number": [
+          "flags",
+          9
+        ]
+      }
+    },
+    "925826256": {
+      "name": "wallPaperSettings",
+      "fields": {
+        "blur": [
+          "flags",
+          1
+        ],
+        "motion": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "3131405864": {
+      "name": "autoDownloadSettings",
+      "fields": {
+        "disabled": [
+          "flags",
+          0
+        ],
+        "video_preload_large": [
+          "flags",
+          1
+        ],
+        "audio_preload_next": [
+          "flags",
+          2
+        ],
+        "phonecalls_less_data": [
+          "flags",
+          3
+        ],
+        "stories_preload": [
+          "flags",
+          4
+        ]
+      }
+    },
+    "4283715173": {
+      "name": "folder",
+      "fields": {
+        "autofill_new_broadcasts": [
+          "flags",
+          0
+        ],
+        "autofill_public_groups": [
+          "flags",
+          1
+        ],
+        "autofill_new_correspondents": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "3896830975": {
+      "name": "messages.searchCounter",
+      "fields": {
+        "inexact": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "1020666860": {
+      "name": "urlAuthResultRequest",
+      "fields": {
+        "request_write_access": [
+          "flags",
+          0
+        ],
+        "request_phone_number": [
+          "flags",
+          1
+        ],
+        "match_codes_first": [
+          "flags",
+          5
+        ],
+        "is_app": [
+          "flags",
+          6
+        ]
+      }
+    },
+    "2685298646": {
+      "name": "theme",
+      "fields": {
+        "creator": [
+          "flags",
+          0
+        ],
+        "default": [
+          "flags",
+          1
+        ],
+        "for_chat": [
+          "flags",
+          5
+        ]
+      }
+    },
+    "1474462241": {
+      "name": "account.contentSettings",
+      "fields": {
+        "sensitive_enabled": [
+          "flags",
+          0
+        ],
+        "sensitive_can_change": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "2413711439": {
+      "name": "inputThemeSettings",
+      "fields": {
+        "message_colors_animated": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "4200117972": {
+      "name": "themeSettings",
+      "fields": {
+        "message_colors_animated": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "1355547603": {
+      "name": "webPageAttributeStickerSet",
+      "fields": {
+        "emojis": [
+          "flags",
+          0
+        ],
+        "text_color": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "2856789585": {
+      "name": "dialogFilter",
+      "fields": {
+        "contacts": [
+          "flags",
+          0
+        ],
+        "non_contacts": [
+          "flags",
+          1
+        ],
+        "groups": [
+          "flags",
+          2
+        ],
+        "broadcasts": [
+          "flags",
+          3
+        ],
+        "bots": [
+          "flags",
+          4
+        ],
+        "exclude_muted": [
+          "flags",
+          11
+        ],
+        "exclude_read": [
+          "flags",
+          12
+        ],
+        "exclude_archived": [
+          "flags",
+          13
+        ],
+        "title_noanimate": [
+          "flags",
+          28
+        ]
+      }
+    },
+    "2522053591": {
+      "name": "dialogFilterChatlist",
+      "fields": {
+        "has_my_invites": [
+          "flags",
+          26
+        ],
+        "title_noanimate": [
+          "flags",
+          28
+        ]
+      }
+    },
+    "145021050": {
+      "name": "help.promoData",
+      "fields": {
+        "proxy": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "4265718607": {
+      "name": "globalPrivacySettings",
+      "fields": {
+        "archive_and_mute_new_noncontact_peers": [
+          "flags",
+          0
+        ],
+        "keep_archived_unmuted": [
+          "flags",
+          1
+        ],
+        "keep_archived_folders": [
+          "flags",
+          2
+        ],
+        "hide_read_marks": [
+          "flags",
+          3
+        ],
+        "new_noncontact_peers_require_premium": [
+          "flags",
+          4
+        ],
+        "display_gifts_button": [
+          "flags",
+          7
+        ]
+      }
+    },
+    "3280440867": {
+      "name": "help.country",
+      "fields": {
+        "hidden": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "462937446": {
+      "name": "messageReplyHeader",
+      "fields": {
+        "reply_to_scheduled": [
+          "flags",
+          2
+        ],
+        "forum_topic": [
+          "flags",
+          3
+        ],
+        "quote": [
+          "flags",
+          9
+        ],
+        "reply_to_ephemeral": [
+          "flags",
+          13
+        ]
+      }
+    },
+    "2211844034": {
+      "name": "messageReplies",
+      "fields": {
+        "comments": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "4021466647": {
+      "name": "groupCall",
+      "fields": {
+        "join_muted": [
+          "flags",
+          1
+        ],
+        "can_change_join_muted": [
+          "flags",
+          2
+        ],
+        "join_date_asc": [
+          "flags",
+          6
+        ],
+        "schedule_start_subscribed": [
+          "flags",
+          8
+        ],
+        "can_start_video": [
+          "flags",
+          9
+        ],
+        "record_video_active": [
+          "flags",
+          11
+        ],
+        "rtmp_stream": [
+          "flags",
+          12
+        ],
+        "listeners_hidden": [
+          "flags",
+          13
+        ],
+        "conference": [
+          "flags",
+          14
+        ],
+        "creator": [
+          "flags",
+          15
+        ],
+        "messages_enabled": [
+          "flags",
+          17
+        ],
+        "can_change_messages_enabled": [
+          "flags",
+          18
+        ],
+        "min": [
+          "flags",
+          19
+        ]
+      }
+    },
+    "708691884": {
+      "name": "groupCallParticipant",
+      "fields": {
+        "muted": [
+          "flags",
+          0
+        ],
+        "left": [
+          "flags",
+          1
+        ],
+        "can_self_unmute": [
+          "flags",
+          2
+        ],
+        "just_joined": [
+          "flags",
+          4
+        ],
+        "versioned": [
+          "flags",
+          5
+        ],
+        "min": [
+          "flags",
+          8
+        ],
+        "muted_by_you": [
+          "flags",
+          9
+        ],
+        "volume_by_admin": [
+          "flags",
+          10
+        ],
+        "self": [
+          "flags",
+          12
+        ],
+        "video_joined": [
+          "flags",
+          15
+        ]
+      }
+    },
+    "1578088377": {
+      "name": "messages.historyImportParsed",
+      "fields": {
+        "pm": [
+          "flags",
+          0
+        ],
+        "group": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "2354765785": {
+      "name": "chatInviteImporter",
+      "fields": {
+        "requested": [
+          "flags",
+          0
+        ],
+        "via_chatlist": [
+          "flags",
+          3
+        ]
+      }
+    },
+    "1735736008": {
+      "name": "groupCallParticipantVideo",
+      "fields": {
+        "paused": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "2109703795": {
+      "name": "sponsoredMessage",
+      "fields": {
+        "recommended": [
+          "flags",
+          5
+        ],
+        "can_report": [
+          "flags",
+          12
+        ]
+      }
+    },
+    "343859772": {
+      "name": "messages.searchResultsCalendar",
+      "fields": {
+        "inexact": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "171155211": {
+      "name": "messageReactions",
+      "fields": {
+        "min": [
+          "flags",
+          0
+        ],
+        "can_see_list": [
+          "flags",
+          2
+        ],
+        "reactions_as_tags": [
+          "flags",
+          3
+        ]
+      }
+    },
+    "3229084673": {
+      "name": "availableReaction",
+      "fields": {
+        "inactive": [
+          "flags",
+          0
+        ],
+        "premium": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "2356786748": {
+      "name": "messagePeerReaction",
+      "fields": {
+        "big": [
+          "flags",
+          0
+        ],
+        "unread": [
+          "flags",
+          1
+        ],
+        "my": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "3641544190": {
+      "name": "attachMenuBot",
+      "fields": {
+        "inactive": [
+          "flags",
+          0
+        ],
+        "has_settings": [
+          "flags",
+          1
+        ],
+        "request_write_access": [
+          "flags",
+          2
+        ],
+        "show_in_attach_menu": [
+          "flags",
+          3
+        ],
+        "show_in_side_menu": [
+          "flags",
+          4
+        ],
+        "side_menu_disclaimer_needed": [
+          "flags",
+          5
+        ]
+      }
+    },
+    "1294139288": {
+      "name": "webViewResultUrl",
+      "fields": {
+        "fullsize": [
+          "flags",
+          1
+        ],
+        "fullscreen": [
+          "flags",
+          2
+        ],
+        "same_origin": [
+          "flags",
+          3
+        ]
+      }
+    },
+    "3898760850": {
+      "name": "inputInvoiceStarGift",
+      "fields": {
+        "hide_name": [
+          "flags",
+          0
+        ],
+        "include_upgrade": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "1300335965": {
+      "name": "inputInvoiceStarGiftUpgrade",
+      "fields": {
+        "keep_original_details": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "3920676440": {
+      "name": "inputInvoiceStarGiftResale",
+      "fields": {
+        "ton": [
+          "flags",
+          0
+        ],
+        "show_name": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "516618768": {
+      "name": "inputInvoiceStarGiftAuctionBid",
+      "fields": {
+        "hide_name": [
+          "flags",
+          0
+        ],
+        "update_bid": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "3485063511": {
+      "name": "messages.transcribedAudio",
+      "fields": {
+        "pending": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "2792693350": {
+      "name": "inputStorePaymentPremiumSubscription",
+      "fields": {
+        "restore": [
+          "flags",
+          0
+        ],
+        "upgrade": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "369444042": {
+      "name": "inputStorePaymentPremiumGiveaway",
+      "fields": {
+        "only_new_subscribers": [
+          "flags",
+          0
+        ],
+        "winners_are_visible": [
+          "flags",
+          3
+        ]
+      }
+    },
+    "1964968186": {
+      "name": "inputStorePaymentStarsGiveaway",
+      "fields": {
+        "only_new_subscribers": [
+          "flags",
+          0
+        ],
+        "winners_are_visible": [
+          "flags",
+          3
+        ]
+      }
+    },
+    "1069645911": {
+      "name": "inputStorePaymentAuthCode",
+      "fields": {
+        "restore": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "1385335754": {
+      "name": "chatReactionsAll",
+      "fields": {
+        "allow_custom": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "1596792306": {
+      "name": "premiumSubscriptionOption",
+      "fields": {
+        "current": [
+          "flags",
+          1
+        ],
+        "can_purchase_upgrade": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "3088871476": {
+      "name": "sendAsPeer",
+      "fields": {
+        "premium_required": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "3020371527": {
+      "name": "username",
+      "fields": {
+        "editable": [
+          "flags",
+          0
+        ],
+        "active": [
+          "flags",
+          1
+        ],
+        "deletable": [
+          "flags",
+          2
+        ],
+        "expired": [
+          "flags",
+          3
+        ]
+      }
+    },
+    "4242200597": {
+      "name": "forumTopic",
+      "fields": {
+        "my": [
+          "flags",
+          1
+        ],
+        "closed": [
+          "flags",
+          2
+        ],
+        "pinned": [
+          "flags",
+          3
+        ],
+        "short": [
+          "flags",
+          5
+        ],
+        "hidden": [
+          "flags",
+          6
+        ],
+        "title_missing": [
+          "flags",
+          7
+        ]
+      }
+    },
+    "913709011": {
+      "name": "messages.forumTopics",
+      "fields": {
+        "order_by_create_date": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "3387977243": {
+      "name": "requestPeerTypeChat",
+      "fields": {
+        "creator": [
+          "flags",
+          0
+        ],
+        "bot_participant": [
+          "flags",
+          5
+        ]
+      }
+    },
+    "865857388": {
+      "name": "requestPeerTypeBroadcast",
+      "fields": {
+        "creator": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "1048699000": {
+      "name": "requestPeerTypeCreateBot",
+      "fields": {
+        "bot_managed": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "3360175310": {
+      "name": "autoSaveSettings",
+      "fields": {
+        "photos": [
+          "flags",
+          0
+        ],
+        "videos": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "3947933173": {
+      "name": "messages.botApp",
+      "fields": {
+        "inactive": [
+          "flags",
+          0
+        ],
+        "request_write_access": [
+          "flags",
+          1
+        ],
+        "has_settings": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "4044279343": {
+      "name": "chatlists.chatlistInvite",
+      "fields": {
+        "title_noanimate": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "2371443926": {
+      "name": "storyViews",
+      "fields": {
+        "has_viewers": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "4289579283": {
+      "name": "storyItemSkipped",
+      "fields": {
+        "close_friends": [
+          "flags",
+          8
+        ],
+        "live": [
+          "flags",
+          9
+        ]
+      }
+    },
+    "379894076": {
+      "name": "storyItem",
+      "fields": {
+        "pinned": [
+          "flags",
+          5
+        ],
+        "public": [
+          "flags",
+          7
+        ],
+        "close_friends": [
+          "flags",
+          8
+        ],
+        "min": [
+          "flags",
+          9
+        ],
+        "noforwards": [
+          "flags",
+          10
+        ],
+        "edited": [
+          "flags",
+          11
+        ],
+        "contacts": [
+          "flags",
+          12
+        ],
+        "selected_contacts": [
+          "flags",
+          13
+        ],
+        "out": [
+          "flags",
+          16
+        ]
+      }
+    },
+    "1862033025": {
+      "name": "stories.allStories",
+      "fields": {
+        "has_more": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "2965236421": {
+      "name": "storyView",
+      "fields": {
+        "blocked": [
+          "flags",
+          0
+        ],
+        "blocked_my_stories_from": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "2424530699": {
+      "name": "storyViewPublicForward",
+      "fields": {
+        "blocked": [
+          "flags",
+          0
+        ],
+        "blocked_my_stories_from": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "3178549065": {
+      "name": "storyViewPublicRepost",
+      "fields": {
+        "blocked": [
+          "flags",
+          0
+        ],
+        "blocked_my_stories_from": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "340088945": {
+      "name": "mediaAreaSuggestedReaction",
+      "fields": {
+        "dark": [
+          "flags",
+          0
+        ],
+        "flipped": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "3952623503": {
+      "name": "payments.checkedGiftCode",
+      "fields": {
+        "via_giveaway": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "1130879648": {
+      "name": "payments.giveawayInfo",
+      "fields": {
+        "participating": [
+          "flags",
+          0
+        ],
+        "preparing_results": [
+          "flags",
+          3
+        ]
+      }
+    },
+    "3782600303": {
+      "name": "payments.giveawayInfoResults",
+      "fields": {
+        "winner": [
+          "flags",
+          0
+        ],
+        "refunded": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "1262359766": {
+      "name": "boost",
+      "fields": {
+        "gift": [
+          "flags",
+          1
+        ],
+        "giveaway": [
+          "flags",
+          2
+        ],
+        "unclaimed": [
+          "flags",
+          3
+        ]
+      }
+    },
+    "1230586490": {
+      "name": "premium.boostsStatus",
+      "fields": {
+        "my_boost": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "3089555792": {
+      "name": "storyFwdHeader",
+      "fields": {
+        "modified": [
+          "flags",
+          3
+        ]
+      }
+    },
+    "2917953214": {
+      "name": "help.peerColorOption",
+      "fields": {
+        "hidden": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "3179793260": {
+      "name": "savedDialog",
+      "fields": {
+        "pinned": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "1681948327": {
+      "name": "monoForumDialog",
+      "fields": {
+        "unread_mark": [
+          "flags",
+          3
+        ],
+        "nopaid_messages_exception": [
+          "flags",
+          4
+        ]
+      }
+    },
+    "720277905": {
+      "name": "smsjobs.status",
+      "fields": {
+        "allow_international": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "2358423704": {
+      "name": "businessWorkHours",
+      "fields": {
+        "open_now": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "1871393450": {
+      "name": "inputBusinessRecipients",
+      "fields": {
+        "existing_chats": [
+          "flags",
+          0
+        ],
+        "new_chats": [
+          "flags",
+          1
+        ],
+        "contacts": [
+          "flags",
+          2
+        ],
+        "non_contacts": [
+          "flags",
+          3
+        ],
+        "exclude_selected": [
+          "flags",
+          5
+        ]
+      }
+    },
+    "554733559": {
+      "name": "businessRecipients",
+      "fields": {
+        "existing_chats": [
+          "flags",
+          0
+        ],
+        "new_chats": [
+          "flags",
+          1
+        ],
+        "contacts": [
+          "flags",
+          2
+        ],
+        "non_contacts": [
+          "flags",
+          3
+        ],
+        "exclude_selected": [
+          "flags",
+          5
+        ]
+      }
+    },
+    "2200008160": {
+      "name": "inputBusinessAwayMessage",
+      "fields": {
+        "offline_only": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "4011158108": {
+      "name": "businessAwayMessage",
+      "fields": {
+        "offline_only": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "718878489": {
+      "name": "messages.dialogFilters",
+      "fields": {
+        "tags_enabled": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "2402595573": {
+      "name": "botBusinessConnection",
+      "fields": {
+        "disabled": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "3303379486": {
+      "name": "inputBusinessBotRecipients",
+      "fields": {
+        "existing_chats": [
+          "flags",
+          0
+        ],
+        "new_chats": [
+          "flags",
+          1
+        ],
+        "contacts": [
+          "flags",
+          2
+        ],
+        "non_contacts": [
+          "flags",
+          3
+        ],
+        "exclude_selected": [
+          "flags",
+          5
+        ]
+      }
+    },
+    "3096245107": {
+      "name": "businessBotRecipients",
+      "fields": {
+        "existing_chats": [
+          "flags",
+          0
+        ],
+        "new_chats": [
+          "flags",
+          1
+        ],
+        "contacts": [
+          "flags",
+          2
+        ],
+        "non_contacts": [
+          "flags",
+          3
+        ],
+        "exclude_selected": [
+          "flags",
+          5
+        ]
+      }
+    },
+    "1653379620": {
+      "name": "missingInvitee",
+      "fields": {
+        "premium_would_allow_invite": [
+          "flags",
+          0
+        ],
+        "premium_required_for_pm": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "2479088254": {
+      "name": "availableEffect",
+      "fields": {
+        "premium_required": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "3097230543": {
+      "name": "factCheck",
+      "fields": {
+        "need_check": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "198776256": {
+      "name": "starsTopupOption",
+      "fields": {
+        "extended": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "325426864": {
+      "name": "starsTransaction",
+      "fields": {
+        "refund": [
+          "flags",
+          3
+        ],
+        "pending": [
+          "flags",
+          4
+        ],
+        "failed": [
+          "flags",
+          6
+        ],
+        "gift": [
+          "flags",
+          10
+        ],
+        "reaction": [
+          "flags",
+          11
+        ],
+        "stargift_upgrade": [
+          "flags",
+          18
+        ],
+        "business_transfer": [
+          "flags",
+          21
+        ],
+        "stargift_resale": [
+          "flags",
+          22
+        ],
+        "posts_search": [
+          "flags",
+          24
+        ],
+        "stargift_prepaid_upgrade": [
+          "flags",
+          25
+        ],
+        "stargift_drop_original_details": [
+          "flags",
+          26
+        ],
+        "phonegroup_message": [
+          "flags",
+          27
+        ],
+        "stargift_auction_bid": [
+          "flags",
+          28
+        ],
+        "offer": [
+          "flags",
+          29
+        ]
+      }
+    },
+    "4273886353": {
+      "name": "starsRevenueStatus",
+      "fields": {
+        "withdrawal_enabled": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "543876817": {
+      "name": "inputStarsTransaction",
+      "fields": {
+        "refund": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "1577421297": {
+      "name": "starsGiftOption",
+      "fields": {
+        "extended": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "779004698": {
+      "name": "starsSubscription",
+      "fields": {
+        "canceled": [
+          "flags",
+          0
+        ],
+        "can_refulfill": [
+          "flags",
+          1
+        ],
+        "missing_balance": [
+          "flags",
+          2
+        ],
+        "bot_canceled": [
+          "flags",
+          7
+        ]
+      }
+    },
+    "1269016922": {
+      "name": "messageReactor",
+      "fields": {
+        "top": [
+          "flags",
+          0
+        ],
+        "my": [
+          "flags",
+          1
+        ],
+        "anonymous": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "2496562474": {
+      "name": "starsGiveawayOption",
+      "fields": {
+        "extended": [
+          "flags",
+          0
+        ],
+        "default": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "1411605001": {
+      "name": "starsGiveawayWinnersOption",
+      "fields": {
+        "default": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "825922887": {
+      "name": "starGift",
+      "fields": {
+        "limited": [
+          "flags",
+          0
+        ],
+        "sold_out": [
+          "flags",
+          1
+        ],
+        "birthday": [
+          "flags",
+          2
+        ],
+        "require_premium": [
+          "flags",
+          7
+        ],
+        "limited_per_user": [
+          "flags",
+          8
+        ],
+        "peer_color_available": [
+          "flags",
+          10
+        ],
+        "auction": [
+          "flags",
+          11
+        ]
+      }
+    },
+    "2247141837": {
+      "name": "starGiftUnique",
+      "fields": {
+        "require_premium": [
+          "flags",
+          6
+        ],
+        "resale_ton_only": [
+          "flags",
+          7
+        ],
+        "theme_available": [
+          "flags",
+          9
+        ],
+        "burned": [
+          "flags",
+          14
+        ],
+        "crafted": [
+          "flags",
+          15
+        ]
+      }
+    },
+    "1862904881": {
+      "name": "reportResultAddComment",
+      "fields": {
+        "optional": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "429997937": {
+      "name": "connectedBotStarRef",
+      "fields": {
+        "revoked": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "2703945727": {
+      "name": "botVerifierSettings",
+      "fields": {
+        "can_modify_custom_description": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "1448235490": {
+      "name": "starGiftAttributeModel",
+      "fields": {
+        "crafted": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "1105150972": {
+      "name": "savedStarGift",
+      "fields": {
+        "name_hidden": [
+          "flags",
+          0
+        ],
+        "unsaved": [
+          "flags",
+          5
+        ],
+        "refunded": [
+          "flags",
+          9
+        ],
+        "can_upgrade": [
+          "flags",
+          10
+        ],
+        "pinned_to_top": [
+          "flags",
+          12
+        ],
+        "upgrade_separate": [
+          "flags",
+          17
+        ]
+      }
+    },
+    "2690796791": {
+      "name": "businessBotRights",
+      "fields": {
+        "reply": [
+          "flags",
+          0
+        ],
+        "read_messages": [
+          "flags",
+          1
+        ],
+        "delete_sent_messages": [
+          "flags",
+          2
+        ],
+        "delete_received_messages": [
+          "flags",
+          3
+        ],
+        "edit_name": [
+          "flags",
+          4
+        ],
+        "edit_bio": [
+          "flags",
+          5
+        ],
+        "edit_profile_photo": [
+          "flags",
+          6
+        ],
+        "edit_username": [
+          "flags",
+          7
+        ],
+        "view_gifts": [
+          "flags",
+          8
+        ],
+        "sell_gifts": [
+          "flags",
+          9
+        ],
+        "change_gift_settings": [
+          "flags",
+          10
+        ],
+        "transfer_and_upgrade_gifts": [
+          "flags",
+          11
+        ],
+        "transfer_stars": [
+          "flags",
+          12
+        ],
+        "manage_stories": [
+          "flags",
+          13
+        ]
+      }
+    },
+    "1911715524": {
+      "name": "disallowedGiftsSettings",
+      "fields": {
+        "disallow_unlimited_stargifts": [
+          "flags",
+          0
+        ],
+        "disallow_limited_stargifts": [
+          "flags",
+          1
+        ],
+        "disallow_unique_stargifts": [
+          "flags",
+          2
+        ],
+        "disallow_premium_gifts": [
+          "flags",
+          3
+        ],
+        "disallow_stargifts_from_channels": [
+          "flags",
+          4
+        ]
+      }
+    },
+    "1236871718": {
+      "name": "todoList",
+      "fields": {
+        "others_can_append": [
+          "flags",
+          0
+        ],
+        "others_can_complete": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "244201445": {
+      "name": "suggestedPost",
+      "fields": {
+        "accepted": [
+          "flags",
+          1
+        ],
+        "rejected": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "1040931690": {
+      "name": "searchPostsFlood",
+      "fields": {
+        "query_is_free": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "1362093126": {
+      "name": "payments.uniqueStarGiftValueInfo",
+      "fields": {
+        "last_sale_on_fragment": [
+          "flags",
+          1
+        ],
+        "value_is_average": [
+          "flags",
+          6
+        ]
+      }
+    },
+    "445316222": {
+      "name": "groupCallMessage",
+      "fields": {
+        "from_admin": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "3997371525": {
+      "name": "groupCallDonor",
+      "fields": {
+        "top": [
+          "flags",
+          0
+        ],
+        "my": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "1897752877": {
+      "name": "recentStory",
+      "fields": {
+        "live": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "787403204": {
+      "name": "starGiftAuctionUserState",
+      "fields": {
+        "returned": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "1118831432": {
+      "name": "starGiftAuctionAcquiredGift",
+      "fields": {
+        "name_hidden": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "1339896880": {
+      "name": "keyboardButtonStyle",
+      "fields": {
+        "bg_primary": [
+          "flags",
+          0
+        ],
+        "bg_danger": [
+          "flags",
+          1
+        ],
+        "bg_success": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "3489021609": {
+      "name": "aiComposeTone",
+      "fields": {
+        "creator": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "3709845395": {
+      "name": "bots.accessSettings",
+      "fields": {
+        "restricted": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "2045480115": {
+      "name": "account.webBrowserSettings",
+      "fields": {
+        "open_external_browser": [
+          "flags",
+          0
+        ],
+        "display_close_button": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "3838069244": {
+      "name": "inputRichMessage",
+      "fields": {
+        "rtl": [
+          "flags",
+          0
+        ],
+        "noautolink": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "3670770538": {
+      "name": "inputRichMessageHTML",
+      "fields": {
+        "rtl": [
+          "flags",
+          0
+        ],
+        "noautolink": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "4937516": {
+      "name": "inputRichMessageMarkdown",
+      "fields": {
+        "rtl": [
+          "flags",
+          0
+        ],
+        "noautolink": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "3136527755": {
+      "name": "richMessage",
+      "fields": {
+        "rtl": [
+          "flags",
+          0
+        ],
+        "part": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "1981030077": {
+      "name": "communityPeer",
+      "fields": {
+        "can_view_history": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "2078997125": {
+      "name": "communityPeerRequest",
+      "fields": {
+        "visible": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "3710369513": {
+      "name": "ephemeralMessage",
+      "fields": {
+        "out": [
+          "flags",
+          0
+        ],
+        "welcome_template": [
+          "flags",
+          5
+        ],
+        "invert_media": [
+          "flags",
+          7
+        ],
+        "noforwards": [
+          "flags",
+          12
+        ]
+      }
+    },
+    "1071802622": {
+      "name": "inputButtonTypeRequestPeer",
+      "fields": {
+        "name_requested": [
+          "flags",
+          0
+        ],
+        "username_requested": [
+          "flags",
+          1
+        ],
+        "photo_requested": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "2573319348": {
+      "name": "inputInlineButtonTypeUrlAuth",
+      "fields": {
+        "request_write_access": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "693484600": {
+      "name": "inlineButtonTypeCallback",
+      "fields": {
+        "requires_password": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "2474065909": {
+      "name": "inlineButtonTypeSwitchInline",
+      "fields": {
+        "same_peer": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "63312061": {
+      "name": "richButtonStyle",
+      "fields": {
+        "bg_primary": [
+          "flags",
+          0
+        ],
+        "bg_danger": [
+          "flags",
+          1
+        ],
+        "bg_success": [
+          "flags",
+          2
+        ],
+        "link": [
+          "flags",
+          3
+        ]
+      }
+    },
+    "2663958184": {
+      "name": "onrampMethodAvailability",
+      "fields": {
+        "available": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "230847874": {
+      "name": "onrampProviderInfo",
+      "fields": {
+        "supports_base_currencies": [
+          "flags",
+          0
+        ],
+        "supports_limits": [
+          "flags",
+          1
+        ],
+        "supports_quote": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "4190652787": {
+      "name": "onrampAvailability",
+      "fields": {
+        "allowed": [
+          "flags",
+          0
+        ],
+        "buy_allowed": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "2629415660": {
+      "name": "walletStateEmpty",
+      "fields": {
+        "creating": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "2512729195": {
+      "name": "walletState",
+      "fields": {
+        "backup_enabled": [
+          "flags",
+          0
+        ],
+        "can_export_phrase": [
+          "flags",
+          1
+        ],
+        "can_enable_backup": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "2502803779": {
+      "name": "walletTransaction",
+      "fields": {
+        "incoming": [
+          "flags",
+          0
+        ],
+        "gasless": [
+          "flags",
+          1
+        ],
+        "failed": [
+          "flags",
+          2
+        ],
+        "key_change": [
+          "flags",
+          5
+        ],
+        "comment_encrypted": [
+          "flags",
+          6
+        ]
+      }
+    },
+    "308631238": {
+      "name": "tonConnectSession",
+      "fields": {
+        "pending": [
+          "flags",
+          0
+        ],
+        "closing": [
+          "flags",
+          1
+        ],
+        "closed": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "3186166413": {
+      "name": "wallet.existingBalance",
+      "fields": {
+        "has_balance": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "2865215255": {
+      "name": "auth.signUp",
+      "fields": {
+        "no_joined_notifications": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "2017422166": {
+      "name": "auth.firebasePnvSignUp",
+      "fields": {
+        "no_joined_notifications": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "3968205178": {
+      "name": "account.registerDevice",
+      "fields": {
+        "no_muted": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "2398350000": {
+      "name": "account.initTakeoutSession",
+      "fields": {
+        "contacts": [
+          "flags",
+          0
+        ],
+        "message_users": [
+          "flags",
+          1
+        ],
+        "message_chats": [
+          "flags",
+          2
+        ],
+        "message_megagroups": [
+          "flags",
+          3
+        ],
+        "message_channels": [
+          "flags",
+          4
+        ],
+        "files": [
+          "flags",
+          5
+        ]
+      }
+    },
+    "489050862": {
+      "name": "account.finishTakeoutSession",
+      "fields": {
+        "success": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "1398240377": {
+      "name": "account.getNotifyExceptions",
+      "fields": {
+        "compare_sound": [
+          "flags",
+          1
+        ],
+        "compare_stories": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "3818557187": {
+      "name": "account.uploadWallPaper",
+      "fields": {
+        "for_chat": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "1995661875": {
+      "name": "account.saveAutoDownloadSettings",
+      "fields": {
+        "low": [
+          "flags",
+          0
+        ],
+        "high": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "3341269819": {
+      "name": "account.installTheme",
+      "fields": {
+        "dark": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "3044323691": {
+      "name": "account.setContentSettings",
+      "fields": {
+        "sensitive_enabled": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "1089766498": {
+      "name": "account.changeAuthorizationSettings",
+      "fields": {
+        "confirmed": [
+          "flags",
+          3
+        ]
+      }
+    },
+    "3600515937": {
+      "name": "account.saveAutoSaveSettings",
+      "fields": {
+        "users": [
+          "flags",
+          0
+        ],
+        "chats": [
+          "flags",
+          1
+        ],
+        "broadcasts": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "1749885262": {
+      "name": "account.updateColor",
+      "fields": {
+        "for_profile": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "1721797758": {
+      "name": "account.updateConnectedBot",
+      "fields": {
+        "deleted": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "4264483446": {
+      "name": "account.toggleNoPaidMessagesException",
+      "fields": {
+        "refund_charged": [
+          "flags",
+          0
+        ],
+        "require_payment": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "2993107625": {
+      "name": "account.saveMusic",
+      "fields": {
+        "unsave": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "2598339326": {
+      "name": "account.updateWebBrowserSettings",
+      "fields": {
+        "open_external_browser": [
+          "flags",
+          0
+        ],
+        "display_close_button": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "1626161705": {
+      "name": "account.toggleWebBrowserSettingsException",
+      "fields": {
+        "delete": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "774801204": {
+      "name": "contacts.block",
+      "fields": {
+        "my_stories_from": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "3041973032": {
+      "name": "contacts.unblock",
+      "fields": {
+        "my_stories_from": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "2592509824": {
+      "name": "contacts.getBlocked",
+      "fields": {
+        "my_stories_from": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "99978511": {
+      "name": "contacts.search",
+      "fields": {
+        "broadcasts": [
+          "flags",
+          0
+        ],
+        "bots": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "2536798390": {
+      "name": "contacts.getTopPeers",
+      "fields": {
+        "correspondents": [
+          "flags",
+          0
+        ],
+        "bots_pm": [
+          "flags",
+          1
+        ],
+        "bots_inline": [
+          "flags",
+          2
+        ],
+        "phone_calls": [
+          "flags",
+          3
+        ],
+        "forward_users": [
+          "flags",
+          4
+        ],
+        "forward_chats": [
+          "flags",
+          5
+        ],
+        "groups": [
+          "flags",
+          10
+        ],
+        "channels": [
+          "flags",
+          15
+        ],
+        "bots_app": [
+          "flags",
+          16
+        ],
+        "bots_guestchat": [
+          "flags",
+          17
+        ]
+      }
+    },
+    "3652857428": {
+      "name": "contacts.addContact",
+      "fields": {
+        "add_phone_privacy_exception": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "3544759364": {
+      "name": "contacts.getLocated",
+      "fields": {
+        "background": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "698914348": {
+      "name": "contacts.blockFromReplies",
+      "fields": {
+        "delete_message": [
+          "flags",
+          0
+        ],
+        "delete_history": [
+          "flags",
+          1
+        ],
+        "report_spam": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "2496027766": {
+      "name": "contacts.setBlocked",
+      "fields": {
+        "my_stories_from": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "2700397391": {
+      "name": "messages.getDialogs",
+      "fields": {
+        "exclude_pinned": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "2962199082": {
+      "name": "messages.deleteHistory",
+      "fields": {
+        "just_clear": [
+          "flags",
+          0
+        ],
+        "revoke": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "3851326930": {
+      "name": "messages.deleteMessages",
+      "fields": {
+        "revoke": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "4277440354": {
+      "name": "messages.sendMessage",
+      "fields": {
+        "no_webpage": [
+          "flags",
+          1
+        ],
+        "silent": [
+          "flags",
+          5
+        ],
+        "background": [
+          "flags",
+          6
+        ],
+        "clear_draft": [
+          "flags",
+          7
+        ],
+        "noforwards": [
+          "flags",
+          14
+        ],
+        "update_stickersets_order": [
+          "flags",
+          15
+        ],
+        "invert_media": [
+          "flags",
+          16
+        ],
+        "allow_paid_floodskip": [
+          "flags",
+          19
+        ]
+      }
+    },
+    "53536639": {
+      "name": "messages.sendMedia",
+      "fields": {
+        "silent": [
+          "flags",
+          5
+        ],
+        "background": [
+          "flags",
+          6
+        ],
+        "clear_draft": [
+          "flags",
+          7
+        ],
+        "noforwards": [
+          "flags",
+          14
+        ],
+        "update_stickersets_order": [
+          "flags",
+          15
+        ],
+        "invert_media": [
+          "flags",
+          16
+        ],
+        "allow_paid_floodskip": [
+          "flags",
+          19
+        ]
+      }
+    },
+    "326126204": {
+      "name": "messages.forwardMessages",
+      "fields": {
+        "silent": [
+          "flags",
+          5
+        ],
+        "background": [
+          "flags",
+          6
+        ],
+        "with_my_score": [
+          "flags",
+          8
+        ],
+        "drop_author": [
+          "flags",
+          11
+        ],
+        "drop_media_captions": [
+          "flags",
+          12
+        ],
+        "noforwards": [
+          "flags",
+          14
+        ],
+        "allow_paid_floodskip": [
+          "flags",
+          19
+        ],
+        "from_ephemeral": [
+          "flags",
+          25
+        ]
+      }
+    },
+    "2719505579": {
+      "name": "messages.deleteChatUser",
+      "fields": {
+        "revoke_history": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "4086541984": {
+      "name": "messages.discardEncryption",
+      "fields": {
+        "delete_history": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "1157265941": {
+      "name": "messages.sendEncrypted",
+      "fields": {
+        "silent": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "1431914525": {
+      "name": "messages.sendEncryptedFile",
+      "fields": {
+        "silent": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "2757090960": {
+      "name": "messages.exportChatInvite",
+      "fields": {
+        "legacy_revoke_permanent": [
+          "flags",
+          2
+        ],
+        "request_needed": [
+          "flags",
+          3
+        ]
+      }
+    },
+    "1629922364": {
+      "name": "messages.searchGlobal",
+      "fields": {
+        "broadcasts_only": [
+          "flags",
+          1
+        ],
+        "groups_only": [
+          "flags",
+          2
+        ],
+        "users_only": [
+          "flags",
+          3
+        ]
+      }
+    },
+    "2016638777": {
+      "name": "messages.reorderStickerSets",
+      "fields": {
+        "masks": [
+          "flags",
+          0
+        ],
+        "emojis": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "3138561049": {
+      "name": "messages.setInlineBotResults",
+      "fields": {
+        "gallery": [
+          "flags",
+          0
+        ],
+        "private": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "3234821702": {
+      "name": "messages.sendInlineBotResult",
+      "fields": {
+        "silent": [
+          "flags",
+          5
+        ],
+        "background": [
+          "flags",
+          6
+        ],
+        "clear_draft": [
+          "flags",
+          7
+        ],
+        "hide_via": [
+          "flags",
+          11
+        ]
+      }
+    },
+    "2970019436": {
+      "name": "messages.editMessage",
+      "fields": {
+        "no_webpage": [
+          "flags",
+          1
+        ],
+        "invert_media": [
+          "flags",
+          16
+        ]
+      }
+    },
+    "2753805137": {
+      "name": "messages.editInlineBotMessage",
+      "fields": {
+        "no_webpage": [
+          "flags",
+          1
+        ],
+        "invert_media": [
+          "flags",
+          16
+        ]
+      }
+    },
+    "2470627847": {
+      "name": "messages.getBotCallbackAnswer",
+      "fields": {
+        "game": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "3582923530": {
+      "name": "messages.setBotCallbackAnswer",
+      "fields": {
+        "alert": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "2903482716": {
+      "name": "messages.saveDraft",
+      "fields": {
+        "no_webpage": [
+          "flags",
+          1
+        ],
+        "invert_media": [
+          "flags",
+          6
+        ]
+      }
+    },
+    "2645114939": {
+      "name": "messages.getRecentStickers",
+      "fields": {
+        "attached": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "958863608": {
+      "name": "messages.saveRecentSticker",
+      "fields": {
+        "attached": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "2308530221": {
+      "name": "messages.clearRecentStickers",
+      "fields": {
+        "attached": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "1475442322": {
+      "name": "messages.getArchivedStickers",
+      "fields": {
+        "masks": [
+          "flags",
+          0
+        ],
+        "emojis": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "2398678208": {
+      "name": "messages.setGameScore",
+      "fields": {
+        "edit_message": [
+          "flags",
+          0
+        ],
+        "force": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "363700068": {
+      "name": "messages.setInlineGameScore",
+      "fields": {
+        "edit_message": [
+          "flags",
+          0
+        ],
+        "force": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "2805064279": {
+      "name": "messages.toggleDialogPin",
+      "fields": {
+        "pinned": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "991616823": {
+      "name": "messages.reorderPinnedDialogs",
+      "fields": {
+        "force": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "163765653": {
+      "name": "messages.setBotPrecheckoutResults",
+      "fields": {
+        "success": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "469278068": {
+      "name": "messages.sendMultiMedia",
+      "fields": {
+        "silent": [
+          "flags",
+          5
+        ],
+        "background": [
+          "flags",
+          6
+        ],
+        "clear_draft": [
+          "flags",
+          7
+        ],
+        "noforwards": [
+          "flags",
+          14
+        ],
+        "update_stickersets_order": [
+          "flags",
+          15
+        ],
+        "invert_media": [
+          "flags",
+          16
+        ],
+        "allow_paid_floodskip": [
+          "flags",
+          19
+        ]
+      }
+    },
+    "896555914": {
+      "name": "messages.searchStickerSets",
+      "fields": {
+        "exclude_featured": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "2354054904": {
+      "name": "messages.markDialogUnread",
+      "fields": {
+        "unread": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "3534419948": {
+      "name": "messages.updatePinnedMessage",
+      "fields": {
+        "silent": [
+          "flags",
+          0
+        ],
+        "unpin": [
+          "flags",
+          1
+        ],
+        "pm_oneside": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "1738797278": {
+      "name": "messages.acceptUrlAuth",
+      "fields": {
+        "write_allowed": [
+          "flags",
+          0
+        ],
+        "share_phone_number": [
+          "flags",
+          3
+        ]
+      }
+    },
+    "3037016042": {
+      "name": "messages.toggleStickerSets",
+      "fields": {
+        "uninstall": [
+          "flags",
+          0
+        ],
+        "archive": [
+          "flags",
+          1
+        ],
+        "unarchive": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "4190888969": {
+      "name": "messages.deletePhoneCallHistory",
+      "fields": {
+        "revoke": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "2729812982": {
+      "name": "messages.getExportedChatInvites",
+      "fields": {
+        "revoked": [
+          "flags",
+          3
+        ]
+      }
+    },
+    "3184144245": {
+      "name": "messages.editExportedChatInvite",
+      "fields": {
+        "revoked": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "3741637966": {
+      "name": "messages.getChatInviteImporters",
+      "fields": {
+        "requested": [
+          "flags",
+          0
+        ],
+        "subscription_expired": [
+          "flags",
+          3
+        ]
+      }
+    },
+    "2145904661": {
+      "name": "messages.hideChatJoinRequest",
+      "fields": {
+        "approved": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "3766875370": {
+      "name": "messages.hideAllChatJoinRequests",
+      "fields": {
+        "approved": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "3540875476": {
+      "name": "messages.sendReaction",
+      "fields": {
+        "big": [
+          "flags",
+          1
+        ],
+        "add_to_recent": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "1777704297": {
+      "name": "messages.toggleBotInAttachMenu",
+      "fields": {
+        "write_allowed": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "647873217": {
+      "name": "messages.requestWebView",
+      "fields": {
+        "from_bot_menu": [
+          "flags",
+          4
+        ],
+        "silent": [
+          "flags",
+          5
+        ],
+        "compact": [
+          "flags",
+          7
+        ],
+        "fullscreen": [
+          "flags",
+          8
+        ]
+      }
+    },
+    "2966952579": {
+      "name": "messages.prolongWebView",
+      "fields": {
+        "silent": [
+          "flags",
+          5
+        ]
+      }
+    },
+    "1094336115": {
+      "name": "messages.requestSimpleWebView",
+      "fields": {
+        "from_switch_webview": [
+          "flags",
+          1
+        ],
+        "from_side_menu": [
+          "flags",
+          2
+        ],
+        "compact": [
+          "flags",
+          7
+        ],
+        "fullscreen": [
+          "flags",
+          8
+        ]
+      }
+    },
+    "3833378169": {
+      "name": "messages.togglePeerTranslations",
+      "fields": {
+        "disabled": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "1398901710": {
+      "name": "messages.requestAppWebView",
+      "fields": {
+        "write_allowed": [
+          "flags",
+          0
+        ],
+        "compact": [
+          "flags",
+          7
+        ],
+        "fullscreen": [
+          "flags",
+          8
+        ]
+      }
+    },
+    "2415577825": {
+      "name": "messages.setChatWallPaper",
+      "fields": {
+        "for_both": [
+          "flags",
+          3
+        ],
+        "revert": [
+          "flags",
+          4
+        ]
+      }
+    },
+    "2461288780": {
+      "name": "messages.searchEmojiStickerSets",
+      "fields": {
+        "exclude_featured": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "512883865": {
+      "name": "messages.getSavedDialogs",
+      "fields": {
+        "exclude_pinned": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "2894183390": {
+      "name": "messages.toggleSavedDialogPin",
+      "fields": {
+        "pinned": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "2339464583": {
+      "name": "messages.reorderPinnedSavedDialogs",
+      "fields": {
+        "force": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "3386908283": {
+      "name": "messages.requestMainWebView",
+      "fields": {
+        "compact": [
+          "flags",
+          7
+        ],
+        "fullscreen": [
+          "flags",
+          8
+        ]
+      }
+    },
+    "2184512894": {
+      "name": "messages.clickSponsoredMessage",
+      "fields": {
+        "media": [
+          "flags",
+          0
+        ],
+        "fullscreen": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "699516522": {
+      "name": "messages.searchStickers",
+      "fields": {
+        "emojis": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "1517122453": {
+      "name": "messages.reportMessagesDelivery",
+      "fields": {
+        "push": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "2164737372": {
+      "name": "messages.toggleSuggestedPostApproval",
+      "fields": {
+        "reject": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "242762224": {
+      "name": "messages.reorderPinnedForumTopics",
+      "fields": {
+        "force": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "798540757": {
+      "name": "messages.createForumTopic",
+      "fields": {
+        "title_missing": [
+          "flags",
+          4
+        ]
+      }
+    },
+    "3672950153": {
+      "name": "messages.composeMessageWithAI",
+      "fields": {
+        "proofread": [
+          "flags",
+          0
+        ],
+        "emojify": [
+          "flags",
+          3
+        ]
+      }
+    },
+    "2373641903": {
+      "name": "messages.composeRichMessageWithAI",
+      "fields": {
+        "proofread": [
+          "flags",
+          0
+        ],
+        "emojify": [
+          "flags",
+          3
+        ]
+      }
+    },
+    "51854712": {
+      "name": "updates.getChannelDifference",
+      "fields": {
+        "force": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "166207545": {
+      "name": "photos.updateProfilePhoto",
+      "fields": {
+        "fallback": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "59286453": {
+      "name": "photos.uploadProfilePhoto",
+      "fields": {
+        "fallback": [
+          "flags",
+          3
+        ]
+      }
+    },
+    "3779873393": {
+      "name": "photos.uploadContactProfilePhoto",
+      "fields": {
+        "suggest": [
+          "flags",
+          3
+        ],
+        "save": [
+          "flags",
+          4
+        ]
+      }
+    },
+    "3193124286": {
+      "name": "upload.getFile",
+      "fields": {
+        "precise": [
+          "flags",
+          0
+        ],
+        "cdn_supported": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "2432722695": {
+      "name": "channels.createChannel",
+      "fields": {
+        "broadcast": [
+          "flags",
+          0
+        ],
+        "megagroup": [
+          "flags",
+          1
+        ],
+        "for_import": [
+          "flags",
+          3
+        ],
+        "forum": [
+          "flags",
+          5
+        ]
+      }
+    },
+    "3862932971": {
+      "name": "channels.exportMessageLink",
+      "fields": {
+        "grouped": [
+          "flags",
+          0
+        ],
+        "thread": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "1099781276": {
+      "name": "channels.toggleSignatures",
+      "fields": {
+        "signatures_enabled": [
+          "flags",
+          0
+        ],
+        "profiles_enabled": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "4172297903": {
+      "name": "channels.getAdminedPublicChannels",
+      "fields": {
+        "by_location": [
+          "flags",
+          0
+        ],
+        "check_limit": [
+          "flags",
+          1
+        ],
+        "for_personal": [
+          "flags",
+          2
+        ],
+        "for_community_peer": [
+          "flags",
+          3
+        ]
+      }
+    },
+    "2611648071": {
+      "name": "channels.deleteHistory",
+      "fields": {
+        "for_everyone": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "3884295231": {
+      "name": "channels.getSendAs",
+      "fields": {
+        "for_paid_reactions": [
+          "flags",
+          0
+        ],
+        "for_live_stories": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "248260120": {
+      "name": "channels.toggleJoinRequest",
+      "fields": {
+        "apply_to_invites": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "3635033713": {
+      "name": "channels.updateColor",
+      "fields": {
+        "for_profile": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "1259483771": {
+      "name": "channels.updatePaidMessagesPrice",
+      "fields": {
+        "broadcast_messages_allowed": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "4103366487": {
+      "name": "bots.setCustomVerification",
+      "fields": {
+        "enabled": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "3819719777": {
+      "name": "bots.checkUsername",
+      "fields": {
+        "additional": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "3853614891": {
+      "name": "bots.createBot",
+      "fields": {
+        "via_deeplink": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "830553304": {
+      "name": "bots.editAccessSettings",
+      "fields": {
+        "restricted": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "3066622251": {
+      "name": "payments.validateRequestedInfo",
+      "fields": {
+        "save": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "3627905217": {
+      "name": "payments.clearSavedInfo",
+      "fields": {
+        "credentials": [
+          "flags",
+          0
+        ],
+        "info": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "1319744447": {
+      "name": "payments.getStarsStatus",
+      "fields": {
+        "ton": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "1775912279": {
+      "name": "payments.getStarsTransactions",
+      "fields": {
+        "inbound": [
+          "flags",
+          0
+        ],
+        "outbound": [
+          "flags",
+          1
+        ],
+        "ascending": [
+          "flags",
+          2
+        ],
+        "ton": [
+          "flags",
+          4
+        ]
+      }
+    },
+    "3642751702": {
+      "name": "payments.getStarsRevenueStats",
+      "fields": {
+        "dark": [
+          "flags",
+          0
+        ],
+        "ton": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "607378578": {
+      "name": "payments.getStarsRevenueWithdrawalUrl",
+      "fields": {
+        "ton": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "768218808": {
+      "name": "payments.getStarsTransactionsByID",
+      "fields": {
+        "ton": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "52761285": {
+      "name": "payments.getStarsSubscriptions",
+      "fields": {
+        "missing_balance": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "707422588": {
+      "name": "payments.saveStarGift",
+      "fields": {
+        "unsave": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "1845102114": {
+      "name": "payments.botCancelStarsSubscription",
+      "fields": {
+        "restore": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "225134839": {
+      "name": "payments.getSuggestedStarRefBots",
+      "fields": {
+        "order_by_revenue": [
+          "flags",
+          0
+        ],
+        "order_by_date": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "3841762467": {
+      "name": "payments.editConnectedStarRefBot",
+      "fields": {
+        "revoked": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "2933318901": {
+      "name": "payments.upgradeStarGift",
+      "fields": {
+        "keep_original_details": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "2736383337": {
+      "name": "payments.getSavedStarGifts",
+      "fields": {
+        "exclude_unsaved": [
+          "flags",
+          0
+        ],
+        "exclude_saved": [
+          "flags",
+          1
+        ],
+        "exclude_unlimited": [
+          "flags",
+          2
+        ],
+        "exclude_unique": [
+          "flags",
+          4
+        ],
+        "sort_by_value": [
+          "flags",
+          5
+        ],
+        "exclude_upgradable": [
+          "flags",
+          7
+        ],
+        "exclude_unupgradable": [
+          "flags",
+          8
+        ],
+        "peer_color_available": [
+          "flags",
+          9
+        ],
+        "exclude_hosted": [
+          "flags",
+          10
+        ]
+      }
+    },
+    "1626009505": {
+      "name": "payments.toggleChatStarGiftNotifications",
+      "fields": {
+        "enabled": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "2053087798": {
+      "name": "payments.getResaleStarGifts",
+      "fields": {
+        "sort_by_price": [
+          "flags",
+          1
+        ],
+        "sort_by_num": [
+          "flags",
+          2
+        ],
+        "for_craft": [
+          "flags",
+          4
+        ],
+        "stars_only": [
+          "flags",
+          5
+        ]
+      }
+    },
+    "3922622492": {
+      "name": "payments.resolveStarGiftOffer",
+      "fields": {
+        "decline": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "2418125671": {
+      "name": "stickers.createStickerSet",
+      "fields": {
+        "masks": [
+          "flags",
+          0
+        ],
+        "emojis": [
+          "flags",
+          5
+        ],
+        "text_color": [
+          "flags",
+          6
+        ]
+      }
+    },
+    "1124046573": {
+      "name": "phone.requestCall",
+      "fields": {
+        "video": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "2999697856": {
+      "name": "phone.discardCall",
+      "fields": {
+        "video": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "1508562471": {
+      "name": "phone.setCallRating",
+      "fields": {
+        "user_initiative": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "1221445336": {
+      "name": "phone.createGroupCall",
+      "fields": {
+        "rtmp_stream": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "2411016279": {
+      "name": "phone.joinGroupCall",
+      "fields": {
+        "muted": [
+          "flags",
+          0
+        ],
+        "video_stopped": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "2537788146": {
+      "name": "phone.toggleGroupCallSettings",
+      "fields": {
+        "reset_invite_hash": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "4045981448": {
+      "name": "phone.toggleGroupCallRecord",
+      "fields": {
+        "start": [
+          "flags",
+          0
+        ],
+        "video": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "3869926527": {
+      "name": "phone.exportGroupCallInvite",
+      "fields": {
+        "can_self_unmute": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "1525991226": {
+      "name": "phone.getGroupCallStreamRtmpUrl",
+      "fields": {
+        "live_story": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "2097431739": {
+      "name": "phone.createConferenceCall",
+      "fields": {
+        "muted": [
+          "flags",
+          0
+        ],
+        "video_stopped": [
+          "flags",
+          2
+        ],
+        "join": [
+          "flags",
+          3
+        ]
+      }
+    },
+    "2359690533": {
+      "name": "phone.deleteConferenceCallParticipants",
+      "fields": {
+        "only_left": [
+          "flags",
+          0
+        ],
+        "kick": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "3169986181": {
+      "name": "phone.inviteConferenceCallParticipant",
+      "fields": {
+        "video": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "4132394231": {
+      "name": "phone.deleteGroupCallMessages",
+      "fields": {
+        "report_spam": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "499117216": {
+      "name": "phone.deleteGroupCallParticipantMessages",
+      "fields": {
+        "report_spam": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "2873246746": {
+      "name": "stats.getBroadcastStats",
+      "fields": {
+        "dark": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "3705636359": {
+      "name": "stats.getMegagroupStats",
+      "fields": {
+        "dark": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "3068175349": {
+      "name": "stats.getMessageStats",
+      "fields": {
+        "dark": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "927985472": {
+      "name": "stats.getStoryStats",
+      "fields": {
+        "dark": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "3263036008": {
+      "name": "stats.getPollStats",
+      "fields": {
+        "dark": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "2409523352": {
+      "name": "stories.sendStory",
+      "fields": {
+        "pinned": [
+          "flags",
+          2
+        ],
+        "noforwards": [
+          "flags",
+          4
+        ],
+        "fwd_modified": [
+          "flags",
+          7
+        ]
+      }
+    },
+    "4004566565": {
+      "name": "stories.getAllStories",
+      "fields": {
+        "next": [
+          "flags",
+          1
+        ],
+        "hidden": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "2127707223": {
+      "name": "stories.getStoryViewsList",
+      "fields": {
+        "just_contacts": [
+          "flags",
+          0
+        ],
+        "reactions_first": [
+          "flags",
+          2
+        ],
+        "forwards_first": [
+          "flags",
+          3
+        ]
+      }
+    },
+    "1471926630": {
+      "name": "stories.activateStealthMode",
+      "fields": {
+        "past": [
+          "flags",
+          0
+        ],
+        "future": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "2144810674": {
+      "name": "stories.sendReaction",
+      "fields": {
+        "add_to_recent": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "3115485215": {
+      "name": "stories.getStoryReactionsList",
+      "fields": {
+        "forwards_first": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "3496594654": {
+      "name": "stories.startLive",
+      "fields": {
+        "pinned": [
+          "flags",
+          2
+        ],
+        "noforwards": [
+          "flags",
+          4
+        ],
+        "rtmp_stream": [
+          "flags",
+          5
+        ]
+      }
+    },
+    "1626764896": {
+      "name": "premium.getBoostsList",
+      "fields": {
+        "gifts": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "155164863": {
+      "name": "smsjobs.updateSettings",
+      "fields": {
+        "allow_international": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "1252538643": {
+      "name": "aicompose.createTone",
+      "fields": {
+        "display_author": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "2788710892": {
+      "name": "communities.create",
+      "fields": {
+        "hidden": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "1936576490": {
+      "name": "communities.togglePeerLink",
+      "fields": {
+        "visible": [
+          "flags",
+          0
+        ],
+        "hidden": [
+          "flags",
+          1
+        ],
+        "deleted": [
+          "flags",
+          2
+        ]
+      }
+    },
+    "3613844458": {
+      "name": "communities.toggleCommunityCollapsedInDialogs",
+      "fields": {
+        "collapsed": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "2357336488": {
+      "name": "communities.togglePeerLinkRequestApproval",
+      "fields": {
+        "reject": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "3219381565": {
+      "name": "communities.toggleAllPeerLinkRequestApproval",
+      "fields": {
+        "reject": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "2573708559": {
+      "name": "communities.toggleParticipantBanned",
+      "fields": {
+        "unban": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "3129827125": {
+      "name": "ephemeral.sendMessage",
+      "fields": {
+        "invert_media": [
+          "flags",
+          6
+        ],
+        "welcome": [
+          "flags",
+          7
+        ],
+        "anchor": [
+          "flags",
+          9
+        ],
+        "noforwards": [
+          "flags",
+          10
+        ]
+      }
+    },
+    "3483136603": {
+      "name": "ephemeral.editMessage",
+      "fields": {
+        "invert_media": [
+          "flags",
+          5
+        ],
+        "welcome": [
+          "flags",
+          6
+        ]
+      }
+    },
+    "2373705057": {
+      "name": "toncenter.performApiRequest",
+      "fields": {
+        "post": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "1383456733": {
+      "name": "wallet.getUserAddresses",
+      "fields": {
+        "force": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "2827160195": {
+      "name": "wallet.getTransactions",
+      "fields": {
+        "inbound": [
+          "flags",
+          0
+        ],
+        "outbound": [
+          "flags",
+          1
+        ]
+      }
+    },
+    "3267364729": {
+      "name": "wallet.tonConnectSubmitConnectResult",
+      "fields": {
+        "error": [
+          "flags",
+          0
+        ]
+      }
+    },
+    "1723169601": {
+      "name": "wallet.tonConnectClaimRequest",
+      "fields": {
+        "declined": [
+          "flags",
+          1
+        ]
+      }
+    }
+  }
+}

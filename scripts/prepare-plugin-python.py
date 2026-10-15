@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Prepare checksum-pinned Python iOS frameworks and Bazel resource bundles."""
-import argparse, hashlib, io, json, os, plistlib, shutil, subprocess, tarfile, urllib.request, zipfile
+import argparse, hashlib, io, json, os, plistlib, shutil, subprocess, sys, tarfile, urllib.request, zipfile
 from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 VERSION = '3.11-b11'
@@ -8,6 +8,17 @@ SHA256 = '92bda6f03a5fc5fd696b946b1917e7160e625b2ea618a43a7d6b66e9cf849b5f'
 URL = f'https://github.com/beeware/Python-Apple-support/releases/download/{VERSION}/Python-3.11-iOS-support.b11.tar.gz'
 
 PACKAGES = [('requests', '2.32.5', '2462f94637a34fd532264295e186976db0f5d453d1cdd31473c85a6a161affb6'), ('packaging', '25.0', '29572ef2b1f17581046b3a2227d5c611fb25ec70ca1ba8554b24b0e69331a484'), ('urllib3', '2.5.0', 'e6b01673c0fa6a13e374b50871808eb3bf7046c4b125b216f6bf1cc604cff0dc'), ('idna', '3.11', '771a87f49d9defaf64091e6e6fe9c18d4833f140bd19464795bc32d966ca37ea'), ('certifi', '2025.10.5', '0f212c2744a9bb6de0c56639a6f68afe01ecd92d91f14ae897c4fe7bbeeef0de'), ('charset-normalizer', '3.4.4', '7a32c560861a02ff789ad905a2fe94e3f840803362c84fecf1851cb4cf3dc37f'), ('PyYAML', '6.0.3', 'd76623373421df22fb4cf8817020cbb7ef15c725b9d5e45f17e189bfc384190f')]
+PACKAGES += [
+    ('mpmath', '1.3.0', 'a0b2b9fe80bbcd81a6647ff13108738cfb482d481d826cc0e02f5b35e5c88d2c'),
+    ('tinydb', '4.8.2', 'f97030ee5cbc91eeadd1d7af07ab0e48ceb04aa63d4a983adbaca4cba16e86c3'),
+    ('beautifulsoup4', '4.13.5', '642085eaa22233aceadff9c69651bc51e8bf3f874fb6d7104ece2beb24b47c4a'),
+    ('soupsieve', '2.8', '0cc76456a30e20f5d7f2e14a98a4ae2ee4e5abdc7c5ea0aafe795f344bc7984c'),
+    ('typing_extensions', '4.15.0', 'f0fa19c6845758ab08074a0cfa8b7aecb71c999ca73d62883bc25cc018c4e548'),
+    ('Markdown', '3.9', '9f4d91ed810864ea88a6f32c07ba8bee1346c0cc1f6b1f9f6c822f2a9667d280'),
+    ('python-dateutil', '2.9.0.post0', 'a8b2bc7bffae282281c8140a97d3aa9c14da0b136dfe83f850eea9a5f7470427'),
+    ('six', '1.17.0', '4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274'),
+    ('pytz', '2025.2', '5ddf76296dd8c44c26eb8f4b6f35488f3ccbf6fbbd7adee0b7262d43f0ec2f00'),
+]
 
 def add_packages(z):
     cache = ROOT / 'build-input/python-packages'
@@ -35,6 +46,7 @@ def add_packages(z):
                     if not member.is_dir(): z.writestr(member.filename, wheel.read(member))
 
 def prepare(archive=None, fix_install_names=True):
+    subprocess.run([sys.executable, str(ROOT / 'scripts/generate-plugin-tl.py')], check=True)
     out = ROOT / 'build-input/aftergram-python'
     out.mkdir(parents=True, exist_ok=True)
     cache = ROOT / 'build-input/python-ios.tar.gz'
@@ -97,7 +109,8 @@ def prepare(archive=None, fix_install_names=True):
                 z.write(f, str(f.relative_to(lib)))
     with zipfile.ZipFile(resources / 'aftergram_sdk.zip', 'w', zipfile.ZIP_STORED) as z:
         sdk = ROOT / 'submodules/AfterGramPython/SDK'
-        for f in sorted(sdk.rglob('*.py')): z.write(f, str(f.relative_to(sdk)))
+        for f in sorted(sdk.rglob('*')):
+            if f.is_file() and f.suffix in {'.py', '.json'}: z.write(f, str(f.relative_to(sdk)))
         add_packages(z)
     (resources / 'native-modules.json').write_text(json.dumps(dict(native_names)))
     shutil.copy2(xc / 'lib/python3.11/LICENSE.txt', resources / 'PYTHON-LICENSE.txt')

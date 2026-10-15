@@ -63,17 +63,26 @@ class BasePlugin:
     def on_send_message_hook(self, account, params): return HookResult()
     def on_update_hook(self, update_name, account, update): return HookResult()
     def on_updates_hook(self, container_name, account, updates): return HookResult()
+    def pre_request_hook(self, request_name, account, request): return HookResult()
+    def post_request_hook(self, request_name, account, response, error): return HookResult()
     def add_on_send_message_hook(self, priority=0): self._send_priority = int(priority)
     def add_hook(self, name, match_substring=False, priority=0):
         # Incoming message notifications are read-only. Request replacement is not emulated.
         supported = {'TL_updateNewMessage', 'TL_updateNewChannelMessage'}
+        from aftergram_tl import REQUEST_HOOK_NAMES
+        supported.update(REQUEST_HOOK_NAMES)
         if not (name in supported or (match_substring and any(name in event for event in supported))):
             raise NotImplementedError('Unsupported event or raw request hook on iOS: ' + name)
         self._hooks.append((name, bool(match_substring), int(priority)))
-    def get_setting(self, key, default=None): return self._host.settings[self.id].get(key, default)
+    def get_setting(self, key, default=None):
+        with self._host.state_lock: return self._host.settings.get(self.id,{}).get(key, default)
     def set_setting(self, key, value, reload_settings=False):
-        self._host.settings[self.id][key] = value
-        self._host.save_settings()
+        with self._host.state_lock:
+            from aftergram_host import current
+            ctx = current()
+            if ctx.get('background') and ctx['generation'] != self._host.generations.get(self.id,0): return
+            self._host.settings[self.id][key] = value
+            self._host.save_settings()
     def export_settings(self): return dict(self._host.settings[self.id])
     def import_settings(self, settings, reload_settings=True):
         self._host.settings[self.id].update(settings)
@@ -91,4 +100,7 @@ class BasePlugin:
         from client_utils import AccountClient
         return AccountClient(account)
     def log(self, message): self.logger.info(message)
+    def getId(self): return self.id
+    def getName(self): return self._host.registry[self.id]['name']
+    def getVersion(self): return self._host.registry[self.id]['version']
     def hook_method(self, *args, **kwargs): raise NotImplementedError('Xposed is not available on iOS')

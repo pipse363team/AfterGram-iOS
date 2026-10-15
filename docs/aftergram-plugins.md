@@ -1,42 +1,74 @@
 # Плагины AfterGram
 
-Встроенный Python 3.11 и библиотека совместимости с частью API exteraGram. Раздел находится в **Настройки → Плагины**. [Сборка с плагинами](https://github.com/pipse363team/AfterGram-iOS/actions/runs/38652153242) прошла успешно: 13 Python-тестов, iOS XCTest сохранения сообщений и встроенного runtime, сборка IPA и проверка встроенных ресурсов. Работу новой версии на iPhone ещё нужно проверить.
+Встроенный Python 3.11 и библиотека совместимости с API exteraGram. Плагины работают в iOS-клиенте через нативные адаптеры. JVM, Xposed и Android SDK в приложение не встроены.
 
-## Использование
+## Установка
 
-1. Импортировать `.py` или исходный пакет `.elyx`/`.eaf`.
-2. Если найдены поддерживаемые Android-вызовы, выбрать **Подготовить для iOS**. Замены выполняются через AST; строки и комментарии не используются для поиска вызовов. Оригинал сохраняется отдельно.
-3. Включить установленный плагин. При импорте код анализируется, но не выполняется.
-4. Открыть настройки плагина. Для быстрой проверки есть **Добавить пример Hello**: включить его и отправить `.hello Alice`.
+1. Открыть **Настройки → Плагины → Импортировать плагин**.
+2. Выбрать `.plugin`, `.py` либо исходный пакет `.elyx`/`.eaf`/`.zip`.
+3. Проверить результат анализа. Если нужны поддерживаемые замены, нажать **Подготовить для iOS**. Оригинал сохраняется отдельно; до включения код плагина не выполняется.
+4. Включить установленный плагин и открыть его настройки.
 
-## Поддерживаемая часть API
+Для проверки есть **Добавить пример Hello** и команда `.hello Alice`. [AfterGram Tools](../examples/plugins/aftergram_tools.plugin) показывает нативную форму, отправку текста и запрос `help.getNearestDc`: после импорта и включения отправить `.agdemo`.
 
-- `BasePlugin`, загрузка/выгрузка и события START/PAUSE/RESUME.
-- `HookResult`, стратегии DEFAULT/CANCEL/MODIFY/MODIFY_FINAL для исходящего текста и приоритеты обработчиков.
-- `on_send_message_hook`: текст и подписи облачных сообщений. Пересылки и секретные чаты не обрабатываются.
-- `add_hook` для `TL_updateNewMessage` и `TL_updateNewChannelMessage`: уведомления о новых входящих сообщениях после применения серверного состояния, включая чаты без уведомлений. Входящие события в этой версии доступны только для чтения.
-- Настройки Header/Divider/Switch/Input/EditText/Selector/Text, вложенные страницы и сохранение значений между перезапусками. EditText пока использует однострочный ввод.
-- Пункты меню сообщений и основное меню внутри экрана плагина.
-- `client_utils.send_text`/`send_message`: обычный текст, ответ, отложенная отправка и флаг уведомления. Вызовы из плагина не проходят повторно через плагины, чтобы исключить рекурсивные автоответы.
-- Отложенные Python callbacks через `run_on_queue` и `run_on_ui_thread`; исполняются на очереди движка. Действия с интерфейсом выполняет нативный мост.
-- Clipboard, обычное логирование и журнал ошибок. BulletinHelper отображает сообщения, когда открыт экран плагинов.
-- JSON/YAML Elyx refmap и metadata, относительные исходные модули, базовые assets/strings/settings. Простые абсолютные импорты соседних исходных модулей адаптируются в относительные. Java assets/proxy и весь Elyx API не реализованы.
-- Встроенные requests 2.32.5, packaging 25.0, urllib3 2.5.0, idna 3.11, certifi 2025.10.5, charset-normalizer 3.4.4 и чистая Python-часть PyYAML 6.0.3. Ограничения `__requirements__` проверяются относительно этих версий.
+## Поддержка API
+
+| Возможность | Реализация |
+| --- | --- |
+| BasePlugin | Загрузка/выгрузка, START/STOP/PAUSE/RESUME, настройки, журнал ошибок |
+| Исходящие сообщения | Приоритеты, DEFAULT/CANCEL/MODIFY/MODIFY_FINAL, текст и подписи облачных сообщений, entities |
+| Запросы Telegram | 840 методов и 1700 конструкторов, сгенерированных из API этой сборки; `send_request`, callback с response/error, отмена запросов |
+| Перехват запросов | `pre_request_hook` и `post_request_hook` для обычного `Network.request`, приоритеты, подстроки, отмена и замена данных; ошибки плагина возвращают исходный пакет |
+| Входящие сообщения | `TL_updateNewMessage` и `TL_updateNewChannelMessage` после применения состояния; события доступны для чтения |
+| TLRPC | Старый `TLRPC.TL_account_updateProfile` и новый `TL_account.updateProfile`, JavaList, snake_case/camelCase полей, flags/flags2, vectors, bytes |
+| Текст | Отправка и редактирование, ответы, отложенная отправка, notify, HTML/Markdown, UTF-16 entities и custom emoji |
+| Медиа | `send_photo`, `send_video`, `send_audio`, `send_document`: локальные файлы до 512 MB, подписи с форматированием, спойлеры; копирование в mediaBox перед загрузкой |
+| Настройки | Header/Divider/Switch/Input/EditText/Selector/Text, вложенные страницы, длинное нажатие, multiline, max_length, mask, accent/red |
+| Диалоги | AlertDialogBuilder: кнопки, списки, простые формы, cancel/dismiss callbacks, текстовый прогресс и загрузка |
+| Portable UI | TextView/EditText/Button/LinearLayout/FrameLayout превращаются в содержимое нативной формы; произвольная Android-вёрстка не воспроизводится |
+| Меню | Меню сообщений и основное меню внутри экрана плагина |
+| Аккаунт | `self.client(account)`, get_user_config, ограниченный get_messages_controller/get_account_instance/get_connections_manager; данные своего пользователя и известные peers |
+| Фон | `run_on_queue` использует пул до четырёх Python workers на аккаунт; результаты доставляются через очередь движка. UI callbacks выполняются на очереди движка, действия с UIKit — на main thread |
+| Утилиты | Clipboard, Runnable R, отмена запланированных callbacks, Java wrappers для чисел/строк, стандартные каталоги и операции с файлами |
+| Ссылки | ACTION_VIEW для http/https/tg/mailto, ACTION_SEND текста через системное меню Share |
+| Elyx | JSON/YAML refmap и metadata, исходные модули, assets/strings/settings, относительные импорты |
+
+`UserConfig.selectedAccount` и account helpers используют аккаунт callback. Его ID отличается от Android-индекса. Обращение к другому аккаунту отклоняется. `getInputPeer` использует данные текущего чата либо peers из полученных API-ответов; он не придумывает access hash.
 
 ## Автоматическая адаптация
 
-Поддержаны `from org.telegram.messenger import AndroidUtilities, UserConfig` и `from java.lang import String, Integer, Long`, включая aliases. Это ограниченные реализации методов этих классов, а не Java runtime. `UserConfig.selectedAccount` относится к аккаунту callback; числовые идентификаторы аккаунтов отличаются от индексов Android.
+Замены выполняются через AST и сохраняют aliases. Поддержаны группы `org.telegram.messenger`, `java.lang`, переносимые элементы `android.widget`/`android.view`, `android.text.InputType`, `android.content.Intent`/Context, `android.net.Uri` и `LayoutHelper`. Символы без реализации перечисляются в отчёте импорта.
 
-Сканирование зависимостей предварительное: динамические импорты, названия классов и вызовы нельзя полностью проверить статически. Если выполнение вызывает исключение, плагин отключается и ошибка попадает в журнал. Для обычных Python-циклов предусмотрен лимит callback в одну секунду; он не является гарантией прерывания нативных блокирующих вызовов. Python работает в процессе клиента, библиотека совместимости не является отдельной песочницей.
+Wire-схема берётся из Swift-сериализаторов этого checkout. Имена 1197 Boolean-флагов сопоставлены по точному constructor ID и имени с [закреплённой официальной TL-схемой](https://github.com/telegramdesktop/tdesktop/blob/d36272b193057a114ef3a9fe7f15a8f8b587c489/Telegram/SourceFiles/mtproto/scheme/api.tl); несовпавшие версии не подмешиваются. Метаданные и SHA-256 источника сохранены в `scripts/plugin-tl-flags.json`. Неизвестное поле даёт ошибку вместо молчаливого игнорирования.
 
-Не поддерживаются Xposed, DexMaker, Java reflection, Android View/Custom, произвольные TLRPC requests, изменение ответов сервера, редактирование сообщений, отправка медиа из плагина, parse_mode, загрузка произвольных PyPI зависимостей, compiled Elyx/pyc, wheels в пакете, межплагинные зависимости, меню чата/профиля и DevServer через ADB. При обнаружении этих возможностей требуется доработка.
+Импорт предварительно проверяет зависимости и доступные SDK-символы. Динамические импорты и все ветки выполнения нельзя проверить статически, поэтому успешно установленный плагин всё равно может потребовать доработки.
 
-## Хранение и сборка
+## Библиотеки
 
-Код и настройки хранятся в `Account.basePath/aftergram-plugins`, отдельно для каждого аккаунта. Обновление сохраняет настройки и устанавливает плагин выключенным. Удаление убирает его код, settings, callbacks и меню. Новые совместимые плагины не требуют пересборки IPA; изменение нативного API требует обновления клиента.
+В IPA входят закреплённые версии requests, urllib3, idna, certifi, charset-normalizer, packaging, чистая Python-часть PyYAML, mpmath, tinydb, beautifulsoup4, soupsieve, typing_extensions, Markdown, python-dateutil, six и pytz. Версии и SHA-256 перечислены в `scripts/prepare-plugin-python.py`; `__requirements__` проверяются с учётом markers для Python 3.11/iOS.
 
-`scripts/prepare-plugin-python.py` получает закреплённый архив BeeWare Python-Apple-support 3.11-b11, проверяет SHA-256 и готовит runtime, 58 нативных расширений и ресурсный bundle. Библиотеки скачиваются с PyPI с закреплёнными версиями и SHA-256. Это выполняется перед Bazel. В generated resources сохраняются Python license и лицензии поставляемых Python wheels.
+## Выполнение и ошибки
 
-`scripts/build-retention.sh` запускает Python-тесты и iOS-тесты сохранения сообщений и встроенного runtime, затем собирает IPA. `scripts/verify-plugin-ipa.py` проверяет наличие Python.framework, расширений и SDK/stdlib в готовом приложении. Симуляторные расширения подготовлены для arm64.
+Обычная ошибка показывается коротко, полный traceback доступен в прокручиваемом журнале. Ошибка hook отключает плагин и сохраняет исходный текст/пакет. Неудавшийся callback не отправляет накопленные им действия.
 
-Документация API: [exteraGram Plugins](https://plugins.exteragram.app/docs), [Plugin Class](https://plugins.exteragram.app/docs/plugin-class), [Elyx](https://plugins.exteragram.app/docs/elyx). Runtime: [Python Apple Support](https://github.com/beeware/Python-Apple-support).
+Для foreground callbacks действует Python-бюджет в одну секунду, для worker callbacks — 30 секунд. Opcode tracing покрывает оптимизированные однострочные циклы Python 3.11. Он не может принудительно прервать блокирующую C-функцию: для сети следует задавать timeout. Workers разгружают очередь движка при I/O, но Python GIL сохраняется.
+
+При отключении плагина отменяются его ожидающие запросы, callbacks, меню и диалоги, поздние worker-результаты отбрасываются. Начатую C-функцию остановить принудительно нельзя. iOS может приостановить приложение в фоне, поэтому таймеры не гарантируют непрерывную работу при закрытом приложении.
+
+Код и настройки находятся в `Account.basePath/aftergram-plugins`, отдельно по аккаунтам. Обновление сохраняет настройки и устанавливает плагин выключенным. Python работает в процессе клиента; это не отдельная защитная песочница.
+
+## Границы совместимости
+
+Требуют отдельного переноса: Xposed/DexMaker и произвольный перехват Java-методов, Java reflection, Custom/native Android Views, экраны Android, MVEL-условия меню, меню чата/профиля, изменение входящего состояния до применения к базе, замена медиа при редактировании, compiled Elyx/pyc, Java assets/proxy, межплагинные зависимости, произвольные PyPI wheels и DevServer через ADB. MTProto-методы вне обычного `Network.request` не проходят через request hooks.
+
+Наличие класса TLRPC не означает, что все Android-классы плагина перенесены. Старые имена конструкторов, отсутствующие в текущем API, требуют обновления. Успешный запрос зависит также от серверных прав, состояния аккаунта и доступности peer.
+
+## Проверка и сборка
+
+Локально проходят 35 Python-тестов на Python 3.11. Отдельный iOS XCTest сравнивает Python-пакеты с нативными сериализаторами запросов и проверяет 1700 конструкторов через Swift parse/serialize, встроенные workers, `.plugin`, форматирование и остановку зацикленного callback. Результат новой macOS-сборки и проверка на устройстве фиксируются после их завершения.
+
+Локальная проверка опубликованных исходников: Pangu импортируется с адаптацией Intent/Uri, строит настройки и меняет исходящий текст; Clock Nickname загружается и формирует запрос обновления профиля. Эти проверки не меняли профиль через реальную сеть и не заменяют тестирование на iPhone.
+
+Подготовка runtime, iOS-тесты и сборка IPA — отдельные шаги Actions. Проверка IPA подтверждает наличие Python.framework, 58 нативных расширений, SDK, TL-схемы и stdlib. Новые совместимые плагины не требуют пересборки приложения; новые нативные API требуют обновления IPA.
+
+Документация SDK: [exteraGram Plugins](https://plugins.exteragram.app/docs). Runtime: [Python Apple Support](https://github.com/beeware/Python-Apple-support).

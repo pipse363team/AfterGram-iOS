@@ -843,6 +843,8 @@ private final class NetworkSpeedLimitedEventState {
 }
 
 public final class Network: NSObject {
+    public var afterGramPluginShouldHook: ((String) -> Bool)?
+    public var afterGramPluginRequestHook: ((String, String, Data, [String: Any]?, @escaping (Data?) -> Void) -> Void)?
     public let encryptionProvider: EncryptionProvider
     
     private let queue: Queue
@@ -1304,6 +1306,41 @@ public final class Network: NSObject {
     }
     
     public func request<T>(_ data: (FunctionDescription, Buffer, DeserializeFunctionResponse<T>), tag: NetworkRequestDependencyTag? = nil, automaticFloodWait: Bool = true, onFloodWaitError: ((String) -> Void)? = nil) -> Signal<T, MTRpcError> {
+        guard self.afterGramPluginShouldHook?(data.0.name) == true else {
+            return self.requestWithoutPlugins(data, tag: tag, automaticFloodWait: automaticFloodWait, onFloodWaitError: onFloodWaitError)
+        }
+        return self.pluginHookPayload(name: data.0.name, stage: "pre", payload: data.1.makeData())
+        |> mapToSignal { payload -> Signal<(T, Data), MTRpcError> in
+            let parser = DeserializeFunctionResponse<(T, Data)> { buffer in
+                guard let value = data.2.parse(buffer) else { return nil }
+                return (value, buffer.makeData())
+            }
+            return self.requestWithoutPlugins((data.0, Buffer(data: payload), parser), tag: tag, automaticFloodWait: automaticFloodWait, onFloodWaitError: onFloodWaitError)
+        }
+        |> mapToSignal { result -> Signal<T, MTRpcError> in
+            return self.pluginHookPayload(name: data.0.name, stage: "post", payload: result.1)
+            |> map { payload in data.2.parse(Buffer(data: payload)) ?? result.0 }
+        }
+        |> `catch` { error -> Signal<T, MTRpcError> in
+            self.afterGramPluginRequestHook?(data.0.name, "post", Data(), ["code":error.errorCode, "text":error.errorDescription ?? "RPC error"], { _ in })
+            return .fail(error)
+        }
+    }
+
+    private func pluginHookPayload(name: String, stage: String, payload: Data) -> Signal<Data, MTRpcError> {
+        guard let hook = self.afterGramPluginRequestHook else { return .single(payload) }
+        return Signal { subscriber in
+            let cancelled = Atomic(value: false)
+            hook(name, stage, payload, nil) { result in
+                if cancelled.with({ $0 }) { return }
+                if let result { subscriber.putNext(result) }
+                subscriber.putCompletion()
+            }
+            return ActionDisposable { _ = cancelled.swap(true) }
+        }
+    }
+
+    private func requestWithoutPlugins<T>(_ data: (FunctionDescription, Buffer, DeserializeFunctionResponse<T>), tag: NetworkRequestDependencyTag?, automaticFloodWait: Bool, onFloodWaitError: ((String) -> Void)?) -> Signal<T, MTRpcError> {
         let requestService = self.requestService
         return Signal { [requestService] subscriber in
             let request = NetworkEngineRequest(

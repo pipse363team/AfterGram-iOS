@@ -18,7 +18,9 @@ class Setting:
     def as_json(self, plugin, index):
         return {'kind': self.kind, 'key': self.key, 'text': self.text, 'subtext': self.subtext,
                 'value': plugin.get_setting(self.key, self.default) if self.key else None,
-                'items': getattr(self, 'items', []), 'index': index, 'subpage': callable(self.create_sub_fragment)}
+                'items': getattr(self, 'items', []), 'index': index, 'subpage': callable(self.create_sub_fragment),
+                'multiline': bool(getattr(self, 'multiline', False)), 'max_length': getattr(self, 'max_length', None),
+                'red': bool(getattr(self, 'red', False)), 'accent': bool(getattr(self, 'accent', False))}
 class Header(Setting): pass
 class Divider(Setting): pass
 class Switch(Setting): pass

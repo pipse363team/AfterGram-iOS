@@ -2,6 +2,7 @@
 """Check that the app contains its Python resources and signed-framework inputs."""
 import argparse
 import json
+import io
 import zipfile
 from pathlib import Path
 
@@ -17,6 +18,12 @@ def verify(path):
         resource = bundles[0]
         for file in ['python311.zip', 'aftergram_sdk.zip', 'PYTHON-LICENSE.txt']:
             if resource + file not in names: raise ValueError('Missing Python resource: ' + file)
+        with zipfile.ZipFile(io.BytesIO(ipa.read(resource + 'aftergram_sdk.zip'))) as sdk:
+            for file in ['aftergram_host.py','aftergram_tl.py','aftergram_tl_schema.json','ui/alert.py','extera_utils/text_formatting.py','org/telegram/tgnet/tl/__init__.py']:
+                if file not in sdk.namelist(): raise ValueError('Missing plugin SDK module: ' + file)
+            schema = json.loads(sdk.read('aftergram_tl_schema.json'))
+            if sum(bool(model.get('function')) for model in schema) != 840 or len(schema) != 2540:
+                raise ValueError('Unexpected plugin Telegram API schema')
         modules = json.loads(ipa.read(resource + 'native-modules.json'))
         for framework in modules.values():
             if root + f'Frameworks/{framework}.framework/{framework}' not in names: raise ValueError('Missing native Python extension: ' + framework)

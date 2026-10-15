@@ -13,9 +13,14 @@ test -d "$DEVELOPER_DIR"
 export USE_BAZEL_VERSION="$(python3 -c 'import json; print(json.load(open("versions.json"))["bazel"].split(":")[0])')"
 RETENTION_BAZEL_PATH="$(command -v bazelisk)"
 export RETENTION_BAZEL_PATH
-python3 scripts/prepare-retention-build.py
-python3 scripts/prepare-plugin-python.py
-python3 -m unittest discover -s scripts/tests -p test_plugin_host.py
+AFTERGRAM_BUILD_STAGE="${1:-all}"
+case "$AFTERGRAM_BUILD_STAGE" in all|prepare|test|build) ;; *) echo "Unknown build stage" >&2; exit 2 ;; esac
+if [[ "$AFTERGRAM_BUILD_STAGE" == all || "$AFTERGRAM_BUILD_STAGE" == prepare ]]; then
+  python3 scripts/prepare-retention-build.py
+  python3 scripts/prepare-plugin-python.py
+  python3 -m unittest discover -s scripts/tests -p test_plugin_host.py
+fi
+if [[ "$AFTERGRAM_BUILD_STAGE" == prepare ]]; then exit 0; fi
 
 RETENTION_BUILD_NUMBER="${GITHUB_RUN_NUMBER:-10000}"
 RETENTION_BAZEL_FLAGS=(
@@ -24,13 +29,17 @@ RETENTION_BAZEL_FLAGS=(
   --ios_signing_cert_name=-
   --verbose_failures
   --features=swift.use_global_module_cache
+  --disk_cache="$HOME/Library/Caches/AfterGramBazel"
+  --experimental_disk_cache_gc_max_size=6G
+  --repository_cache="$HOME/Library/Caches/AfterGramRepositories"
 )
 
-if [[ "${RETENTION_RUN_TESTS:-true}" == true ]]; then
+if [[ "$AFTERGRAM_BUILD_STAGE" != build && "${RETENTION_RUN_TESTS:-true}" == true ]]; then
   "$RETENTION_BAZEL_PATH" test //submodules/TelegramCore:TelegramCoreTests \
     "${RETENTION_BAZEL_FLAGS[@]}" --ios_multi_cpus=sim_arm64 \
     --test_filter="DeletedMessageRetentionTests,AfterGramPluginTests" --test_output=errors
 fi
+if [[ "$AFTERGRAM_BUILD_STAGE" == test ]]; then exit 0; fi
 
 "$RETENTION_BAZEL_PATH" build //Telegram:Telegram \
   "${RETENTION_BAZEL_FLAGS[@]}" -c opt --ios_multi_cpus=arm64 \

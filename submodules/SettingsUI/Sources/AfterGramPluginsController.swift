@@ -7,6 +7,63 @@ import Display
 import TelegramCore
 import TelegramPresentationData
 
+private final class AfterGramPluginTextController: ViewController {
+    private let textView = UITextView()
+    private let context: AccountContext
+    private let initialText: String
+    private let maximum: Int?
+    private let save: ((String, @escaping (String?) -> Void) -> Void)?
+    init(context: AccountContext, title: String, text: String, maximum: Int? = nil, save: ((String, @escaping (String?) -> Void) -> Void)? = nil) {
+        self.context = context
+        self.initialText = text
+        self.maximum = maximum
+        self.save = save
+        let presentation = context.sharedContext.currentPresentationData.with { $0 }
+        super.init(navigationBarPresentationData: NavigationBarPresentationData(presentationData: presentation))
+        self.title = title
+        if save != nil {
+            let ru = presentation.strings.baseLanguageCode.lowercased().hasPrefix("ru")
+            self.navigationItem.rightBarButtonItem = UIBarButtonItem(title: ru ? "Сохранить" : "Save", style: .done, target: self, action: #selector(self.savePressed))
+        }
+    }
+    required init(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+    override func loadDisplayNode() {
+        self.displayNode = ASDisplayNode()
+        let theme = self.context.sharedContext.currentPresentationData.with { $0 }.theme
+        self.textView.backgroundColor = theme.list.blocksBackgroundColor
+        self.textView.textColor = theme.list.itemPrimaryTextColor
+        self.textView.font = UIFont.monospacedSystemFont(ofSize: 14, weight: .regular)
+        self.textView.text = self.initialText
+        self.textView.isEditable = self.save != nil
+        self.textView.textContainerInset = UIEdgeInsets(top: 16, left: 12, bottom: 16, right: 12)
+        self.displayNode.view.addSubview(self.textView)
+        self.displayNodeDidLoad()
+    }
+    override func containerLayoutUpdated(_ layout: ContainerViewLayout, transition: ContainedViewLayoutTransition) {
+        super.containerLayoutUpdated(layout, transition: transition)
+        let top = self.navigationLayout(layout: layout).navigationFrame.maxY
+        let bottom = layout.inputHeight ?? layout.intrinsicInsets.bottom
+        transition.updateFrame(view: self.textView, frame: CGRect(x: 0, y: top, width: layout.size.width, height: max(0, layout.size.height - top - bottom)))
+    }
+    @objc private func savePressed() {
+        let value = self.textView.text ?? ""
+        if let maximum = self.maximum, value.unicodeScalars.count > maximum {
+            self.showError("Maximum: \(maximum)");return
+        }
+        self.navigationItem.rightBarButtonItem?.isEnabled = false
+        self.save?(value) { [weak self] error in
+            guard let self else { return }
+            self.navigationItem.rightBarButtonItem?.isEnabled = true
+            if let error { self.showError(error) } else { self.navigationController?.popViewController(animated: true) }
+        }
+    }
+    private func showError(_ text: String) {
+        let alert = UIAlertController(title: nil, message: text, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        self.present(alert, animated: true)
+    }
+}
+
 private final class AfterGramPluginsController: ViewController, UITableViewDataSource, UITableViewDelegate, UIDocumentPickerDelegate {
     private let context: AccountContext
     private let pluginId: String?
@@ -30,6 +87,7 @@ private final class AfterGramPluginsController: ViewController, UITableViewDataS
         self.table.backgroundColor = presentation.theme.list.blocksBackgroundColor
         self.table.rowHeight = UITableView.automaticDimension
         self.table.estimatedRowHeight = 62
+        self.table.addGestureRecognizer(UILongPressGestureRecognizer(target: self, action: #selector(self.longPressed(_:))))
     }
     required init(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
     deinit {
@@ -56,6 +114,14 @@ private final class AfterGramPluginsController: ViewController, UITableViewDataS
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         self.present(alert, animated: true)
     }
+    @objc private func longPressed(_ gesture: UILongPressGestureRecognizer) {
+        guard gesture.state == .began, let pluginId = self.pluginId,
+              let index = self.table.indexPathForRow(at: gesture.location(in: self.table))?.row else { return }
+        self.context.account.afterGramPlugins.request(["op": "long_press", "id": pluginId, "index": index, "path": self.settingsPath]) { [weak self] response in
+            if let error = response["error"] as? String { self?.show(error) }
+            self?.reload()
+        }
+    }
     private func reload() {
         var request: [String: Any] = ["op": "list"]
         if let pluginId = self.pluginId { request = ["op": "settings", "id": pluginId, "path": self.settingsPath] }
@@ -72,7 +138,7 @@ private final class AfterGramPluginsController: ViewController, UITableViewDataS
     }
     func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
         if self.pluginId == nil && section == 0 {
-            return self.ru ? "Импортируй Python-плагин или исходный пакет Elyx. При необходимости появится кнопка «Подготовить для iOS»." : "Import a Python or Elyx source plugin. When supported adaptations are available, choose Prepare for iOS."
+            return self.ru ? "Импортируй .plugin, .py или исходный пакет Elyx. При необходимости появится кнопка «Подготовить для iOS»." : "Import a .plugin, .py or Elyx source plugin. When supported adaptations are available, choose Prepare for iOS."
         }
         return nil
     }
@@ -100,6 +166,8 @@ private final class AfterGramPluginsController: ViewController, UITableViewDataS
             let item = self.records[indexPath.row]
             cell.textLabel?.text = item["text"] as? String
             cell.detailTextLabel?.text = item["subtext"] as? String
+            if item["red"] as? Bool == true { cell.textLabel?.textColor = .systemRed }
+            else if item["accent"] as? Bool == true { cell.textLabel?.textColor = presentation.theme.list.itemAccentColor }
             switch item["kind"] as? String {
             case "Switch":
                 let toggle = UISwitch()
@@ -110,7 +178,9 @@ private final class AfterGramPluginsController: ViewController, UITableViewDataS
                 cell.accessoryView = toggle
             case "Input", "EditText", "Selector":
                 cell.accessoryType = .disclosureIndicator
-                if let value = item["value"], !(value is NSNull) { cell.detailTextLabel?.text = String(describing: value) }
+                if item["kind"] as? String == "Selector", let selected = item["value"] as? Int, let items = item["items"] as? [String], items.indices.contains(selected) {
+                    cell.detailTextLabel?.text = items[selected]
+                } else if let value = item["value"], !(value is NSNull) { cell.detailTextLabel?.text = String(describing: value) }
             case "Header", "Divider":
                 cell.selectionStyle = .none
                 cell.textLabel?.font = UIFont.preferredFont(forTextStyle: .headline)
@@ -126,6 +196,17 @@ private final class AfterGramPluginsController: ViewController, UITableViewDataS
             let item = self.records[indexPath.row]
             switch item["kind"] as? String {
             case "Input", "EditText":
+                if item["multiline"] as? Bool == true {
+                    let editor = AfterGramPluginTextController(context: self.context, title: item["text"] as? String ?? "", text: item["value"] as? String ?? "", maximum: item["max_length"] as? Int, save: { [weak self] value, completion in
+                        guard let self, let id = self.pluginId else { completion("Plugin is unavailable");return }
+                        self.context.account.afterGramPlugins.request(["op": "setting", "id": id, "index": indexPath.row, "value": value, "path": self.settingsPath]) { response in
+                            if let error = response["error"] as? String { completion(error);return }
+                            completion(nil)
+                        }
+                    })
+                    self.navigationController?.pushViewController(editor, animated: true)
+                    return
+                }
                 let alert = UIAlertController(title: item["text"] as? String, message: item["subtext"] as? String, preferredStyle: .alert)
                 alert.addTextField { $0.text = item["value"] as? String }
                 alert.addAction(UIAlertAction(title: self.ru ? "Отмена" : "Cancel", style: .cancel))
@@ -154,7 +235,7 @@ private final class AfterGramPluginsController: ViewController, UITableViewDataS
             switch indexPath.row {
             case 0:
                 guard !self.busy else { return }
-                let picker = UIDocumentPickerViewController(forOpeningContentTypes: [.pythonScript, .data], asCopy: true)
+                let picker = UIDocumentPickerViewController(forOpeningContentTypes: [.item], asCopy: true)
                 picker.delegate = self
                 picker.allowsMultipleSelection = false
                 self.present(picker, animated: true)
@@ -166,7 +247,8 @@ private final class AfterGramPluginsController: ViewController, UITableViewDataS
             default:
                 self.context.account.afterGramPlugins.request(["op": "logs"]) { [weak self] response in
                     let text = (response["logs"] as? [String] ?? []).joined(separator: "\n")
-                    self?.show(text.isEmpty ? (self?.ru == true ? "Журнал пуст" : "No logs") : text)
+                    guard let self else { return }
+                    self.navigationController?.pushViewController(AfterGramPluginTextController(context: self.context, title: self.ru ? "Журнал плагинов" : "Plugin Logs", text: text.isEmpty ? (self.ru ? "Журнал пуст" : "No logs") : text), animated: true)
                 }
             }
             return
@@ -216,25 +298,33 @@ private final class AfterGramPluginsController: ViewController, UITableViewDataS
             try FileManager.default.copyItem(at: source, to: temp)
             self.temporaryImport = temp
             self.busy = true
-            self.context.account.afterGramPlugins.request(["op": "inspect", "path": temp.path]) { [weak self] response in
+            controller.dismiss(animated: true) { [weak self] in self?.inspectImport(temp) }
+        } catch { self.show(error.localizedDescription) }
+    }
+    private func inspectImport(_ temp: URL) {
+        self.context.account.afterGramPlugins.request(["op": "inspect", "path": temp.path]) { [weak self] response in
                 guard let self else { return }
                 let report = response["report"] as? [String: Any] ?? [:]
                 let issues = report["issues"] as? [String] ?? []
                 if let error = response["error"] as? String { self.finishImport();self.show(error);return }
                 if !issues.isEmpty { self.finishImport();self.show(issues.joined(separator: "\n"));return }
                 let changes = report["changes"] as? [String] ?? []
-                if changes.isEmpty { self.install(temp, adapt: false);return }
-                let alert = UIAlertController(title: self.ru ? "Подготовить для iOS" : "Prepare for iOS", message: changes.joined(separator: "\n"), preferredStyle: .alert)
+                let metadata = report["metadata"] as? [String: Any] ?? [:]
+                let name = metadata["__name__"] as? String ?? temp.lastPathComponent
+                let alert = UIAlertController(title: name, message: changes.isEmpty ? (self.ru ? "Плагин будет установлен выключенным." : "The plugin will be installed disabled.") : changes.joined(separator: "\n"), preferredStyle: .alert)
                 alert.addAction(UIAlertAction(title: self.ru ? "Отмена" : "Cancel", style: .cancel) { [weak self] _ in self?.finishImport() })
-                alert.addAction(UIAlertAction(title: self.ru ? "Подготовить" : "Prepare", style: .default) { [weak self] _ in self?.install(temp, adapt: true) })
+                alert.addAction(UIAlertAction(title: changes.isEmpty ? (self.ru ? "Установить" : "Install") : (self.ru ? "Подготовить для iOS" : "Prepare for iOS"), style: .default) { [weak self] _ in self?.install(temp, adapt: !changes.isEmpty) })
                 self.present(alert, animated: true)
-            }
-        } catch { self.show(error.localizedDescription) }
+        }
     }
     private func install(_ path: URL, adapt: Bool) {
         self.context.account.afterGramPlugins.request(["op": "install", "path": path.path, "adapt": adapt]) { [weak self] response in
             self?.finishImport()
             if let error = response["error"] as? String { self?.show(error) }
+            else if response["installed"] as? Bool != true {
+                let report = response["report"] as? [String: Any] ?? [:]
+                self?.show((report["issues"] as? [String] ?? []).joined(separator: "\n"))
+            }
             self?.reload()
         }
     }

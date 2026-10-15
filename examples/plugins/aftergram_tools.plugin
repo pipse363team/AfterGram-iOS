@@ -1,0 +1,37 @@
+from base_plugin import BasePlugin, HookResult, HookStrategy
+from client_utils import get_last_fragment, send_text, send_request
+from ui.settings import Header, Input
+from ui.alert import AlertDialogBuilder
+from ui.bulletin import BulletinHelper
+from android.widget import EditText
+from org.telegram.tgnet import TLRPC
+
+__id__ = 'aftergram_tools'
+__name__ = 'AfterGram Tools'
+__description__ = 'Type .agdemo to try a native form, sending text and a Telegram API request.'
+__author__ = 'AfterGram'
+__version__ = '1.0'
+
+class AfterGramTools(BasePlugin):
+    def on_plugin_load(self): self.add_on_send_message_hook()
+
+    def create_settings(self):
+        return [Header(text='AfterGram Tools'), Input(key='greeting', text='Default message', default='Hello from AfterGram!')]
+
+    def on_send_message_hook(self, account, params):
+        if params.message.strip() != '.agdemo': return HookResult()
+        activity = get_last_fragment().getParentActivity()
+        field = EditText(activity)
+        field.setText(self.get_setting('greeting', 'Hello from AfterGram!'))
+        dialog = AlertDialogBuilder(activity).set_title('AfterGram Tools').set_view(field)
+        dialog.set_positive_button('Send', lambda builder, which: send_text(params.peer, field.getText().toString()))
+        dialog.set_negative_button('Cancel')
+        dialog.set_neutral_button('Server info', self.server_info)
+        dialog.show()
+        return HookResult(strategy=HookStrategy.CANCEL)
+
+    def server_info(self, builder, which):
+        def received(response, error):
+            if error: BulletinHelper.show_error(error.text)
+            else: BulletinHelper.show_info('Nearest Telegram DC: ' + str(response.nearest_dc))
+        send_request(TLRPC.TL_help_getNearestDc(), received)

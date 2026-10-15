@@ -25,6 +25,14 @@ Based on the official Telegram iOS 13.0 client. Adds deleted message retention.
 
 **AfterGram is available only for iOS and iPadOS.** It is an unofficial client and is not affiliated with Telegram.
 
+## Plugins
+
+Import `.plugin`, `.py` and Elyx source packages in **Settings → Plugins**. Choose **Prepare for iOS** when supported Android calls need adaptation.
+
+The engine supports native settings and dialogs, text and media operations, Telegram API requests and background tasks. Compatibility depends on the APIs each plugin uses; Xposed and arbitrary Android screens require porting.
+
+[Supported features](docs/aftergram-plugins.md) · [Example plugin](examples/plugins/aftergram_tools.plugin)
+
 ## Installation
 
 1. Download **AfterGram-13.0.ipa** from [Releases](https://github.com/pipse363team/AfterGram-iOS/releases).
