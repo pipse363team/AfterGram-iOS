@@ -42,6 +42,16 @@ final class DeletedMessageRetentionTests: XCTestCase {
         XCTAssertNil(copyRetainedMedia(resource: LocalFileMediaResource(fileId: 999), mediaBox: self.mediaBox))
     }
 
+    func testViewOnceMediaBackupAttributeRoundTripsMedia() {
+        let file = TelegramMediaFile(fileId: MediaId(namespace: Namespaces.Media.CloudFile, id: 55), partialReference: nil, resource: LocalFileMediaResource(fileId: 56, size: 3), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "image/jpeg", size: 3, attributes: [], alternativeRepresentations: [])
+        let original = AfterGramViewOnceMediaBackupAttribute(media: [file])
+        let encoder = PostboxEncoder()
+        original.encode(encoder)
+        let decoded = AfterGramViewOnceMediaBackupAttribute(decoder: PostboxDecoder(buffer: MemoryBuffer(data: encoder.makeData())))
+        let decodedFile = decoded.media.first as? TelegramMediaFile
+        XCTAssertEqual(decodedFile?.resource.id, file.resource.id)
+    }
+
     func testGifVideoAndRoundVideoKeepTheirPlaybackMetadata() throws {
         let cases: [[TelegramMediaFileAttribute]] = [
             [.Animated, .Video(duration: 3, size: PixelDimensions(width: 320, height: 240), flags: [], preloadSize: nil, coverTime: nil, videoCodec: nil)],
@@ -107,21 +117,45 @@ final class DeletedMessageRetentionTests: XCTestCase {
         let id = SparseFixtures.messageId(SparseFixtures.channelId, 42)
         let missingId = SparseFixtures.messageId(SparseFixtures.channelId, 43)
         let viewOnceId = SparseFixtures.messageId(SparseFixtures.channelId, 44)
+        let viewOnceResource = LocalFileMediaResource(fileId: 444, size: 3)
+        box.mediaBox.storeResourceData(viewOnceResource.id, data: Data([7, 8, 9]), synchronous: true)
+        let viewOnceFile = TelegramMediaFile(fileId: MediaId(namespace: Namespaces.Media.CloudFile, id: 444), partialReference: nil, resource: viewOnceResource, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "image/jpeg", size: 3, attributes: [], alternativeRepresentations: [])
         let transaction = box.transaction { transaction -> Void in
             let message = SparseFixtures.message(SparseFixtures.channelId, 42, timestamp: 10).withUpdatedText("kept")
             let _ = transaction.addMessages([retentionStoreMessage(message, attributes: [], media: [], groupingKey: nil)], location: .Random)
-            let viewOnceMessage = SparseFixtures.message(SparseFixtures.channelId, 44, timestamp: 10).withUpdatedAttributes([AutoclearTimeoutMessageAttribute(timeout: viewOnceTimeout, countdownBeginTime: nil)])
+            let viewOnceMessage = SparseFixtures.message(SparseFixtures.channelId, 44, timestamp: 10).withUpdatedAttributes([
+                AutoclearTimeoutMessageAttribute(timeout: viewOnceTimeout, countdownBeginTime: nil),
+                AfterGramViewOnceMediaBackupAttribute(media: [viewOnceFile])
+            ])
             XCTAssertTrue(afterGramIsViewOnceMessage(viewOnceMessage))
-            let _ = transaction.addMessages([retentionStoreMessage(viewOnceMessage, attributes: viewOnceMessage.attributes, media: [], groupingKey: nil)], location: .Random)
-            let remove = retainRemotelyDeletedMessages(transaction: transaction, mediaBox: box.mediaBox, ids: [id, missingId])
+            let expiredMessage = retentionStoreMessage(viewOnceMessage, attributes: viewOnceMessage.attributes, media: [TelegramMediaExpiredContent(data: .image)], groupingKey: nil)
+            let _ = transaction.addMessages([expiredMessage], location: .Random)
+            let remove = retainRemotelyDeletedMessages(transaction: transaction, mediaBox: box.mediaBox, ids: [id, missingId, viewOnceId])
             XCTAssertEqual(remove, [missingId])
             transaction.deleteMessages(remove, forEachMedia: nil)
             XCTAssertEqual(transaction.getMessage(id)?.text, "kept")
             XCTAssertEqual(transaction.getMessage(id)?.isRemotelyDeleted, true)
             XCTAssertTrue(retainRemotelyDeletedMessages(transaction: transaction, mediaBox: box.mediaBox, ids: [id]).isEmpty)
-            let viewOnceRemoval = retainRemotelyDeletedMessages(transaction: transaction, mediaBox: box.mediaBox, ids: [viewOnceId])
-            XCTAssertEqual(viewOnceRemoval, [viewOnceId])
-            XCTAssertNotEqual(transaction.getMessage(viewOnceId)?.isRemotelyDeleted, true)
+            if let retainedViewOnce = transaction.getMessage(viewOnceId) {
+                XCTAssertTrue(afterGramIsViewOnceMessage(retainedViewOnce))
+                XCTAssertTrue(retainedViewOnce.isRemotelyDeleted)
+                XCTAssertFalse(retainedViewOnce.attributes.contains(where: { $0 is AfterGramViewOnceMediaBackupAttribute }))
+                let restoredFile = retainedViewOnce.media.first as? TelegramMediaFile
+                XCTAssertNotNil(restoredFile)
+                if let restoredFile = restoredFile {
+                    XCTAssertTrue(restoredFile.resource is LocalFileMediaResource)
+                    let path = retainedMediaPath(fileId: retainedMediaFileId(viewOnceResource), mediaBox: box.mediaBox)
+                    XCTAssertEqual(try? Data(contentsOf: URL(fileURLWithPath: path)), Data([7, 8, 9]))
+                }
+                if let expiredViewOnce = retainedRemoteDeletedMessageAfterAutoclear(retainedViewOnce, mediaBox: box.mediaBox) {
+                    XCTAssertTrue(expiredViewOnce.attributes.contains(where: { $0 is RemotelyDeletedMessageAttribute }))
+                    XCTAssertFalse(expiredViewOnce.attributes.contains(where: { $0 is AutoclearTimeoutMessageAttribute }))
+                } else {
+                    XCTFail("Expected remotely deleted view-once media to remain archived after its timer")
+                }
+            } else {
+                XCTFail("Expected remotely deleted view-once message to remain in the archive")
+            }
             transaction.deleteMessages([id], forEachMedia: nil)
             XCTAssertNil(transaction.getMessage(id))
         }.start(completed: { updated.fulfill() })

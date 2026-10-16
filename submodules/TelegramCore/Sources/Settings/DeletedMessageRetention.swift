@@ -62,15 +62,12 @@ func retainRemotelyDeletedMessages(transaction: Transaction, mediaBox: MediaBox,
             remove.append(id)
             continue
         }
-        // Respect Telegram's view-once contract; it is distinct from ordinary remote deletion.
-        if afterGramIsViewOnceMessage(message) {
-            remove.append(id)
-            continue
-        }
         if message.isRemotelyDeleted { continue }
         transaction.updateMessage(id, update: { current in
-            let attributes = current.attributes + [RemotelyDeletedMessageAttribute(timestamp: Int32(Date().timeIntervalSince1970))]
-            let media = retainedMessageMedia(current.media, mediaBox: mediaBox)
+            let backedUpMedia = current.attributes.first(where: { $0 is AfterGramViewOnceMediaBackupAttribute }) as? AfterGramViewOnceMediaBackupAttribute
+            var attributes = current.attributes.filter { !($0 is AfterGramViewOnceMediaBackupAttribute) }
+            attributes.append(RemotelyDeletedMessageAttribute(timestamp: Int32(Date().timeIntervalSince1970)))
+            let media = retainedMessageMedia(backedUpMedia?.media ?? current.media, mediaBox: mediaBox)
             // Separate deleted album members so unaffected members are not faded.
             return .update(retentionStoreMessage(current, attributes: attributes, media: media, groupingKey: nil))
         })
@@ -170,13 +167,37 @@ public final class DeletedMessageMediaPrefetcher {
         Queue.mainQueue().async { [weak self] in
             guard let self, let account = self.account,
                   message.id.namespace == Namespaces.Message.Cloud else { return }
-            guard !afterGramIsViewOnceMessage(message) else { return }
             guard let enabled = self.enabled else {
                 self.initialMessages.append(message)
                 return
             }
             guard enabled else { return }
-            for media in message.media {
+            if afterGramIsViewOnceMessage(message) || message.attributes.contains(where: { $0 is AfterGramViewOnceMediaBackupAttribute }) {
+                let _ = account.postbox.transaction { transaction -> [Media] in
+                    guard let current = transaction.getMessage(message.id) else {
+                        return message.media
+                    }
+                    let existing = current.attributes.first(where: { $0 is AfterGramViewOnceMediaBackupAttribute }) as? AfterGramViewOnceMediaBackupAttribute
+                    guard existing != nil || afterGramIsViewOnceMessage(current) else { return current.media }
+                    let backupMedia = retainedMessageMedia(existing?.media ?? current.media, mediaBox: account.postbox.mediaBox)
+                    let attributes = current.attributes.filter { !($0 is AfterGramViewOnceMediaBackupAttribute) } + [AfterGramViewOnceMediaBackupAttribute(media: backupMedia)]
+                    transaction.updateMessage(current.id, update: { current in
+                        return .update(retentionStoreMessage(current, attributes: attributes, media: current.media, groupingKey: current.groupingKey))
+                    })
+                    return backupMedia
+                }.start(next: { [weak self] media in
+                    self?.prepareMedia(message, media: media)
+                })
+            } else {
+                self.prepareMedia(message, media: message.media)
+            }
+        }
+    }
+
+    private func prepareMedia(_ message: Message, media messageMedia: [Media]) {
+        Queue.mainQueue().async { [weak self] in
+            guard let self, let account = self.account, self.enabled == true else { return }
+            for media in messageMedia {
                 var resources: [MediaResource] = []
                 if let file = media as? TelegramMediaFile {
                     resources = [file.resource] + file.previewRepresentations.map { $0.resource }
@@ -208,9 +229,16 @@ public final class DeletedMessageMediaPrefetcher {
                 if copyRetainedMedia(resource: resource, mediaBox: account.postbox.mediaBox, source: data.path) != nil {
                     let _ = account.postbox.transaction { transaction -> Void in
                         for id in messageIds {
-                            guard let current = transaction.getMessage(id), current.isRemotelyDeleted else { continue }
+                            guard let current = transaction.getMessage(id) else { continue }
+                            var attributes = current.attributes
+                            if let index = attributes.firstIndex(where: { $0 is AfterGramViewOnceMediaBackupAttribute }),
+                               let backup = attributes[index] as? AfterGramViewOnceMediaBackupAttribute {
+                                attributes[index] = AfterGramViewOnceMediaBackupAttribute(media: retainedMessageMedia(backup.media, mediaBox: account.postbox.mediaBox))
+                            }
+                            guard current.isRemotelyDeleted || attributes.contains(where: { $0 is AfterGramViewOnceMediaBackupAttribute }) else { continue }
+                            let media = current.isRemotelyDeleted ? retainedMessageMedia(current.media, mediaBox: account.postbox.mediaBox) : current.media
                             transaction.updateMessage(id, update: { current in
-                                return .update(retentionStoreMessage(current, attributes: current.attributes, media: retainedMessageMedia(current.media, mediaBox: account.postbox.mediaBox), groupingKey: current.groupingKey))
+                                return .update(retentionStoreMessage(current, attributes: attributes, media: media, groupingKey: current.groupingKey))
                             })
                         }
                     }.start()
