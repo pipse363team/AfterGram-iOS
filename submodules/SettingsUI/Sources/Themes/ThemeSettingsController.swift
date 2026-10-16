@@ -40,6 +40,7 @@ private final class ThemeSettingsControllerArguments {
     let openStickersAndEmoji: () -> Void
     let toggleSendWithCmdEnter: (Bool) -> Void
     let toggleShowNextMediaOnTap: (Bool) -> Void
+    let toggleClassicAppearance: (Bool) -> Void
     let selectAppIcon: (PresentationAppIcon) -> Void
     let editTheme: (PresentationCloudTheme) -> Void
     let themeContextAction: (Bool, PresentationThemeReference, ASDisplayNode, ContextGesture?) -> Void
@@ -61,6 +62,7 @@ private final class ThemeSettingsControllerArguments {
         openStickersAndEmoji: @escaping () -> Void,
         toggleSendWithCmdEnter: @escaping (Bool) -> Void,
         toggleShowNextMediaOnTap: @escaping (Bool) -> Void,
+        toggleClassicAppearance: @escaping (Bool) -> Void,
         selectAppIcon: @escaping (PresentationAppIcon) -> Void,
         editTheme: @escaping (PresentationCloudTheme) -> Void,
         themeContextAction: @escaping (Bool, PresentationThemeReference, ASDisplayNode, ContextGesture?) -> Void,
@@ -81,6 +83,7 @@ private final class ThemeSettingsControllerArguments {
         self.openStickersAndEmoji = openStickersAndEmoji
         self.toggleSendWithCmdEnter = toggleSendWithCmdEnter
         self.toggleShowNextMediaOnTap = toggleShowNextMediaOnTap
+        self.toggleClassicAppearance = toggleClassicAppearance
         self.selectAppIcon = selectAppIcon
         self.editTheme = editTheme
         self.themeContextAction = themeContextAction
@@ -139,6 +142,7 @@ private enum ThemeSettingsControllerEntry: ItemListNodeEntry {
     case sendWithCmdEnter(PresentationTheme, String, Bool)
     case showNextMediaOnTap(PresentationTheme, String, Bool)
     case showNextMediaOnTapInfo(PresentationTheme, String)
+    case classicAppearance(PresentationTheme, Bool)
     
     var section: ItemListSectionId {
         switch self {
@@ -152,7 +156,7 @@ private enum ThemeSettingsControllerEntry: ItemListNodeEntry {
                 return ThemeSettingsControllerSection.icon.rawValue
             case .powerSaving, .stickersAndEmoji:
                 return ThemeSettingsControllerSection.message.rawValue
-            case .otherHeader, .sendWithCmdEnter, .showNextMediaOnTap, .showNextMediaOnTapInfo:
+            case .otherHeader, .sendWithCmdEnter, .showNextMediaOnTap, .showNextMediaOnTapInfo, .classicAppearance:
                 return ThemeSettingsControllerSection.other.rawValue
         }
     }
@@ -195,6 +199,8 @@ private enum ThemeSettingsControllerEntry: ItemListNodeEntry {
             return 16
         case .showNextMediaOnTapInfo:
             return 17
+        case .classicAppearance:
+            return 18
         }
     }
     
@@ -308,6 +314,12 @@ private enum ThemeSettingsControllerEntry: ItemListNodeEntry {
                 } else {
                     return false
                 }
+            case let .classicAppearance(lhsTheme, lhsValue):
+                if case let .classicAppearance(rhsTheme, rhsValue) = rhs, lhsTheme === rhsTheme, lhsValue == rhsValue {
+                    return true
+                } else {
+                    return false
+                }
         }
     }
     
@@ -394,6 +406,10 @@ private enum ThemeSettingsControllerEntry: ItemListNodeEntry {
                 }, tag: ThemeSettingsEntryTag.tapForNextMedia)
             case let .showNextMediaOnTapInfo(_, text):
                 return ItemListTextItem(presentationData: presentationData, text: .plain(text), sectionId: self.section)
+            case let .classicAppearance(_, value):
+                return ItemListSwitchItem(presentationData: presentationData, systemStyle: .glass, title: presentationData.strings.baseLanguageCode.lowercased().hasPrefix("ru") ? "Классическая тема Telegram (≈ 2020)" : "Classic Telegram theme (≈ 2020)", value: value, sectionId: self.section, style: .blocks, updated: { value in
+                    arguments.toggleClassicAppearance(value)
+                })
         }
     }
 }
@@ -493,6 +509,8 @@ private func themeSettingsControllerEntries(
     }
     entries.append(.showNextMediaOnTap(presentationData.theme, strings.Appearance_ShowNextMediaOnTap, mediaSettings.showNextMediaOnTap))
     entries.append(.showNextMediaOnTapInfo(presentationData.theme, strings.Appearance_ShowNextMediaOnTapInfo))
+
+    entries.append(.classicAppearance(presentationData.theme, themeReference == .builtin(.dayClassic)))
     
     return entries
 }
@@ -619,6 +637,24 @@ public func themeSettingsController(context: AccountContext, focusOnItemTag: The
         let _ = updateMediaDisplaySettingsInteractively(accountManager: context.sharedContext.accountManager, { current in
             return current.withUpdatedShowNextMediaOnTap(value)
         }).start()
+    }, toggleClassicAppearance: { enabled in
+        let previousThemeKey = "aftergram.classicTheme.previous.\(context.account.id.int64)"
+        if enabled {
+            let _ = (context.sharedContext.accountManager.sharedData(keys: Set([ApplicationSpecificSharedDataKeys.presentationThemeSettings]))
+            |> take(1)
+            |> deliverOnMainQueue).start(next: { view in
+                let settings = view.entries[ApplicationSpecificSharedDataKeys.presentationThemeSettings]?.get(PresentationThemeSettings.self) ?? PresentationThemeSettings.defaultSettings
+                if settings.theme != .builtin(.dayClassic), let data = try? JSONEncoder().encode(settings) {
+                    UserDefaults.standard.set(data, forKey: previousThemeKey)
+                }
+                selectThemeImpl?(.builtin(.dayClassic))
+            })
+        } else if let data = UserDefaults.standard.data(forKey: previousThemeKey), let settings = try? JSONDecoder().decode(PresentationThemeSettings.self, from: data) {
+            UserDefaults.standard.removeObject(forKey: previousThemeKey)
+            selectThemeImpl?(settings.theme)
+        } else {
+            selectThemeImpl?(.builtin(.day))
+        }
     }, selectAppIcon: { icon in
         let _ = (context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: context.account.peerId))
         |> deliverOnMainQueue).start(next: { peer in
