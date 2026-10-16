@@ -86,6 +86,11 @@ func managedAutoremoveMessageOperations(network: Network, postbox: Postbox, isRe
                             transaction.updateMessage(message.id, update: { _ in
                                 return .update(retainedMessage)
                             })
+                        } else if (transaction.getPreferencesEntry(key: deletedMessageRetentionKey)?.get(DeletedMessageRetentionSettings.self) ?? .defaultValue).enabled,
+                                  let retainedMessage = retainedViewOnceMessageAfterAutoclear(message, mediaBox: postbox.mediaBox) {
+                            transaction.updateMessage(message.id, update: { _ in
+                                return .update(retainedMessage)
+                            })
                         } else if message.id.peerId.namespace == Namespaces.Peer.SecretChat || isRemove {
                             _internal_deleteMessages(transaction: transaction, mediaBox: postbox.mediaBox, ids: [entry.messageId])
                         } else {

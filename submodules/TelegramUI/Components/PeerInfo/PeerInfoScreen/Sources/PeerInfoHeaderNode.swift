@@ -66,6 +66,112 @@ final class PeerInfoHeaderNavigationTransition {
 final class PeerInfoHeaderRegularContentNode: SparseNode {
 }
 
+private final class AfterGramProfileBrandView: UIView {
+    private let shimmerLayer = CAGradientLayer()
+    private let sparkleLayer = CAEmitterLayer()
+    private let titleLabel = UILabel()
+    private var didStartShimmer = false
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        self.backgroundColor = UIColor(white: 0.035, alpha: 0.96)
+        self.layer.cornerRadius = 13.0
+        self.layer.cornerCurve = .continuous
+        self.layer.borderWidth = 0.7
+        self.layer.borderColor = UIColor(white: 0.55, alpha: 0.55).cgColor
+        self.clipsToBounds = true
+        self.isUserInteractionEnabled = false
+        self.accessibilityLabel = "AfterGram"
+
+        self.shimmerLayer.colors = [
+            UIColor(white: 1.0, alpha: 0.0).cgColor,
+            UIColor(white: 1.0, alpha: 0.25).cgColor,
+            UIColor(white: 1.0, alpha: 0.0).cgColor
+        ]
+        self.shimmerLayer.locations = [0.0, 0.5, 1.0]
+        self.shimmerLayer.startPoint = CGPoint(x: 0.0, y: 0.0)
+        self.shimmerLayer.endPoint = CGPoint(x: 1.0, y: 0.0)
+        self.layer.addSublayer(self.shimmerLayer)
+
+        let sparkleImage = UIGraphicsImageRenderer(size: CGSize(width: 8.0, height: 8.0)).image { renderer in
+            UIColor(white: 1.0, alpha: 0.9).setFill()
+            let path = UIBezierPath()
+            path.move(to: CGPoint(x: 4.0, y: 0.0))
+            path.addLine(to: CGPoint(x: 5.0, y: 3.0))
+            path.addLine(to: CGPoint(x: 8.0, y: 4.0))
+            path.addLine(to: CGPoint(x: 5.0, y: 5.0))
+            path.addLine(to: CGPoint(x: 4.0, y: 8.0))
+            path.addLine(to: CGPoint(x: 3.0, y: 5.0))
+            path.addLine(to: CGPoint(x: 0.0, y: 4.0))
+            path.addLine(to: CGPoint(x: 3.0, y: 3.0))
+            path.close()
+            renderer.cgContext.addPath(path.cgPath)
+            renderer.cgContext.fillPath()
+        }
+        self.sparkleLayer.emitterShape = .rectangle
+        self.sparkleLayer.emitterMode = .surface
+        self.sparkleLayer.renderMode = .additive
+        let sparkle = CAEmitterCell()
+        sparkle.contents = sparkleImage.cgImage
+        sparkle.birthRate = 1.2
+        sparkle.lifetime = 0.85
+        sparkle.velocity = 1.0
+        sparkle.velocityRange = 1.5
+        sparkle.alphaSpeed = -1.0
+        sparkle.scale = 0.42
+        sparkle.scaleRange = 0.3
+        self.sparkleLayer.emitterCells = [sparkle]
+        self.layer.addSublayer(self.sparkleLayer)
+
+        let logo = UILabel()
+        logo.translatesAutoresizingMaskIntoConstraints = false
+        logo.text = "A"
+        logo.textAlignment = .center
+        logo.textColor = UIColor(white: 0.04, alpha: 1.0)
+        logo.font = UIFont.systemFont(ofSize: 12.0, weight: .heavy)
+        logo.backgroundColor = .white
+        logo.layer.cornerRadius = 8.0
+        logo.clipsToBounds = true
+        self.addSubview(logo)
+
+        self.titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        self.titleLabel.text = "AfterGram"
+        self.titleLabel.textColor = .white
+        self.titleLabel.font = UIFont.systemFont(ofSize: 13.0, weight: .semibold)
+        self.addSubview(self.titleLabel)
+
+        NSLayoutConstraint.activate([
+            logo.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 5.0),
+            logo.centerYAnchor.constraint(equalTo: self.centerYAnchor),
+            logo.widthAnchor.constraint(equalToConstant: 16.0),
+            logo.heightAnchor.constraint(equalToConstant: 16.0),
+            self.titleLabel.leadingAnchor.constraint(equalTo: logo.trailingAnchor, constant: 5.0),
+            self.titleLabel.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -8.0),
+            self.titleLabel.centerYAnchor.constraint(equalTo: self.centerYAnchor)
+        ])
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        self.shimmerLayer.frame = CGRect(x: -self.bounds.width, y: 0.0, width: self.bounds.width * 3.0, height: self.bounds.height)
+        self.sparkleLayer.frame = self.bounds
+        self.sparkleLayer.emitterPosition = CGPoint(x: self.bounds.midX, y: self.bounds.midY)
+        self.sparkleLayer.emitterSize = self.bounds.size
+        guard !self.didStartShimmer else { return }
+        self.didStartShimmer = true
+        let animation = CABasicAnimation(keyPath: "position.x")
+        animation.fromValue = -self.bounds.width * 0.5
+        animation.toValue = self.bounds.width * 2.5
+        animation.duration = 3.6
+        animation.repeatCount = .infinity
+        self.shimmerLayer.add(animation, forKey: "aftergram.shimmer")
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
 enum PeerInfoHeaderTextFieldNodeKey: Equatable {
     case firstName
     case lastName
@@ -120,6 +226,7 @@ final class PeerInfoHeaderNode: ASDisplayNode {
     let titleNodeContainer: ASDisplayNode
     let titleNodeRawContainer: ASDisplayNode
     let titleNode: MultiScaleTextNode
+    private let afterGramBrandView: AfterGramProfileBrandView
     var standardTitle: ComponentView<Empty>?
     
     let titleCredibilityIconView: ComponentHostView<Empty>
@@ -230,6 +337,7 @@ final class PeerInfoHeaderNode: ASDisplayNode {
         self.titleNodeRawContainer = ASDisplayNode()
         self.titleNode = MultiScaleTextNode(stateKeys: [TitleNodeStateRegular, TitleNodeStateExpanded])
         self.titleNode.displaysAsynchronously = false
+        self.afterGramBrandView = AfterGramProfileBrandView(frame: CGRect(x: 0.0, y: 0.0, width: 116.0, height: 26.0))
         
         self.titleCredibilityIconView = ComponentHostView<Empty>()
         self.titleNode.stateNode(forKey: TitleNodeStateRegular)?.view.addSubview(self.titleCredibilityIconView)
@@ -319,6 +427,7 @@ final class PeerInfoHeaderNode: ASDisplayNode {
         
         self.regularContentNode.addSubnode(self.avatarListNode.listContainerNode.controlsClippingOffsetNode)
         self.regularContentNode.addSubnode(self.titleNodeContainer)
+        self.titleNode.stateNode(forKey: TitleNodeStateExpanded)?.view.addSubview(self.afterGramBrandView)
         self.regularContentNode.addSubnode(self.subtitleNodeContainer)
         self.regularContentNode.addSubnode(self.subtitleNodeRawContainer)
         self.regularContentNode.addSubnode(self.usernameNodeContainer)
@@ -1594,6 +1703,14 @@ final class PeerInfoHeaderNode: ASDisplayNode {
         var subtitleBadgeSize: CGSize?
         let _ = panelSubtitleNodeLayout[TitleNodeStateRegular]!.size
         let usernameSize = usernameNodeLayout[TitleNodeStateRegular]!.size
+
+        self.afterGramBrandView.isHidden = !self.isMyProfile || state.isEditing
+        self.afterGramBrandView.frame = CGRect(
+            x: floor((titleExpandedSize.width - self.afterGramBrandView.bounds.width) / 2.0),
+            y: -self.afterGramBrandView.bounds.height - 7.0,
+            width: self.afterGramBrandView.bounds.width,
+            height: self.afterGramBrandView.bounds.height
+        )
         
         if let statusData, statusData.isHiddenStatus, !self.isPremiumDisabled {
             let subtitleBadgeView: PeerInfoSubtitleBadgeView

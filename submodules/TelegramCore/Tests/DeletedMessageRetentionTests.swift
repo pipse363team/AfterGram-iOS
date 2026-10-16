@@ -42,6 +42,24 @@ final class DeletedMessageRetentionTests: XCTestCase {
         XCTAssertNil(copyRetainedMedia(resource: LocalFileMediaResource(fileId: 999), mediaBox: self.mediaBox))
     }
 
+    func testViewOnceExpiryKeepsMediaOnlyAfterBytesAreRetained() throws {
+        let resource = LocalFileMediaResource(fileId: 777, size: 3)
+        let bytes = Data([4, 5, 6])
+        self.mediaBox.storeResourceData(resource.id, data: bytes, synchronous: true)
+        let file = TelegramMediaFile(fileId: MediaId(namespace: Namespaces.Media.CloudFile, id: 777), partialReference: nil, resource: resource, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "image/jpeg", size: 3, attributes: [], alternativeRepresentations: [])
+        let message = SparseFixtures.message(SparseFixtures.channelId, 777, timestamp: 10).withUpdatedAttributes([
+            AutoclearTimeoutMessageAttribute(timeout: viewOnceTimeout, countdownBeginTime: nil),
+            AfterGramViewOnceMediaBackupAttribute(media: [file])
+        ])
+
+        let retained = try XCTUnwrap(retainedViewOnceMessageAfterAutoclear(message, mediaBox: self.mediaBox))
+        XCTAssertFalse(retained.attributes.contains(where: { $0 is AfterGramViewOnceMediaBackupAttribute }))
+        XCTAssertFalse(retained.attributes.contains(where: { ($0 as? AutoclearTimeoutMessageAttribute)?.timeout == viewOnceTimeout }))
+        let retainedFile = try XCTUnwrap(retained.media.first as? TelegramMediaFile)
+        let retainedResource = try XCTUnwrap(retainedFile.resource as? LocalFileMediaResource)
+        XCTAssertEqual(try Data(contentsOf: URL(fileURLWithPath: retainedMediaPath(fileId: retainedResource.fileId, mediaBox: self.mediaBox))), bytes)
+    }
+
     func testViewOnceMediaBackupAttributeRoundTripsMedia() {
         let file = TelegramMediaFile(fileId: MediaId(namespace: Namespaces.Media.CloudFile, id: 55), partialReference: nil, resource: LocalFileMediaResource(fileId: 56, size: 3), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "image/jpeg", size: 3, attributes: [], alternativeRepresentations: [])
         let original = AfterGramViewOnceMediaBackupAttribute(media: [file])

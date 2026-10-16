@@ -4708,6 +4708,14 @@ public final class ChatHistoryListNodeImpl: ASDisplayNode, ChatHistoryNode, Chat
         
         if let (layoutActionOnViewTransition, layoutCorrelationId) = self.layoutActionOnViewTransition {
             var foundCorrelationMessage = false
+            for item in transition.insertItems + transition.updateItems {
+                guard let messageItem = item.item as? ChatMessageItem else { continue }
+                for (message, _) in messageItem.content {
+                    if afterGramIsViewOnceAttributes(message.attributes) || message.attributes.contains(where: { $0 is AfterGramViewOnceMediaBackupAttribute }) {
+                        self.context.account.deletedMessageMediaPrefetcher.prepare(message)
+                    }
+                }
+            }
             if let layoutCorrelationId = layoutCorrelationId {
                 itemSearch: for item in transition.insertItems {
                     if let messageItem = item.item as? ChatMessageItem {

@@ -44,7 +44,7 @@ func retentionStoreMessage(_ message: Message, attributes: [MessageAttribute], m
     return StoreMessage(id: message.id, customStableId: nil, globallyUniqueId: message.globallyUniqueId, groupingKey: groupingKey, threadId: message.threadId, timestamp: message.timestamp, flags: StoreMessageFlags(message.flags), tags: message.tags, globalTags: message.globalTags, localTags: message.localTags, forwardInfo: message.forwardInfo.flatMap(StoreMessageForwardInfo.init), authorId: message.author?.id, text: message.text, attributes: attributes, media: media)
 }
 
-func afterGramIsViewOnceAttributes(_ attributes: [MessageAttribute]) -> Bool {
+public func afterGramIsViewOnceAttributes(_ attributes: [MessageAttribute]) -> Bool {
     return attributes.contains(where: {
         ($0 as? AutoclearTimeoutMessageAttribute)?.timeout == viewOnceTimeout ||
         ($0 as? AutoremoveTimeoutMessageAttribute)?.timeout == viewOnceTimeout
@@ -62,6 +62,37 @@ func retainedRemoteDeletedMessageAfterAutoclear(_ message: Message, mediaBox: Me
     guard message.isRemotelyDeleted else { return nil }
     let attributes = message.attributes.filter { !($0 is AutoclearTimeoutMessageAttribute) }
     return retentionStoreMessage(message, attributes: attributes, media: retainedMessageMedia(message.media, mediaBox: mediaBox), groupingKey: message.groupingKey)
+}
+
+/// Converts an expired view-once message into a regular local message only after
+/// its primary media bytes have been copied out of MediaBox's evictable cache.
+func retainedViewOnceMessageAfterAutoclear(_ message: Message, mediaBox: MediaBox) -> StoreMessage? {
+    guard afterGramIsViewOnceMessage(message),
+          let backup = message.attributes.first(where: { $0 is AfterGramViewOnceMediaBackupAttribute }) as? AfterGramViewOnceMediaBackupAttribute,
+          !backup.media.isEmpty else { return nil }
+
+    let media = retainedMessageMedia(backup.media, mediaBox: mediaBox)
+    let hasStablePrimaryMedia = media.contains { item in
+        if let file = item as? TelegramMediaFile,
+           let resource = file.resource as? LocalFileMediaResource {
+            return FileManager.default.fileExists(atPath: retainedMediaPath(fileId: resource.fileId, mediaBox: mediaBox))
+        } else if let image = item as? TelegramMediaImage,
+                  let representation = image.representations.max(by: {
+                      Int64($0.dimensions.width) * Int64($0.dimensions.height) < Int64($1.dimensions.width) * Int64($1.dimensions.height)
+                  }), let resource = representation.resource as? LocalFileMediaResource {
+            return FileManager.default.fileExists(atPath: retainedMediaPath(fileId: resource.fileId, mediaBox: mediaBox))
+        }
+        return false
+    }
+    guard hasStablePrimaryMedia else { return nil }
+
+    let attributes = message.attributes.filter { attribute in
+        if attribute is AfterGramViewOnceMediaBackupAttribute { return false }
+        if let attribute = attribute as? AutoclearTimeoutMessageAttribute, attribute.timeout == viewOnceTimeout { return false }
+        if let attribute = attribute as? AutoremoveTimeoutMessageAttribute, attribute.timeout == viewOnceTimeout { return false }
+        return true
+    }
+    return retentionStoreMessage(message, attributes: attributes, media: media, groupingKey: message.groupingKey)
 }
 
 /// Returns only IDs which still require deletion. Call before replaying remote deletes.
