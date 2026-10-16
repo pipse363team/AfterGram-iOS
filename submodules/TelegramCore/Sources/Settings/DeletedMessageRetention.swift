@@ -227,9 +227,26 @@ public final class DeletedMessageMediaPrefetcher {
                 }) {
                     resources = [largest.resource]
                 }
-                for resource in resources where !(resource is LocalFileMediaResource) {
-                    if copyRetainedMedia(resource: resource, mediaBox: account.postbox.mediaBox) != nil { continue }
-                    if self.known.insert(resource.id).inserted { self.pending.append((message, media, resource)) }
+                for resource in resources {
+                    let retainedPath = retainedMediaPath(fileId: retainedMediaFileId(resource), mediaBox: account.postbox.mediaBox)
+                    if FileManager.default.fileExists(atPath: retainedPath) { continue }
+                    guard self.known.insert(resource.id).inserted else { continue }
+                    if resource is LocalFileMediaResource {
+                        guard let source = account.postbox.mediaBox.completedResourcePath(resource) else {
+                            self.known.remove(resource.id)
+                            continue
+                        }
+                        DispatchQueue.global(qos: .utility).async { [weak self, weak account] in
+                            if let account {
+                                _ = copyRetainedMedia(resource: resource, mediaBox: account.postbox.mediaBox, source: source)
+                            }
+                            Queue.mainQueue().async {
+                                self?.finish(resource.id)
+                            }
+                        }
+                    } else {
+                        self.pending.append((message, media, resource))
+                    }
                 }
             }
             self.advance()
