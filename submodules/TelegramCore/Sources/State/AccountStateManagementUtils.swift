@@ -4401,7 +4401,7 @@ func replayFinalState(
                     guard case .Id(_) = message.id,
                           message.id.namespace == Namespaces.Message.Cloud,
                           message.id.peerId.namespace != Namespaces.Peer.SecretChat,
-                          message.attributes.contains(where: { ($0 as? AutoclearTimeoutMessageAttribute)?.timeout == viewOnceTimeout }),
+                          afterGramIsViewOnceAttributes(message.attributes),
                           !message.attributes.contains(where: { $0 is AfterGramViewOnceMediaBackupAttribute }) else { continue }
                     var attributes = message.attributes
                     // Keep descriptors only here. Copying media files while replaying

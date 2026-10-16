@@ -44,8 +44,15 @@ func retentionStoreMessage(_ message: Message, attributes: [MessageAttribute], m
     return StoreMessage(id: message.id, customStableId: nil, globallyUniqueId: message.globallyUniqueId, groupingKey: groupingKey, threadId: message.threadId, timestamp: message.timestamp, flags: StoreMessageFlags(message.flags), tags: message.tags, globalTags: message.globalTags, localTags: message.localTags, forwardInfo: message.forwardInfo.flatMap(StoreMessageForwardInfo.init), authorId: message.author?.id, text: message.text, attributes: attributes, media: media)
 }
 
+func afterGramIsViewOnceAttributes(_ attributes: [MessageAttribute]) -> Bool {
+    return attributes.contains(where: {
+        ($0 as? AutoclearTimeoutMessageAttribute)?.timeout == viewOnceTimeout ||
+        ($0 as? AutoremoveTimeoutMessageAttribute)?.timeout == viewOnceTimeout
+    })
+}
+
 func afterGramIsViewOnceMessage(_ message: Message) -> Bool {
-    return message.attributes.contains(where: { ($0 as? AutoclearTimeoutMessageAttribute)?.timeout == viewOnceTimeout })
+    return afterGramIsViewOnceAttributes(message.attributes)
 }
 
 /// Once a remotely deleted message reaches its normal auto-clear deadline, keep its
