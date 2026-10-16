@@ -174,43 +174,73 @@ private class ApplicationStatusBarHost: StatusBarHost {
 }
 
 private final class AfterGramBrandPill: UIView {
+    private weak var statusAreaTopConstraint: NSLayoutConstraint?
+
+    func setStatusAreaTopConstraint(_ constraint: NSLayoutConstraint) {
+        self.statusAreaTopConstraint = constraint
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        guard let superview, let statusAreaTopConstraint else { return }
+        // Center a compact badge in the actual safe-area/status-bar band. This
+        // adapts to notched, Dynamic Island, and non-notched iPhones.
+        let desiredConstant = -(superview.safeAreaInsets.top + self.bounds.height) / 2.0
+        if abs(statusAreaTopConstraint.constant - desiredConstant) > 0.5 {
+            statusAreaTopConstraint.constant = desiredConstant
+        }
+    }
+
     override init(frame: CGRect) {
         super.init(frame: frame)
         self.translatesAutoresizingMaskIntoConstraints = false
         self.isUserInteractionEnabled = false
         self.accessibilityLabel = "AfterGram"
         self.backgroundColor = UIColor(white: 0.04, alpha: 1.0)
-        self.layer.cornerRadius = 12.0
+        self.layer.cornerRadius = 8.0
         self.layer.cornerCurve = .continuous
 
         let logo = UILabel()
         logo.translatesAutoresizingMaskIntoConstraints = false
         logo.text = "A"
         logo.textColor = UIColor(white: 0.05, alpha: 1.0)
-        logo.font = UIFont.systemFont(ofSize: 11.0, weight: .heavy)
+        logo.font = UIFont.systemFont(ofSize: 9.0, weight: .heavy)
         logo.textAlignment = .center
         logo.backgroundColor = .white
-        logo.layer.cornerRadius = 8.0
+        logo.layer.cornerRadius = 6.0
         logo.clipsToBounds = true
 
-        let sparkle = UIGraphicsImageRenderer(size: CGSize(width: 4.0, height: 4.0)).image { context in
-            UIColor.white.setFill()
-            context.cgContext.fillEllipse(in: CGRect(x: 1.0, y: 1.0, width: 2.0, height: 2.0))
+        let sparkle = UIGraphicsImageRenderer(size: CGSize(width: 8.0, height: 8.0)).image { context in
+            UIColor(white: 0.38, alpha: 1.0).setFill()
+            let path = UIBezierPath()
+            path.move(to: CGPoint(x: 4.0, y: 0.0))
+            path.addLine(to: CGPoint(x: 5.0, y: 3.0))
+            path.addLine(to: CGPoint(x: 8.0, y: 4.0))
+            path.addLine(to: CGPoint(x: 5.0, y: 5.0))
+            path.addLine(to: CGPoint(x: 4.0, y: 8.0))
+            path.addLine(to: CGPoint(x: 3.0, y: 5.0))
+            path.addLine(to: CGPoint(x: 0.0, y: 4.0))
+            path.addLine(to: CGPoint(x: 3.0, y: 3.0))
+            path.close()
+            context.cgContext.addPath(path.cgPath)
+            context.cgContext.fillPath()
         }
         let sparkles = CAEmitterLayer()
-        sparkles.emitterPosition = CGPoint(x: 8.0, y: 8.0)
+        sparkles.emitterPosition = CGPoint(x: 6.0, y: 6.0)
         sparkles.emitterShape = .circle
-        sparkles.emitterSize = CGSize(width: 9.0, height: 9.0)
-        sparkles.frame = CGRect(x: 0.0, y: 0.0, width: 16.0, height: 16.0)
+        sparkles.emitterSize = CGSize(width: 8.0, height: 8.0)
+        sparkles.frame = CGRect(x: 0.0, y: 0.0, width: 12.0, height: 12.0)
         let particle = CAEmitterCell()
         particle.contents = sparkle.cgImage
-        particle.birthRate = 0.7
-        particle.lifetime = 2.4
-        particle.velocity = 2.0
-        particle.velocityRange = 3.0
-        particle.alphaSpeed = -0.45
-        particle.scale = 0.35
+        particle.birthRate = 1.1
+        particle.lifetime = 1.8
+        particle.velocity = 0.8
+        particle.velocityRange = 1.2
+        particle.alphaSpeed = -0.5
+        particle.scale = 0.65
         particle.scaleRange = 0.25
+        particle.spin = 0.7
+        particle.spinRange = 1.4
         sparkles.emitterCells = [particle]
         logo.layer.addSublayer(sparkles)
 
@@ -218,19 +248,19 @@ private final class AfterGramBrandPill: UIView {
         title.translatesAutoresizingMaskIntoConstraints = false
         title.text = "AfterGram"
         title.textColor = .white
-        title.font = UIFont.systemFont(ofSize: 11.0, weight: .semibold)
+        title.font = UIFont.systemFont(ofSize: 10.0, weight: .semibold)
 
         self.addSubview(logo)
         self.addSubview(title)
         NSLayoutConstraint.activate([
-            self.widthAnchor.constraint(equalToConstant: 94.0),
-            self.heightAnchor.constraint(equalToConstant: 24.0),
-            logo.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 4.0),
+            self.widthAnchor.constraint(equalToConstant: 80.0),
+            self.heightAnchor.constraint(equalToConstant: 16.0),
+            logo.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 2.0),
             logo.centerYAnchor.constraint(equalTo: self.centerYAnchor),
-            logo.widthAnchor.constraint(equalToConstant: 16.0),
-            logo.heightAnchor.constraint(equalToConstant: 16.0),
-            title.leadingAnchor.constraint(equalTo: logo.trailingAnchor, constant: 5.0),
-            title.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -7.0),
+            logo.widthAnchor.constraint(equalToConstant: 12.0),
+            logo.heightAnchor.constraint(equalToConstant: 12.0),
+            title.leadingAnchor.constraint(equalTo: logo.trailingAnchor, constant: 4.0),
+            title.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -4.0),
             title.centerYAnchor.constraint(equalTo: self.centerYAnchor)
         ])
     }
@@ -494,10 +524,12 @@ private func extractAccountManagerState(records: AccountRecordsView<TelegramAcco
         self.mainWindow = Window1(hostView: hostView, statusBarHost: statusBarHost)
         let brandPill = AfterGramBrandPill(frame: .zero)
         hostView.containerView.addSubview(brandPill)
+        let topConstraint = brandPill.topAnchor.constraint(equalTo: hostView.containerView.safeAreaLayoutGuide.topAnchor, constant: -24.0)
         NSLayoutConstraint.activate([
             brandPill.centerXAnchor.constraint(equalTo: hostView.containerView.centerXAnchor),
-            brandPill.topAnchor.constraint(equalTo: hostView.containerView.safeAreaLayoutGuide.topAnchor, constant: -32.0)
+            topConstraint
         ])
+        brandPill.setStatusAreaTopConstraint(topConstraint)
         self.afterGramBrandPill = brandPill
         if let traitCollection = window.rootViewController?.traitCollection {
             if #available(iOS 13.0, *) {

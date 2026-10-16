@@ -123,10 +123,15 @@ func copyRetainedMedia(resource: MediaResource, mediaBox: MediaBox, source: Stri
 func retainedMessageMedia(_ media: [Media], mediaBox: MediaBox) -> [Media] {
     return media.map { media in
         if let file = media as? TelegramMediaFile, let resource = copyRetainedMedia(resource: file.resource, mediaBox: mediaBox) {
-            let previews = file.previewRepresentations.map { retainedImageRepresentation($0, mediaBox: mediaBox) }
-            return TelegramMediaFile(fileId: file.fileId, partialReference: file.partialReference, resource: resource, previewRepresentations: previews, videoThumbnails: file.videoThumbnails, videoCover: file.videoCover, immediateThumbnailData: file.immediateThumbnailData, mimeType: file.mimeType, size: file.size, attributes: file.attributes, alternativeRepresentations: [])
+            return TelegramMediaFile(fileId: file.fileId, partialReference: file.partialReference, resource: resource, previewRepresentations: file.previewRepresentations, videoThumbnails: file.videoThumbnails, videoCover: file.videoCover, immediateThumbnailData: file.immediateThumbnailData, mimeType: file.mimeType, size: file.size, attributes: file.attributes, alternativeRepresentations: [])
         } else if let image = media as? TelegramMediaImage {
-            return TelegramMediaImage(imageId: image.imageId, representations: image.representations.map { retainedImageRepresentation($0, mediaBox: mediaBox) }, videoRepresentations: image.videoRepresentations, immediateThumbnailData: image.immediateThumbnailData, emojiMarkup: image.emojiMarkup, reference: image.reference, partialReference: image.partialReference, flags: image.flags, video: image.video)
+            let largestIndex = image.representations.indices.max { lhs, rhs in
+                Int64(image.representations[lhs].dimensions.width) * Int64(image.representations[lhs].dimensions.height) < Int64(image.representations[rhs].dimensions.width) * Int64(image.representations[rhs].dimensions.height)
+            }
+            let representations = image.representations.enumerated().map { index, representation in
+                index == largestIndex ? retainedImageRepresentation(representation, mediaBox: mediaBox) : representation
+            }
+            return TelegramMediaImage(imageId: image.imageId, representations: representations, videoRepresentations: image.videoRepresentations, immediateThumbnailData: image.immediateThumbnailData, emojiMarkup: image.emojiMarkup, reference: image.reference, partialReference: image.partialReference, flags: image.flags, video: image.video)
         }
         return media
     }
@@ -145,7 +150,6 @@ public final class DeletedMessageMediaPrefetcher {
     private let settingsDisposable = MetaDisposable()
     private var pending: [(Message, Media, MediaResource)] = []
     private var known = Set<MediaResourceId>()
-    private var waitingMessages: [MediaResourceId: Set<MessageId>] = [:]
     private var active: [MediaResourceId: DisposableSet] = [:]
 
     init(account: Account) {
@@ -160,7 +164,6 @@ public final class DeletedMessageMediaPrefetcher {
                 self.active.values.forEach { $0.dispose() }
                 self.active.removeAll()
                 self.known.removeAll()
-                self.waitingMessages.removeAll()
             } else {
                 for message in initialMessages { self.prepare(message) }
             }
@@ -186,10 +189,12 @@ public final class DeletedMessageMediaPrefetcher {
                     guard let current = transaction.getMessage(message.id) else {
                         return message.media
                     }
-                    let existing = current.attributes.first(where: { $0 is AfterGramViewOnceMediaBackupAttribute }) as? AfterGramViewOnceMediaBackupAttribute
-                    guard existing != nil || afterGramIsViewOnceMessage(current) else { return current.media }
-                    let backupMedia = retainedMessageMedia(existing?.media ?? current.media, mediaBox: account.postbox.mediaBox)
-                    let attributes = current.attributes.filter { !($0 is AfterGramViewOnceMediaBackupAttribute) } + [AfterGramViewOnceMediaBackupAttribute(media: backupMedia)]
+                    if let existing = current.attributes.first(where: { $0 is AfterGramViewOnceMediaBackupAttribute }) as? AfterGramViewOnceMediaBackupAttribute {
+                        return existing.media
+                    }
+                    guard afterGramIsViewOnceMessage(current) else { return current.media }
+                    let backupMedia = current.media
+                    let attributes = current.attributes + [AfterGramViewOnceMediaBackupAttribute(media: backupMedia)]
                     transaction.updateMessage(current.id, update: { current in
                         return .update(retentionStoreMessage(current, attributes: attributes, media: current.media, groupingKey: current.groupingKey))
                     })
@@ -209,13 +214,14 @@ public final class DeletedMessageMediaPrefetcher {
             for media in messageMedia {
                 var resources: [MediaResource] = []
                 if let file = media as? TelegramMediaFile {
-                    resources = [file.resource] + file.previewRepresentations.map { $0.resource }
-                } else if let image = media as? TelegramMediaImage {
-                    resources = image.representations.map { $0.resource }
+                    resources = [file.resource]
+                } else if let image = media as? TelegramMediaImage, let largest = image.representations.max(by: {
+                    Int64($0.dimensions.width) * Int64($0.dimensions.height) < Int64($1.dimensions.width) * Int64($1.dimensions.height)
+                }) {
+                    resources = [largest.resource]
                 }
                 for resource in resources where !(resource is LocalFileMediaResource) {
                     if copyRetainedMedia(resource: resource, mediaBox: account.postbox.mediaBox) != nil { continue }
-                    self.waitingMessages[resource.id, default: []].insert(message.id)
                     if self.known.insert(resource.id).inserted { self.pending.append((message, media, resource)) }
                 }
             }
@@ -225,7 +231,7 @@ public final class DeletedMessageMediaPrefetcher {
 
     private func advance() {
         guard let account = self.account, self.enabled == true else { return }
-        while self.active.count < 2, !self.pending.isEmpty {
+        while self.active.count < 1, !self.pending.isEmpty {
             let (message, media, resource) = self.pending.removeFirst()
             let bag = DisposableSet()
             self.active[resource.id] = bag
@@ -234,25 +240,16 @@ public final class DeletedMessageMediaPrefetcher {
             }))
             bag.add((account.postbox.mediaBox.resourceData(resource) |> filter { $0.complete } |> take(1) |> deliverOnMainQueue).start(next: { [weak self, weak account] data in
                 guard let self, let account, self.enabled == true else { return }
-                let messageIds = Array(self.waitingMessages[resource.id] ?? [])
-                if copyRetainedMedia(resource: resource, mediaBox: account.postbox.mediaBox, source: data.path) != nil {
-                    let _ = account.postbox.transaction { transaction -> Void in
-                        for id in messageIds {
-                            guard let current = transaction.getMessage(id) else { continue }
-                            var attributes = current.attributes
-                            if let index = attributes.firstIndex(where: { $0 is AfterGramViewOnceMediaBackupAttribute }),
-                               let backup = attributes[index] as? AfterGramViewOnceMediaBackupAttribute {
-                                attributes[index] = AfterGramViewOnceMediaBackupAttribute(media: retainedMessageMedia(backup.media, mediaBox: account.postbox.mediaBox))
-                            }
-                            guard current.isRemotelyDeleted || attributes.contains(where: { $0 is AfterGramViewOnceMediaBackupAttribute }) else { continue }
-                            let media = current.isRemotelyDeleted ? retainedMessageMedia(current.media, mediaBox: account.postbox.mediaBox) : current.media
-                            transaction.updateMessage(id, update: { current in
-                                return .update(retentionStoreMessage(current, attributes: attributes, media: media, groupingKey: current.groupingKey))
-                            })
-                        }
-                    }.start()
+                // Detach completed bytes off the UI/database queues. The backup
+                // descriptor stays unchanged, so this does not re-render the chat row.
+                DispatchQueue.global(qos: .utility).async { [weak self, weak account] in
+                    if let account {
+                        _ = copyRetainedMedia(resource: resource, mediaBox: account.postbox.mediaBox, source: data.path)
+                    }
+                    Queue.mainQueue().async {
+                        self?.finish(resource.id)
+                    }
                 }
-                self.finish(resource.id)
             }))
         }
     }
@@ -260,7 +257,6 @@ public final class DeletedMessageMediaPrefetcher {
     private func finish(_ id: MediaResourceId) {
         self.active.removeValue(forKey: id)?.dispose()
         self.known.remove(id)
-        self.waitingMessages.removeValue(forKey: id)
         self.advance()
     }
 }

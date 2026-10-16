@@ -587,7 +587,7 @@ public func themeSettingsController(context: AccountContext, focusOnItemTag: The
         return animatedEmojiStickers
     }
     
-    var previousThemeForClassicAppearance: PresentationThemeReference?
+    var previousThemeForClassicAppearance: (theme: PresentationThemeReference, automaticTheme: PresentationThemeReference)?
     let arguments = ThemeSettingsControllerArguments(context: context, selectTheme: { theme in
         selectThemeImpl?(theme)
     }, openThemeSettings: {
@@ -639,19 +639,27 @@ public func themeSettingsController(context: AccountContext, focusOnItemTag: The
             return current.withUpdatedShowNextMediaOnTap(value)
         }).start()
     }, toggleClassicAppearance: { enabled in
-        if enabled {
-            let _ = (context.sharedContext.accountManager.sharedData(keys: Set([ApplicationSpecificSharedDataKeys.presentationThemeSettings]))
-            |> take(1)
-            |> deliverOnMainQueue).start(next: { view in
-                let settings = view.entries[ApplicationSpecificSharedDataKeys.presentationThemeSettings]?.get(PresentationThemeSettings.self) ?? PresentationThemeSettings.defaultSettings
-                previousThemeForClassicAppearance = settings.theme == .builtin(.dayClassic) ? .builtin(.day) : settings.theme
-                selectThemeImpl?(.builtin(.dayClassic))
-            })
-        } else {
-            let theme = previousThemeForClassicAppearance ?? .builtin(.day)
-            previousThemeForClassicAppearance = nil
-            selectThemeImpl?(theme)
-        }
+        let _ = (context.sharedContext.accountManager.sharedData(keys: Set([ApplicationSpecificSharedDataKeys.presentationThemeSettings]))
+        |> take(1)
+        |> deliverOnMainQueue).start(next: { view in
+            let settings = view.entries[ApplicationSpecificSharedDataKeys.presentationThemeSettings]?.get(PresentationThemeSettings.self) ?? PresentationThemeSettings.defaultSettings
+            if enabled {
+                let oldTheme = settings.theme == .builtin(.dayClassic) ? .builtin(.day) : settings.theme
+                let oldAutomaticTheme = settings.automaticThemeSwitchSetting.theme == .builtin(.dayClassic) ? .builtin(.night) : settings.automaticThemeSwitchSetting.theme
+                previousThemeForClassicAppearance = (oldTheme, oldAutomaticTheme)
+            }
+            let targetTheme = enabled ? PresentationThemeReference.builtin(.dayClassic) : (previousThemeForClassicAppearance?.theme ?? .builtin(.day))
+            let automaticTheme = enabled ? targetTheme : (previousThemeForClassicAppearance?.automaticTheme ?? .builtin(.night))
+            let _ = updatePresentationThemeSettingsInteractively(accountManager: context.sharedContext.accountManager, { current in
+                var automaticSetting = current.automaticThemeSwitchSetting
+                automaticSetting.theme = automaticTheme
+                return current.withUpdatedTheme(targetTheme).withUpdatedAutomaticThemeSwitchSetting(automaticSetting)
+            }).start()
+            if !enabled {
+                previousThemeForClassicAppearance = nil
+            }
+            presentCrossfadeControllerImpl?(true)
+        })
     }, selectAppIcon: { icon in
         let _ = (context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: context.account.peerId))
         |> deliverOnMainQueue).start(next: { peer in

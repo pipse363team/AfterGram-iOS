@@ -4404,7 +4404,10 @@ func replayFinalState(
                           message.attributes.contains(where: { ($0 as? AutoclearTimeoutMessageAttribute)?.timeout == viewOnceTimeout }),
                           !message.attributes.contains(where: { $0 is AfterGramViewOnceMediaBackupAttribute }) else { continue }
                     var attributes = message.attributes
-                    attributes.append(AfterGramViewOnceMediaBackupAttribute(media: retainedMessageMedia(message.media, mediaBox: mediaBox)))
+                    // Keep descriptors only here. Copying media files while replaying
+                    // the database update can block the UI and disk; completed bytes
+                    // are detached from the cache asynchronously by the prefetcher.
+                    attributes.append(AfterGramViewOnceMediaBackupAttribute(media: message.media))
                     messages[i] = message.withUpdatedAttributes(attributes)
                 }
             
