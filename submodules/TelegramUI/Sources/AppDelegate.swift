@@ -193,6 +193,27 @@ private final class AfterGramBrandPill: UIView {
         logo.layer.cornerRadius = 8.0
         logo.clipsToBounds = true
 
+        let sparkle = UIGraphicsImageRenderer(size: CGSize(width: 4.0, height: 4.0)).image { context in
+            UIColor.white.setFill()
+            context.cgContext.fillEllipse(in: CGRect(x: 1.0, y: 1.0, width: 2.0, height: 2.0))
+        }
+        let sparkles = CAEmitterLayer()
+        sparkles.emitterPosition = CGPoint(x: 8.0, y: 8.0)
+        sparkles.emitterShape = .circle
+        sparkles.emitterSize = CGSize(width: 9.0, height: 9.0)
+        sparkles.frame = CGRect(x: 0.0, y: 0.0, width: 16.0, height: 16.0)
+        let particle = CAEmitterCell()
+        particle.contents = sparkle.cgImage
+        particle.birthRate = 0.7
+        particle.lifetime = 2.4
+        particle.velocity = 2.0
+        particle.velocityRange = 3.0
+        particle.alphaSpeed = -0.45
+        particle.scale = 0.35
+        particle.scaleRange = 0.25
+        sparkles.emitterCells = [particle]
+        logo.layer.addSublayer(sparkles)
+
         let title = UILabel()
         title.translatesAutoresizingMaskIntoConstraints = false
         title.text = "AfterGram"
@@ -475,7 +496,7 @@ private func extractAccountManagerState(records: AccountRecordsView<TelegramAcco
         hostView.containerView.addSubview(brandPill)
         NSLayoutConstraint.activate([
             brandPill.centerXAnchor.constraint(equalTo: hostView.containerView.centerXAnchor),
-            brandPill.topAnchor.constraint(equalTo: hostView.containerView.safeAreaLayoutGuide.topAnchor, constant: -20.0)
+            brandPill.topAnchor.constraint(equalTo: hostView.containerView.safeAreaLayoutGuide.topAnchor, constant: -32.0)
         ])
         self.afterGramBrandPill = brandPill
         if let traitCollection = window.rootViewController?.traitCollection {
@@ -2110,15 +2131,10 @@ private func extractAccountManagerState(records: AccountRecordsView<TelegramAcco
                 extendNow = false
             }
             sharedApplicationContext.wakeupManager.allowBackgroundTimeExtension(timeout: 2.0, extendNow: extendNow)
-            
-            let _ = (sharedApplicationContext.sharedContext.activeAccountContexts
-             |> take(1)
-             |> deliverOnMainQueue).start(next: { activeAccounts in
-                for (_, context, _) in activeAccounts.accounts {
-                    context.account.postbox.clearCaches()
-                }
-            })
         })
+
+        // Keep Postbox's in-memory history caches across short app switches so
+        // returning to a chat does not have to rebuild its visible message list.
         
         self.isInForegroundValue = false
         self.isInForegroundPromise.set(false)

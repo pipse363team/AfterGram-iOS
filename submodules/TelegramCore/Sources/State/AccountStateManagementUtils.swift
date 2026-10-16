@@ -4391,6 +4391,22 @@ func replayFinalState(
                 }
             
                 var messages = messages
+
+                // Archive view-once media descriptors as soon as Telegram writes the
+                // message. The UI may not have time to instantiate its row before
+                // MarkMessageContentAsConsumedInteractively replaces the media with
+                // TelegramMediaExpiredContent.
+                for i in 0 ..< messages.count {
+                    let message = messages[i]
+                    guard case .Id(_) = message.id,
+                          message.id.namespace == Namespaces.Message.Cloud,
+                          message.id.peerId.namespace != Namespaces.Peer.SecretChat,
+                          message.attributes.contains(where: { ($0 as? AutoclearTimeoutMessageAttribute)?.timeout == viewOnceTimeout }),
+                          !message.attributes.contains(where: { $0 is AfterGramViewOnceMediaBackupAttribute }) else { continue }
+                    var attributes = message.attributes
+                    attributes.append(AfterGramViewOnceMediaBackupAttribute(media: retainedMessageMedia(message.media, mediaBox: mediaBox)))
+                    messages[i] = message.withUpdatedAttributes(attributes)
+                }
             
                 if case .UpperHistoryBlock = location {
                     for i in 0 ..< messages.count {

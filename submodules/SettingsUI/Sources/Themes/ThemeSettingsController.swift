@@ -407,7 +407,7 @@ private enum ThemeSettingsControllerEntry: ItemListNodeEntry {
             case let .showNextMediaOnTapInfo(_, text):
                 return ItemListTextItem(presentationData: presentationData, text: .plain(text), sectionId: self.section)
             case let .classicAppearance(_, value):
-                return ItemListSwitchItem(presentationData: presentationData, systemStyle: .glass, title: presentationData.strings.baseLanguageCode.lowercased().hasPrefix("ru") ? "Классическая тема Telegram (≈ 2020)" : "Classic Telegram theme (≈ 2020)", value: value, sectionId: self.section, style: .blocks, updated: { value in
+                return ItemListSwitchItem(presentationData: presentationData, systemStyle: .glass, title: presentationData.strings.baseLanguageCode.lowercased().hasPrefix("ru") ? "Старый дизайн (2020)" : "Classic design (2020)", value: value, sectionId: self.section, style: .blocks, updated: { value in
                     arguments.toggleClassicAppearance(value)
                 })
         }
@@ -587,6 +587,7 @@ public func themeSettingsController(context: AccountContext, focusOnItemTag: The
         return animatedEmojiStickers
     }
     
+    var previousThemeForClassicAppearance: PresentationThemeReference?
     let arguments = ThemeSettingsControllerArguments(context: context, selectTheme: { theme in
         selectThemeImpl?(theme)
     }, openThemeSettings: {
@@ -638,22 +639,18 @@ public func themeSettingsController(context: AccountContext, focusOnItemTag: The
             return current.withUpdatedShowNextMediaOnTap(value)
         }).start()
     }, toggleClassicAppearance: { enabled in
-        let previousThemeKey = "aftergram.classicTheme.previous.\(context.account.id.int64)"
         if enabled {
             let _ = (context.sharedContext.accountManager.sharedData(keys: Set([ApplicationSpecificSharedDataKeys.presentationThemeSettings]))
             |> take(1)
             |> deliverOnMainQueue).start(next: { view in
                 let settings = view.entries[ApplicationSpecificSharedDataKeys.presentationThemeSettings]?.get(PresentationThemeSettings.self) ?? PresentationThemeSettings.defaultSettings
-                if settings.theme != .builtin(.dayClassic), let data = try? JSONEncoder().encode(settings) {
-                    UserDefaults.standard.set(data, forKey: previousThemeKey)
-                }
+                previousThemeForClassicAppearance = settings.theme == .builtin(.dayClassic) ? .builtin(.day) : settings.theme
                 selectThemeImpl?(.builtin(.dayClassic))
             })
-        } else if let data = UserDefaults.standard.data(forKey: previousThemeKey), let settings = try? JSONDecoder().decode(PresentationThemeSettings.self, from: data) {
-            UserDefaults.standard.removeObject(forKey: previousThemeKey)
-            selectThemeImpl?(settings.theme)
         } else {
-            selectThemeImpl?(.builtin(.day))
+            let theme = previousThemeForClassicAppearance ?? .builtin(.day)
+            previousThemeForClassicAppearance = nil
+            selectThemeImpl?(theme)
         }
     }, selectAppIcon: { icon in
         let _ = (context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: context.account.peerId))

@@ -31,7 +31,7 @@ private enum RetentionSettingsEntry: ItemListNodeEntry {
             let update = (arguments as! ((Bool) -> Void, (Bool) -> Void)).1
             return ItemListSwitchItem(presentationData: presentationData, title: ru ? "Сохранять историю правок" : "Keep edit history", value: value, sectionId: self.section, style: .blocks, updated: update)
         case let .info(ru):
-            return ItemListTextItem(presentationData: presentationData, text: .plain(ru ? "Удалённые сообщения остаются в чате с прозрачностью 50% и значком корзины. Медиа из открытого чата заранее скачиваются и сохраняются отдельно от обычного кэша — это расходует трафик и память устройства. Для просмотра после удаления файл должен успеть загрузиться. Уже сохранённые сообщения можно удалить вручную. Отключение не удаляет накопленные копии." : "Deleted messages remain in the chat at 50% opacity with a trash icon. Media in an opened chat are downloaded ahead of time and stored outside the normal cache, using network data and device storage. Playback after deletion requires the file to finish downloading. You can manually delete retained messages. Disabling keeps existing copies."), sectionId: self.section)
+            return ItemListTextItem(presentationData: presentationData, text: .plain(ru ? "Удалённые сообщения остаются в чате с отметкой и прозрачностью 50%. Чтобы сохранить медиа, оно должно успеть загрузиться. Сохранённые сообщения можно удалить вручную." : "Deleted messages stay in the chat at 50% opacity with a deleted mark. Media must finish loading to be retained. Saved messages can be removed manually."), sectionId: self.section)
         }
     }
 }
