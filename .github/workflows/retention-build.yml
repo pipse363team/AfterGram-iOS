@@ -9,7 +9,7 @@ on:
         default: true
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -58,3 +58,10 @@ jobs:
           path: build/artifacts/TelegramRetention.ipa
           if-no-files-found: error
           retention-days: 7
+      - name: Publish latest IPA release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view latest --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 || \
+            gh release create latest --repo "$GITHUB_REPOSITORY" --title "AfterGram iOS — latest" --notes "Latest AfterGram iOS build. Download the IPA and sign it with your Apple account before installing."
+          gh release upload latest build/artifacts/TelegramRetention.ipa --repo "$GITHUB_REPOSITORY" --clobber
