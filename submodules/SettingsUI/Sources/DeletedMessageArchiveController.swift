@@ -33,7 +33,7 @@ private enum RetentionSettingsEntry: ItemListNodeEntry {
             let update = (arguments as! ((Bool) -> Void, (Bool) -> Void, () -> Void)).1
             return ItemListSwitchItem(presentationData: presentationData, title: ru ? "Сохранять историю правок" : "Keep edit history", value: value, sectionId: self.section, style: .blocks, updated: update)
         case let .downloadLatest(ru):
-            let download = (arguments as! (() -> Void)).0
+            let download = arguments as! (() -> Void)
             return ItemListActionItem(presentationData: presentationData, systemStyle: .glass, title: ru ? "Скачать последнюю сборку AfterGram" : "Download the latest AfterGram build", kind: .generic, alignment: .natural, sectionId: self.section, style: .blocks, action: download)
         case let .info(ru):
             return ItemListTextItem(presentationData: presentationData, text: .plain(ru ? "Удалённые сообщения остаются в чате с отметкой и прозрачностью 50%. Чтобы сохранить медиа, оно должно успеть загрузиться. Сохранённые сообщения можно удалить вручную." : "Deleted messages stay in the chat at 50% opacity with a deleted mark. Media must finish loading to be retained. Saved messages can be removed manually."), sectionId: self.section)
