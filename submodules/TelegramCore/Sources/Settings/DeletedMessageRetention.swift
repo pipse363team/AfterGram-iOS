@@ -48,6 +48,15 @@ func afterGramIsViewOnceMessage(_ message: Message) -> Bool {
     return message.attributes.contains(where: { ($0 as? AutoclearTimeoutMessageAttribute)?.timeout == viewOnceTimeout })
 }
 
+/// Once a remotely deleted message reaches its normal auto-clear deadline, keep its
+/// archived content but remove the timer attribute so the expiry operation cannot
+/// repeatedly schedule itself.
+func retainedRemoteDeletedMessageAfterAutoclear(_ message: Message, mediaBox: MediaBox) -> StoreMessage? {
+    guard message.isRemotelyDeleted else { return nil }
+    let attributes = message.attributes.filter { !($0 is AutoclearTimeoutMessageAttribute) }
+    return retentionStoreMessage(message, attributes: attributes, media: retainedMessageMedia(message.media, mediaBox: mediaBox), groupingKey: message.groupingKey)
+}
+
 /// Returns only IDs which still require deletion. Call before replaying remote deletes.
 func retainRemotelyDeletedMessages(transaction: Transaction, mediaBox: MediaBox, ids: [MessageId]) -> [MessageId] {
     let settings = transaction.getPreferencesEntry(key: deletedMessageRetentionKey)?.get(DeletedMessageRetentionSettings.self) ?? .defaultValue
