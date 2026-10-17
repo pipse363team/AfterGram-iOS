@@ -56,11 +56,27 @@ test('sends route metadata to the authenticated sender endpoint', async () => {
     apiToken: 'secret',
     fetchImpl: async (url, options) => {
       request = { url, options };
-      return { ok: true };
+      return { ok: true, json: async () => ({ sent: 1, failed: 0 }) };
     },
   });
   assert.equal(result, true);
   assert.equal(request.url, 'https://push.example:9443/v1/send');
   assert.equal(request.options.headers.authorization, 'Bearer secret');
   assert.equal(JSON.parse(request.options.body).custom.message_id, '5');
+});
+
+test('reports when the push sender has no saved subscriptions', async () => {
+  await assert.rejects(sendTelegramNotification({
+    isPrivate: true,
+    message: {
+      id: 5,
+      peerId: { className: 'PeerUser', userId: 11n },
+      message: 'hi',
+      getSender: async () => ({ firstName: 'Pat' }),
+    },
+  }, {
+    endpoint: 'https://push.example:9443',
+    apiToken: 'secret',
+    fetchImpl: async () => ({ ok: true, json: async () => ({ sent: 0, failed: 0 }) }),
+  }), /no saved subscriptions/);
 });

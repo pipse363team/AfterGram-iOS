@@ -85,6 +85,9 @@ export async function sendTelegramNotification(event, { endpoint, apiToken, fetc
     body: JSON.stringify(payload),
   });
   if (!response.ok) throw new Error(`Push sender returned HTTP ${response.status}`);
+  const result = await response.json();
+  if (!Number.isInteger(result.sent) || !Number.isInteger(result.failed)) throw new Error('Push sender returned an invalid result');
+  if (result.sent === 0) throw new Error(result.failed ? `Push sender could not deliver to any subscription (${result.failed} failed)` : 'Push sender has no saved subscriptions');
   return true;
 }
 

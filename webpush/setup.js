@@ -69,7 +69,15 @@
           body: JSON.stringify({ title: 'AfterGram', description: isRu ? 'Тестовое push-уведомление' : 'Test push notification' }),
         });
         if (!response.ok) throw new Error(isRu ? 'Сервер не отправил push-уведомление.' : 'The server could not send the push notification.');
-        $('status').textContent = isRu ? 'Тестовое уведомление отправлено.' : 'Test notification sent.';
+        const result = await response.json();
+        if (!Number.isInteger(result.sent) || !Number.isInteger(result.failed)) throw new Error(isRu ? 'Сервер вернул некорректный результат отправки.' : 'The server returned an invalid send result.');
+        if (result.sent === 0) {
+          const reason = result.failed ? (isRu ? ` Не удалось отправить: ${result.failed}.` : ` Failed: ${result.failed}.`) : (isRu ? ' На сервере нет сохранённых подписок.' : ' There are no subscriptions saved on the server.');
+          throw new Error((isRu ? 'Push не отправлен.' : 'Push was not sent.') + reason);
+        }
+        $('status').textContent = isRu
+          ? `Тестовый push принят сервисом уведомлений. Успешно: ${result.sent}; ошибок: ${result.failed}.`
+          : `Test push accepted by the notification service. Sent: ${result.sent}; failed: ${result.failed}.`;
       } catch (error) { $('status').textContent = error.message || String(error); }
     });
     $('disable').addEventListener('click', async () => {
