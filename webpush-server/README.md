@@ -13,6 +13,7 @@ WEBPUSH_API_TOKEN=<random secret of at least 32 characters>
 WEBPUSH_SUBJECT=mailto:<real contact address>
 WEBPUSH_ALLOWED_ORIGIN=https://pipse363team.github.io
 WEBPUSH_DATA_DIR=/var/lib/aftergram-webpush
+HOST=127.0.0.1
 PORT=8788
 ```
 
@@ -22,6 +23,10 @@ Install and start behind an HTTPS reverse proxy. The process binds to `127.0.0.1
 npm ci
 npm start
 ```
+
+For a direct TLS listener, set `WEBPUSH_TLS_CERT` and `WEBPUSH_TLS_KEY` to readable certificate files and bind the selected public HTTPS port with `HOST=0.0.0.0`. The repository includes `aftergram-webpush.service` as the current VPS systemd example; it reads its bearer token from `/etc/aftergram-webpush.env` and uses systemd credentials for the TLS private key.
+
+The configured VPS endpoint is `https://chesterfield.space:9443`. Its API token is stored root-only in `/etc/aftergram-webpush.env`; retrieve it on the server with `sudo grep '^WEBPUSH_API_TOKEN=' /etc/aftergram-webpush.env` and enter it in the PWA setup page. Do not put that token in the repository or share it publicly.
 
 ## API
 

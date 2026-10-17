@@ -1,4 +1,5 @@
 import { createServer as createHttpServer } from 'node:http';
+import { createServer as createHttpsServer } from 'node:https';
 import { chmod, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { timingSafeEqual } from 'node:crypto';
@@ -74,7 +75,7 @@ async function readSubscriptions(dataDirectory) {
   }
 }
 
-export async function createWebPushServer({ dataDirectory, apiToken, allowedOrigin, subject, push = webpush }) {
+export async function createWebPushServer({ dataDirectory, apiToken, allowedOrigin, subject, tlsOptions, push = webpush }) {
   if (!apiToken || apiToken.length < 32) throw new Error('WEBPUSH_API_TOKEN must contain at least 32 characters');
   if (!allowedOrigin) throw new Error('WEBPUSH_ALLOWED_ORIGIN must be an https origin');
   const originUrl = new URL(allowedOrigin);
@@ -95,7 +96,7 @@ export async function createWebPushServer({ dataDirectory, apiToken, allowedOrig
     await chmod(path, 0o600);
   };
 
-  return createHttpServer(async (request, response) => {
+  const handleRequest = async (request, response) => {
     const origin = request.headers.origin;
     if (origin && origin !== allowedOrigin) return json(response, 403, { error: 'Origin not allowed' });
     if (origin) {
@@ -158,16 +159,26 @@ export async function createWebPushServer({ dataDirectory, apiToken, allowedOrig
     } catch (error) {
       return json(response, error.status ?? 500, { error: error.status ? error.message : 'Request failed' });
     }
-  });
+  };
+  return tlsOptions ? createHttpsServer(tlsOptions, handleRequest) : createHttpServer(handleRequest);
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const port = Number(process.env.PORT ?? 8788);
+  const host = process.env.HOST ?? '127.0.0.1';
+  const tlsCertPath = process.env.WEBPUSH_TLS_CERT;
+  const tlsKeyPath = process.env.WEBPUSH_TLS_KEY;
+  if (Boolean(tlsCertPath) !== Boolean(tlsKeyPath)) throw new Error('Set both WEBPUSH_TLS_CERT and WEBPUSH_TLS_KEY, or neither');
+  const tlsOptions = tlsCertPath ? {
+    cert: await readFile(tlsCertPath),
+    key: await readFile(tlsKeyPath),
+  } : undefined;
   const server = await createWebPushServer({
     dataDirectory: process.env.WEBPUSH_DATA_DIR ?? join(process.cwd(), 'data'),
     apiToken: process.env.WEBPUSH_API_TOKEN,
     allowedOrigin: process.env.WEBPUSH_ALLOWED_ORIGIN,
     subject: process.env.WEBPUSH_SUBJECT,
+    tlsOptions,
   });
-  server.listen(port, '127.0.0.1', () => process.stdout.write(`Web Push sender listening on 127.0.0.1:${port}\n`));
+  server.listen(port, host, () => process.stdout.write(`Web Push sender listening on ${host}:${port}${tlsOptions ? ' (HTTPS)' : ''}\n`));
 }
