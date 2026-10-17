@@ -92,6 +92,34 @@ test('rejects non-HTTPS subscriptions and disallowed origins', async () => {
   });
 });
 
+test('sends only validated Telegram route metadata in push payloads', async () => {
+  await withServer(async ({ baseUrl, sends }) => {
+    const headers = { authorization: `Bearer ${token}`, 'content-type': 'application/json' };
+    const saved = await fetch(`${baseUrl}/v1/subscriptions`, {
+      method: 'POST', headers, body: JSON.stringify(subscription),
+    });
+    assert.equal(saved.status, 201);
+    const accepted = await fetch(`${baseUrl}/v1/send`, {
+      method: 'POST', headers,
+      body: JSON.stringify({
+        title: 'Alex', description: 'Hello',
+        custom: { peer_type: 'user', peer_id: '12345', message_id: '77' },
+      }),
+    });
+    assert.equal(accepted.status, 200);
+    assert.deepEqual(JSON.parse(sends[0][1]).custom, { peer_type: 'user', peer_id: '12345', message_id: '77' });
+
+    const rejected = await fetch(`${baseUrl}/v1/send`, {
+      method: 'POST', headers,
+      body: JSON.stringify({
+        title: 'Alex', description: 'Hello',
+        custom: { peer_type: 'user', peer_id: 'https://attacker.invalid', message_id: '77' },
+      }),
+    });
+    assert.equal(rejected.status, 400);
+  });
+});
+
 test('creates a stable real VAPID pair without returning the private key', async () => {
   const dataDirectory = await mkdtemp(join(tmpdir(), 'aftergram-vapid-'));
   const options = {

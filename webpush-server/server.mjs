@@ -139,7 +139,22 @@ export async function createWebPushServer({ dataDirectory, apiToken, allowedOrig
         if (!payload || typeof payload.title !== 'string' || typeof payload.description !== 'string') {
           return json(response, 400, { error: 'Expected title and description strings' });
         }
-        const body = JSON.stringify({ title: payload.title.slice(0, 120), description: payload.description.slice(0, 500) });
+        const custom = payload.custom;
+        if (custom !== undefined && (!custom || typeof custom !== 'object' || Array.isArray(custom) ||
+          !['user', 'group', 'channel'].includes(custom.peer_type) ||
+          typeof custom.peer_id !== 'string' || !/^\d{1,20}$/.test(custom.peer_id) ||
+          typeof custom.message_id !== 'string' || !/^\d{1,12}$/.test(custom.message_id))) {
+          return json(response, 400, { error: 'Invalid Telegram notification route' });
+        }
+        const body = JSON.stringify({
+          title: payload.title.slice(0, 120),
+          description: payload.description.slice(0, 500),
+          ...(custom ? { custom: {
+            peer_type: custom.peer_type,
+            peer_id: custom.peer_id,
+            message_id: custom.message_id,
+          } } : {}),
+        });
         const results = await Promise.allSettled(subscriptions.map(subscription => push.sendNotification(subscription, body, { TTL: 60 })));
         const stale = new Set();
         let sent = 0;

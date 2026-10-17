@@ -40,4 +40,13 @@ The API token must be entered only on the owner's device and must not be embedde
 
 ## Telegram integration status
 
-This service can send a test Web Push to a stored PWA subscription. It does not yet receive Telegram message events. The current native app registers the subscription with Telegram as token type 10; Telegram's own push infrastructure cannot use this server's private VAPID key unless Telegram's sender is configured with that key. To use this service for Telegram notifications, an event source must feed it. A bot only sees updates available to that bot; receiving a personal account's messages requires a separate, explicitly configured Telegram client/session. Do not put a Telegram login session in this repository.
+The Telegram bridge uses a separate MTProto user session and listens only to incoming new messages. It sends the sender/chat title, message text (or a media label), peer type, peer ID, and message ID to this server. Message contents and the login session are not logged. Tapping an alert opens the corresponding AfterGram chat and message when the installed app supports the `tgretention` URL scheme.
+
+### Personal Telegram account setup on the VPS
+
+1. Create Telegram `api_id` and `api_hash` at <https://my.telegram.org> → API development tools. Telegram requires third-party clients to use their own API credentials and comply with its API terms.
+2. Add `TELEGRAM_API_ID=...` and `TELEGRAM_API_HASH=...` to root-only `/etc/aftergram-telegram.env`.
+3. From an SSH terminal, run `sudo /usr/local/bin/aftergram-telegram-login`. Enter the phone number, Telegram login code, and optional two-step password at its prompts. The resulting session is stored under `/var/lib/aftergram-telegram` with mode `0600`; do not copy it into Git or chat.
+4. Start it with `sudo systemctl enable --now aftergram-telegram-bridge.service`.
+
+The service can only start receiving messages after the account owner completes that interactive login. Telegram may show the new third-party client under Devices. Revoke it there to stop access immediately. The bridge does not send messages or change account data.

@@ -2600,6 +2600,32 @@ private func extractAccountManagerState(records: AccountRecordsView<TelegramAcco
         guard self.openUrlInProgress != url else {
             return
         }
+        if url.scheme?.lowercased() == "tgretention", url.host?.lowercased() == "open",
+           let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+           let query = components.queryItems {
+            let values = Dictionary(query.compactMap { item -> (String, String)? in
+                guard let value = item.value else { return nil }
+                return (item.name, value)
+            }, uniquingKeysWith: { _, latest in latest })
+            guard let peerType = values["peer_type"],
+                  let rawPeerId = values["peer_id"].flatMap(Int64.init), rawPeerId > 0 else {
+                return
+            }
+            let namespace: Int32
+            switch peerType {
+            case "user": namespace = Namespaces.Peer.CloudUser
+            case "group": namespace = Namespaces.Peer.CloudGroup
+            case "channel": namespace = Namespaces.Peer.CloudChannel
+            default: return
+            }
+            let peerId = PeerId(namespace: namespace, id: PeerId.Id._internalFromInt64Value(rawPeerId))
+            let messageId = values["message_id"].flatMap(Int32.init).flatMap { value -> MessageId? in
+                guard value > 0 else { return nil }
+                return MessageId(peerId: peerId, namespace: Namespaces.Message.Cloud, id: value)
+            }
+            self.openChatWhenReady(accountId: nil, peerId: peerId, threadId: nil, messageId: messageId, storyId: nil)
+            return
+        }
         self.openUrl(url: url)
     }
 

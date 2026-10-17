@@ -5,9 +5,12 @@
   "scripts": {
     "start": "node server.mjs",
     "test": "node --test",
-    "check-page": "node --check ../webpush/setup.js"
+    "check-page": "node --check ../webpush/setup.js && node --check ../webpush/service-worker.js && node --check telegram-bridge.mjs",
+    "telegram:login": "node telegram-bridge.mjs --login",
+    "telegram:start": "node telegram-bridge.mjs"
   },
   "dependencies": {
+    "teleproto": "1.230.1",
     "web-push": "3.6.7"
   }
 }
