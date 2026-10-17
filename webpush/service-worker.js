@@ -27,17 +27,6 @@ self.addEventListener('push', (event) => {
     data: { url: './', custom },
     tag: custom && custom.peer_id || 'telegram',
   };
-  if (custom && ['user', 'group', 'channel'].includes(custom.peer_type) && /^\d{1,20}$/.test(custom.peer_id || '') && 'navigate' in Notification.prototype) {
-    const target = new URL('tgretention://open');
-    target.search = new URLSearchParams({
-      peer_type: custom.peer_type,
-      peer_id: custom.peer_id,
-      message_id: /^\d{1,12}$/.test(custom.message_id || '') ? custom.message_id : '0',
-    });
-    // Safari 18.4+ follows this directly when the notification is tapped,
-    // without dispatching notificationclick to the service worker.
-    options.navigate = target.href;
-  }
   event.waitUntil(self.registration.showNotification(title, options));
 });
 self.addEventListener('notificationclick', (event) => {

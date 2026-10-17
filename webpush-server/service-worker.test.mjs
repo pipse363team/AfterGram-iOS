@@ -5,37 +5,54 @@ import vm from 'node:vm';
 
 const serviceWorkerSource = await readFile(new URL('../webpush/service-worker.js', import.meta.url), 'utf8');
 
-async function shownNotification(custom, supportsNavigate) {
+function createWorker(supportsNavigate = false) {
   const listeners = new Map();
   let shown;
+  let openedUrl;
   class MockNotification {}
   if (supportsNavigate) Object.defineProperty(MockNotification.prototype, 'navigate', { value: '', configurable: true });
   const context = {
     Notification: MockNotification,
     URL,
     URLSearchParams,
+    indexedDB: { open() { throw new Error('IndexedDB unavailable in this test'); } },
     self: {
       addEventListener: (name, listener) => listeners.set(name, listener),
-      registration: { showNotification: async (title, options) => { shown = { title, options }; } },
-      clients: {},
+      registration: {
+        scope: 'https://pipse363team.github.io/AfterGram-iOS/webpush/',
+        showNotification: async (title, options) => { shown = { title, options }; },
+      },
+      clients: {
+        matchAll: async () => [],
+        openWindow: async (url) => { openedUrl = url; return null; },
+      },
     },
   };
   vm.runInNewContext(serviceWorkerSource, context);
+  return { listeners, get shown() { return shown; }, get openedUrl() { return openedUrl; } };
+}
+
+async function dispatchPush(worker, custom) {
   let pending;
-  listeners.get('push')({
+  worker.listeners.get('push')({
     data: { json: () => ({ title: 'Telegram', custom }) },
     waitUntil: (promise) => { pending = promise; },
   });
   await pending;
-  return shown;
 }
 
-test('sets a native chat URL on notification activation when declarative navigation is supported', async () => {
-  const notification = await shownNotification({ peer_type: 'group', peer_id: '12345', message_id: '67' }, true);
-  assert.equal(notification.options.navigate, 'tgretention://open?peer_type=group&peer_id=12345&message_id=67');
-});
+test('keeps notification taps on the handoff flow even when declarative navigation exists', async () => {
+  const worker = createWorker(true);
+  const custom = { peer_type: 'group', peer_id: '12345', message_id: '67' };
+  await dispatchPush(worker, custom);
 
-test('keeps the in-app handoff fallback when notification navigation is unsupported', async () => {
-  const notification = await shownNotification({ peer_type: 'user', peer_id: '12345', message_id: '67' }, false);
-  assert.equal('navigate' in notification.options, false);
+  assert.equal('navigate' in worker.shown.options, false);
+
+  let pending;
+  worker.listeners.get('notificationclick')({
+    notification: { data: { custom }, close() {} },
+    waitUntil: (promise) => { pending = promise; },
+  });
+  await pending;
+  assert.equal(worker.openedUrl, 'https://pipse363team.github.io/AfterGram-iOS/webpush/open-chat.html?peer_type=group&peer_id=12345&message_id=67');
 });
