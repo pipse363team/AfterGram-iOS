@@ -90,9 +90,13 @@ func managedAutoremoveMessageOperations(network: Network, postbox: Postbox, isRe
                                 if let forwardInfo = currentMessage.forwardInfo {
                                     storeForwardInfo = StoreMessageForwardInfo(authorId: forwardInfo.author?.id, sourceId: forwardInfo.source?.id, sourceMessageId: forwardInfo.sourceMessageId, date: forwardInfo.date, authorSignature: forwardInfo.authorSignature, psaType: forwardInfo.psaType, flags: forwardInfo.flags)
                                 }
-                                var updatedMedia = currentMessage.media
+                                let retentionSettings = transaction.getPreferencesEntry(key: deletedMessageRetentionKey)?.get(DeletedMessageRetentionSettings.self) ?? .defaultValue
+                                let retainedMedia = retentionSettings.enabled ? retainedMessageMedia(currentMessage.media, mediaBox: postbox.mediaBox) : currentMessage.media
+                                var updatedMedia = retainedMedia
                                 for i in 0 ..< updatedMedia.count {
-                                    if let _ = updatedMedia[i] as? TelegramMediaImage {
+                                    if retentionSettings.enabled, hasRetainedMediaBytes(updatedMedia[i], mediaBox: postbox.mediaBox) {
+                                        continue
+                                    } else if let _ = updatedMedia[i] as? TelegramMediaImage {
                                         updatedMedia[i] = TelegramMediaExpiredContent(data: .image)
                                     } else if let file = updatedMedia[i] as? TelegramMediaFile {
                                         if file.isInstantVideo {
