@@ -60,6 +60,31 @@ final class DeletedMessageRetentionTests: XCTestCase {
         XCTAssertEqual(try Data(contentsOf: URL(fileURLWithPath: retainedMediaPath(fileId: retainedResource.fileId, mediaBox: self.mediaBox))), bytes)
     }
 
+    func testRetainedViewOncePhotoDropsUncachedRemoteRepresentations() throws {
+        let transientResource = LocalFileMediaResource(fileId: 881, size: 3)
+        let retainedResource = LocalFileMediaResource(fileId: 882, size: 3)
+        let bytes = Data([9, 8, 7])
+        self.mediaBox.storeResourceData(retainedResource.id, data: bytes, synchronous: true)
+        let image = TelegramMediaImage(
+            imageId: MediaId(namespace: Namespaces.Media.CloudImage, id: 882),
+            representations: [
+                TelegramMediaImageRepresentation(dimensions: PixelDimensions(width: 320, height: 320), resource: transientResource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false, isPersonal: false),
+                TelegramMediaImageRepresentation(dimensions: PixelDimensions(width: 1280, height: 1280), resource: retainedResource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false, isPersonal: false)
+            ],
+            immediateThumbnailData: nil,
+            reference: nil,
+            partialReference: nil,
+            flags: []
+        )
+
+        let result = try XCTUnwrap(retainedMessageMedia([image], mediaBox: self.mediaBox).first as? TelegramMediaImage)
+        XCTAssertEqual(result.representations.count, 1)
+        XCTAssertEqual(result.representations.first?.dimensions, PixelDimensions(width: 1280, height: 1280))
+        XCTAssertNil(result.reference)
+        let localResource = try XCTUnwrap(result.representations.first?.resource as? LocalFileMediaResource)
+        XCTAssertEqual(try Data(contentsOf: URL(fileURLWithPath: retainedMediaPath(fileId: localResource.fileId, mediaBox: self.mediaBox))), bytes)
+    }
+
     func testViewOnceMediaBackupAttributeRoundTripsMedia() {
         let file = TelegramMediaFile(fileId: MediaId(namespace: Namespaces.Media.CloudFile, id: 55), partialReference: nil, resource: LocalFileMediaResource(fileId: 56, size: 3), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "image/jpeg", size: 3, attributes: [], alternativeRepresentations: [])
         let original = AfterGramViewOnceMediaBackupAttribute(media: [file])

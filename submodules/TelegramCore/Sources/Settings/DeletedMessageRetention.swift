@@ -77,10 +77,11 @@ func retainedViewOnceMessageAfterAutoclear(_ message: Message, mediaBox: MediaBo
            let resource = file.resource as? LocalFileMediaResource {
             return FileManager.default.fileExists(atPath: retainedMediaPath(fileId: resource.fileId, mediaBox: mediaBox))
         } else if let image = item as? TelegramMediaImage,
-                  let representation = image.representations.max(by: {
-                      Int64($0.dimensions.width) * Int64($0.dimensions.height) < Int64($1.dimensions.width) * Int64($1.dimensions.height)
-                  }), let resource = representation.resource as? LocalFileMediaResource {
-            return FileManager.default.fileExists(atPath: retainedMediaPath(fileId: resource.fileId, mediaBox: mediaBox))
+                  image.representations.contains(where: { representation in
+                      guard let resource = representation.resource as? LocalFileMediaResource else { return false }
+                      return FileManager.default.fileExists(atPath: retainedMediaPath(fileId: resource.fileId, mediaBox: mediaBox))
+                  }) {
+            return true
         }
         return false
     }
@@ -163,20 +164,20 @@ func retainedMessageMedia(_ media: [Media], mediaBox: MediaBox) -> [Media] {
         if let file = media as? TelegramMediaFile, let resource = copyRetainedMedia(resource: file.resource, mediaBox: mediaBox) {
             return TelegramMediaFile(fileId: file.fileId, partialReference: file.partialReference, resource: resource, previewRepresentations: file.previewRepresentations, videoThumbnails: file.videoThumbnails, videoCover: file.videoCover, immediateThumbnailData: file.immediateThumbnailData, mimeType: file.mimeType, size: file.size, attributes: file.attributes, alternativeRepresentations: [])
         } else if let image = media as? TelegramMediaImage {
-            let largestIndex = image.representations.indices.max { lhs, rhs in
-                Int64(image.representations[lhs].dimensions.width) * Int64(image.representations[lhs].dimensions.height) < Int64(image.representations[rhs].dimensions.width) * Int64(image.representations[rhs].dimensions.height)
+            // Once the view-once resource expires, even a smaller CDN representation can
+            // resolve to unrelated/stale content. Expose only representations whose bytes
+            // have been copied to AfterGram's durable local store.
+            let representations = image.representations.compactMap { retainedImageRepresentation($0, mediaBox: mediaBox) }
+            if !representations.isEmpty {
+                return TelegramMediaImage(imageId: image.imageId, representations: representations, videoRepresentations: image.videoRepresentations, immediateThumbnailData: image.immediateThumbnailData, emojiMarkup: image.emojiMarkup, reference: nil, partialReference: nil, flags: image.flags, video: image.video)
             }
-            let representations = image.representations.enumerated().map { index, representation in
-                index == largestIndex ? retainedImageRepresentation(representation, mediaBox: mediaBox) : representation
-            }
-            return TelegramMediaImage(imageId: image.imageId, representations: representations, videoRepresentations: image.videoRepresentations, immediateThumbnailData: image.immediateThumbnailData, emojiMarkup: image.emojiMarkup, reference: image.reference, partialReference: image.partialReference, flags: image.flags, video: image.video)
         }
         return media
     }
 }
 
-private func retainedImageRepresentation(_ representation: TelegramMediaImageRepresentation, mediaBox: MediaBox) -> TelegramMediaImageRepresentation {
-    guard let resource = copyRetainedMedia(resource: representation.resource, mediaBox: mediaBox) else { return representation }
+private func retainedImageRepresentation(_ representation: TelegramMediaImageRepresentation, mediaBox: MediaBox) -> TelegramMediaImageRepresentation? {
+    guard let resource = copyRetainedMedia(resource: representation.resource, mediaBox: mediaBox) else { return nil }
     return TelegramMediaImageRepresentation(dimensions: representation.dimensions, resource: resource, progressiveSizes: representation.progressiveSizes, immediateThumbnailData: representation.immediateThumbnailData, hasVideo: representation.hasVideo, isPersonal: representation.isPersonal, typeHint: representation.typeHint)
 }
 
