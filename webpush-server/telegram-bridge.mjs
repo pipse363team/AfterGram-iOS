@@ -76,6 +76,21 @@ export async function formatTelegramNotification(event) {
   return { title: title.slice(0, 120), description: description.slice(0, 500), custom };
 }
 
+export async function isTelegramChatMuted(client, event, { cache = new Map(), nowSeconds = Math.floor(Date.now() / 1000) } = {}) {
+  const route = peerRoute(event?.message?.peerId);
+  if (!route) return false;
+  const key = `${route.peer_type}:${route.peer_id}`;
+  const cached = cache.get(key);
+  if (cached && cached.expiresAt > nowSeconds) return cached.muted;
+
+  const chat = typeof event.getChat === 'function' ? await event.getChat() : event.chat;
+  if (!chat || typeof client.getNotifySettings !== 'function') return false;
+  const settings = await client.getNotifySettings(chat);
+  const muted = Number(settings?.muteUntil ?? 0) > nowSeconds;
+  cache.set(key, { muted, expiresAt: nowSeconds + 120 });
+  return muted;
+}
+
 export async function sendTelegramNotification(event, { endpoint, apiToken, fetchImpl = fetch }) {
   const payload = await formatTelegramNotification(event);
   if (!payload) return false;
@@ -143,8 +158,12 @@ async function run() {
   await client.connect();
   if (!await client.isUserAuthorized()) throw new Error('Telegram session expired; run the login command again');
 
+  const notificationSettingsCache = new Map();
   client.addEventHandler(event => {
-    void sendTelegramNotification(event, { endpoint, apiToken }).catch(error => {
+    void (async () => {
+      if (await isTelegramChatMuted(client, event, { cache: notificationSettingsCache })) return;
+      await sendTelegramNotification(event, { endpoint, apiToken });
+    })().catch(error => {
       stdout.write(`Telegram push delivery failed: ${error.message}\n`);
     });
   }, new NewMessage({ incoming: true }));

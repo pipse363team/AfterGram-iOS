@@ -5,7 +5,7 @@
   "scripts": {
     "start": "node server.mjs",
     "test": "node --test",
-    "check-page": "node --check ../webpush/setup.js && node --check ../webpush/service-worker.js && node --check telegram-bridge.mjs",
+    "check-page": "node --check ../webpush/setup.js && node --check ../webpush/service-worker.js && node --check ../webpush/open-chat.js && node --check telegram-bridge.mjs",
     "telegram:login": "node telegram-bridge.mjs --login",
     "telegram:start": "node telegram-bridge.mjs"
   },

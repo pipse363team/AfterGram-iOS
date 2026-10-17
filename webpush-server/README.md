@@ -40,7 +40,7 @@ The API token must be entered only on the owner's device and must not be embedde
 
 ## Telegram integration status
 
-The Telegram bridge uses a separate MTProto user session and listens only to incoming new messages. It sends the sender/chat title, message text (or a media label), peer type, peer ID, and message ID to this server. Message contents and the login session are not logged. Tapping an alert opens the corresponding AfterGram chat and message when the installed app supports the `tgretention` URL scheme.
+The Telegram bridge uses a separate MTProto user session and listens only to incoming new messages. It checks Telegram's per-chat mute setting and suppresses pushes for chats that are currently muted. It sends the sender/chat title, message text (or a media label), peer type, peer ID, and message ID to this server. Message contents and the login session are not logged. Tapping an alert opens a small same-origin handoff page that attempts to launch the corresponding AfterGram chat through the `tgretention` URL scheme and shows a manual open link if that does not work. The app build must have `tgretention` registered.
 
 ### Personal Telegram account setup on the VPS
 

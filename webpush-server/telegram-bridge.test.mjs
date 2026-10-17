@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { formatTelegramNotification, sendTelegramNotification } from './telegram-bridge.mjs';
+import { formatTelegramNotification, isTelegramChatMuted, sendTelegramNotification } from './telegram-bridge.mjs';
 
 test('formats incoming private messages with an app chat and message route', async () => {
   const payload = await formatTelegramNotification({
@@ -38,6 +38,29 @@ test('formats incoming group media without text', async () => {
 test('does not notify for outgoing or unsupported peer messages', async () => {
   assert.equal(await formatTelegramNotification({ message: { out: true, id: 1 } }), undefined);
   assert.equal(await formatTelegramNotification({ message: { id: 1, peerId: { className: 'PeerSecret' } } }), undefined);
+});
+
+test('mirrors Telegram chat mute settings and caches them briefly', async () => {
+  let reads = 0;
+  const client = {
+    getNotifySettings: async chat => {
+      reads++;
+      assert.equal(chat.id, 42);
+      return { muteUntil: 2000 };
+    },
+  };
+  const event = {
+    message: { peerId: { className: 'PeerChat', chatId: 42n } },
+    getChat: async () => ({ id: 42 }),
+  };
+  const cache = new Map();
+  assert.equal(await isTelegramChatMuted(client, event, { cache, nowSeconds: 1000 }), true);
+  assert.equal(await isTelegramChatMuted(client, event, { cache, nowSeconds: 1050 }), true);
+  assert.equal(reads, 1);
+  assert.equal(await isTelegramChatMuted(client, event, { cache, nowSeconds: 1201 }), true);
+  assert.equal(reads, 2);
+  assert.equal(await isTelegramChatMuted(client, event, { cache, nowSeconds: 2000 }), false);
+  assert.equal(reads, 3);
 });
 
 test('sends route metadata to the authenticated sender endpoint', async () => {
