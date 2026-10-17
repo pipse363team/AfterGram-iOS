@@ -1806,10 +1806,9 @@ public final class SharedAccountContextImpl: SharedAccountContext {
                 let accounts = active.accounts.map { $0.1 }
                 let allProductionIds = accounts.filter({ !$0.account.testingEnvironment }).map({ $0.account.peerId.id })
                 let allTestingIds = accounts.filter({ $0.account.testingEnvironment }).map({ $0.account.peerId.id })
-                let cleanups: [Signal<Bool, NoError>] = accounts.map { account in
+                let cleanups: [Signal<Never, NoError>] = accounts.map { account in
                     let otherIds = account.account.testingEnvironment ? allTestingIds : allProductionIds
                     return account.engine.accountData.unregisterNotificationToken(token: previousToken, type: .webPush, otherAccountUserIds: otherIds.filter({ $0 != account.account.peerId.id }))
-                    |> then(.single(true))
                 }
                 return combineLatest(cleanups) |> ignoreValues
             }).startStandalone()
