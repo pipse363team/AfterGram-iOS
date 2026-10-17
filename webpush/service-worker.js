@@ -26,8 +26,8 @@ self.addEventListener('notificationclick', (event) => {
           peer_id: custom.peer_id,
           message_id: custom.message_id || '0',
         });
-        const app = await self.clients.openWindow(`tgretention://open?${params}`);
-        if (app) return app;
+        await self.clients.openWindow(`tgretention://open?${params}`);
+        return;
       }
       const app = await self.clients.openWindow('tgretention://');
       if (app) return app;
