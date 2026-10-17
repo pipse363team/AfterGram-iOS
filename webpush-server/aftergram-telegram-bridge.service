@@ -1,0 +1,30 @@
+[Unit]
+Description=AfterGram Telegram message bridge
+After=network-online.target aftergram-webpush.service
+Wants=network-online.target
+Requires=aftergram-webpush.service
+
+[Service]
+Type=simple
+User=aftergram-webpush
+Group=aftergram-webpush
+WorkingDirectory=/opt/aftergram-webpush
+EnvironmentFile=/etc/aftergram-webpush.env
+EnvironmentFile=/etc/aftergram-telegram.env
+Environment=WEBPUSH_API_URL=https://144.31.165.8:9443
+Environment=TELEGRAM_SESSION_FILE=/var/lib/aftergram-telegram/telegram.session
+StateDirectory=aftergram-telegram
+StateDirectoryMode=0700
+UMask=0077
+ExecStart=/usr/bin/node /opt/aftergram-webpush/telegram-bridge.mjs
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/aftergram-telegram
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+
+[Install]
+WantedBy=multi-user.target

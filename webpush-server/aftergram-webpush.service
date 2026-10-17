@@ -1,0 +1,27 @@
+[Unit]
+Description=AfterGram Web Push sender
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=aftergram-webpush
+Group=aftergram-webpush
+WorkingDirectory=/opt/aftergram-webpush
+EnvironmentFile=/etc/aftergram-webpush.env
+Environment=WEBPUSH_TLS_CERT=%d/webpush-tls-cert
+Environment=WEBPUSH_TLS_KEY=%d/webpush-tls-key
+LoadCredential=webpush-tls-cert:/etc/letsencrypt/live/csqtt-ip-144-31-165-8/fullchain.pem
+LoadCredential=webpush-tls-key:/etc/letsencrypt/live/csqtt-ip-144-31-165-8/privkey.pem
+ExecStart=/usr/bin/node /opt/aftergram-webpush/server.mjs
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/aftergram-webpush
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+
+[Install]
+WantedBy=multi-user.target

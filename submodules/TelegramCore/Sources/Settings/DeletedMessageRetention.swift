@@ -63,6 +63,20 @@ func retainedMediaPath(fileId: Int64, mediaBox: MediaBox) -> String {
     return mediaBox.basePath + "/retained-message-media/resource-\(fileId)"
 }
 
+func hasRetainedMediaBytes(_ media: Media, mediaBox: MediaBox) -> Bool {
+    func hasRetainedResource(_ resource: MediaResource) -> Bool {
+        guard let resource = resource as? LocalFileMediaResource else { return false }
+        return FileManager.default.fileExists(atPath: retainedMediaPath(fileId: resource.fileId, mediaBox: mediaBox))
+    }
+
+    if let file = media as? TelegramMediaFile {
+        return hasRetainedResource(file.resource)
+    } else if let image = media as? TelegramMediaImage {
+        return image.representations.contains(where: { hasRetainedResource($0.resource) })
+    }
+    return false
+}
+
 /// Keep bytes outside both MediaBox caches. A hard link also survives cache unlinking.
 func copyRetainedMedia(resource: MediaResource, mediaBox: MediaBox, source: String? = nil) -> LocalFileMediaResource? {
     if let resource = resource as? LocalFileMediaResource,
