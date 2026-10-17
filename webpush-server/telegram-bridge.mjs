@@ -3,7 +3,7 @@ import { dirname } from 'node:path';
 import { createInterface } from 'node:readline/promises';
 import { stdin, stdout } from 'node:process';
 import { pathToFileURL } from 'node:url';
-import { TelegramClient } from 'teleproto';
+import { Api, TelegramClient } from 'teleproto';
 import { StringSession } from 'teleproto/sessions';
 import { NewMessage } from 'teleproto/events';
 
@@ -79,16 +79,35 @@ export async function formatTelegramNotification(event) {
 export async function isTelegramChatMuted(client, event, { cache = new Map(), nowSeconds = Math.floor(Date.now() / 1000) } = {}) {
   const route = peerRoute(event?.message?.peerId);
   if (!route) return false;
-  const key = `${route.peer_type}:${route.peer_id}`;
-  const cached = cache.get(key);
-  if (cached && cached.expiresAt > nowSeconds) return cached.muted;
-
   const chat = typeof event.getChat === 'function' ? await event.getChat() : event.chat;
   if (!chat || typeof client.getNotifySettings !== 'function') return false;
-  const settings = await client.getNotifySettings(chat);
-  const muted = Number(settings?.muteUntil ?? 0) > nowSeconds;
-  cache.set(key, { muted, expiresAt: nowSeconds + 120 });
-  return muted;
+  const getMuteUntil = async (key, entity) => {
+    const cached = cache.get(key);
+    if (cached && cached.expiresAt > nowSeconds) return cached.muteUntil;
+    const settings = await client.getNotifySettings(entity);
+    const muteUntil = settings?.muteUntil;
+    cache.set(key, { muteUntil, expiresAt: nowSeconds + 120 });
+    return muteUntil;
+  };
+
+  let defaultNotifyPeer;
+  let category;
+  if (route.peer_type === 'user') {
+    category = 'users';
+    defaultNotifyPeer = new Api.InputNotifyUsers();
+  } else if (route.peer_type === 'channel' && chat.broadcast) {
+    category = 'broadcasts';
+    defaultNotifyPeer = new Api.InputNotifyBroadcasts();
+  } else {
+    category = 'chats';
+    defaultNotifyPeer = new Api.InputNotifyChats();
+  }
+
+  const [peerMuteUntil, defaultMuteUntil] = await Promise.all([
+    getMuteUntil(`peer:${route.peer_type}:${route.peer_id}`, chat),
+    getMuteUntil(`default:${category}`, defaultNotifyPeer),
+  ]);
+  return Number(peerMuteUntil ?? defaultMuteUntil ?? 0) > nowSeconds;
 }
 
 export async function sendTelegramNotification(event, { endpoint, apiToken, fetchImpl = fetch }) {

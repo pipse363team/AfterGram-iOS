@@ -43,10 +43,11 @@ test('does not notify for outgoing or unsupported peer messages', async () => {
 test('mirrors Telegram chat mute settings and caches them briefly', async () => {
   let reads = 0;
   const client = {
-    getNotifySettings: async chat => {
+    getNotifySettings: async entity => {
       reads++;
-      assert.equal(chat.id, 42);
-      return { muteUntil: 2000 };
+      if (entity.id === 42) return { muteUntil: 2000 };
+      assert.equal(entity.className, 'InputNotifyChats');
+      return { muteUntil: 0 };
     },
   };
   const event = {
@@ -56,11 +57,27 @@ test('mirrors Telegram chat mute settings and caches them briefly', async () => 
   const cache = new Map();
   assert.equal(await isTelegramChatMuted(client, event, { cache, nowSeconds: 1000 }), true);
   assert.equal(await isTelegramChatMuted(client, event, { cache, nowSeconds: 1050 }), true);
-  assert.equal(reads, 1);
-  assert.equal(await isTelegramChatMuted(client, event, { cache, nowSeconds: 1201 }), true);
   assert.equal(reads, 2);
+  assert.equal(await isTelegramChatMuted(client, event, { cache, nowSeconds: 1201 }), true);
+  assert.equal(reads, 4);
   assert.equal(await isTelegramChatMuted(client, event, { cache, nowSeconds: 2000 }), false);
-  assert.equal(reads, 3);
+  assert.equal(reads, 6);
+});
+
+test('uses Telegram category defaults when there is no per-chat mute override', async () => {
+  const event = {
+    message: { peerId: { className: 'PeerChannel', channelId: 99n } },
+    getChat: async () => ({ id: 99, broadcast: true }),
+  };
+  const categoryMuted = await isTelegramChatMuted({
+    getNotifySettings: async entity => entity.id === 99 ? {} : { muteUntil: 2000 },
+  }, event, { nowSeconds: 1000 });
+  assert.equal(categoryMuted, true);
+
+  const peerExplicitlyUnmuted = await isTelegramChatMuted({
+    getNotifySettings: async entity => entity.id === 99 ? { muteUntil: 0 } : { muteUntil: 2000 },
+  }, event, { nowSeconds: 1000 });
+  assert.equal(peerExplicitlyUnmuted, false);
 });
 
 test('sends route metadata to the authenticated sender endpoint', async () => {
