@@ -1,5 +1,15 @@
 (() => {
   const isRu = navigator.language.toLowerCase().startsWith('ru');
+  try {
+    const request = indexedDB.open('aftergram-webpush', 1);
+    request.onupgradeneeded = () => request.result.createObjectStore('handoff');
+    request.onsuccess = () => {
+      const db = request.result;
+      const transaction = db.transaction('handoff', 'readwrite');
+      transaction.objectStore('handoff').delete('pending-chat');
+      transaction.oncomplete = () => db.close();
+    };
+  } catch {}
   const params = new URLSearchParams(location.search);
   const peerType = params.get('peer_type');
   const peerId = params.get('peer_id');
@@ -17,9 +27,8 @@
   openLink.href = target.href;
   if (isRu) {
     document.documentElement.lang = 'ru';
-    document.getElementById('title').textContent = 'Открываю чат в AfterGram…';
-    document.getElementById('hint').textContent = 'Если AfterGram не открылся, нажми кнопку ниже.';
+    document.getElementById('title').textContent = 'Чат найден';
+    document.getElementById('hint').textContent = 'iPhone не разрешает веб‑приложению запускать AfterGram автоматически. Нажми кнопку, чтобы открыть нужный чат.';
     openLink.textContent = 'Открыть чат в AfterGram';
   }
-  window.setTimeout(() => window.location.assign(target.href), 150);
 })();
