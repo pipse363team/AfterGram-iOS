@@ -178,6 +178,7 @@ public final class SharedAccountContextImpl: SharedAccountContext {
     
     private let apsNotificationToken: Signal<Data?, NoError>
     private let voipNotificationToken: Signal<Data?, NoError>
+    private let afterGramWebPushSubscription = Promise<Data?>(UserDefaults.standard.string(forKey: "AfterGramWebPushSubscription").flatMap { $0.data(using: .utf8) })
     
     public let firebaseSecretStream: Signal<[String: String], NoError>
     
@@ -1667,16 +1668,19 @@ public final class SharedAccountContextImpl: SharedAccountContext {
         })
         
         let updatedApsToken = self.apsNotificationToken |> distinctUntilChanged(isEqual: { $0 == $1 })
+        let updatedWebPushToken = self.afterGramWebPushSubscription.get() |> distinctUntilChanged(isEqual: { $0 == $1 })
         self.registeredNotificationTokensDisposable.set((combineLatest(
             queue: .mainQueue(),
             settings,
             self.activeAccountContexts,
-            updatedApsToken
+            updatedApsToken,
+            updatedWebPushToken
         )
-        |> mapToSignal { settings, activeAccountsAndInfo, apsNotificationToken -> Signal<(Bool, Data?), NoError> in
+        |> mapToSignal { settings, activeAccountsAndInfo, apsNotificationToken, webPushToken -> Signal<(Bool, Data?), NoError> in
             let (primary, activeAccounts, _) = activeAccountsAndInfo
             var appliedApsList: [Signal<Bool?, NoError>] = []
             var appliedVoipList: [Signal<Never, NoError>] = []
+            var appliedWebPushList: [Signal<Never, NoError>] = []
             var activeProductionUserIds = activeAccounts.map({ $0.1 }).filter({ !$0.account.testingEnvironment }).map({ $0.account.peerId.id })
             var activeTestingUserIds = activeAccounts.map({ $0.1 }).filter({ $0.account.testingEnvironment }).map({ $0.account.peerId.id })
             
@@ -1739,6 +1743,21 @@ public final class SharedAccountContextImpl: SharedAccountContext {
                 
                 appliedApsList.append(Signal<Bool?, NoError>.single(nil) |> then(appliedAps |> map(Optional.init)))
                 appliedVoipList.append(appliedVoip)
+
+                let otherUserIds = (account.account.testingEnvironment ? activeTestingUserIds : activeProductionUserIds).filter({ $0 != account.account.peerId.id })
+                let webPushRegistration: Signal<Never, NoError>
+                if !activeProductionUserIds.contains(account.account.peerId.id) && !activeTestingUserIds.contains(account.account.peerId.id) {
+                    if let webPushToken {
+                        webPushRegistration = account.engine.accountData.unregisterNotificationToken(token: webPushToken, type: .webPush, otherAccountUserIds: (account.account.testingEnvironment ? allTestingUserIds : allProductionUserIds).filter({ $0 != account.account.peerId.id }))
+                    } else {
+                        webPushRegistration = .complete()
+                    }
+                } else if let webPushToken {
+                    webPushRegistration = account.engine.accountData.registerNotificationToken(token: webPushToken, type: .webPush, sandbox: false, otherAccountUserIds: otherUserIds, excludeMutedChats: !settings.includeMuted) |> ignoreValues
+                } else {
+                    webPushRegistration = .complete()
+                }
+                appliedWebPushList.append(webPushRegistration)
             }
             
             let allApsSuccess = combineLatest(appliedApsList)
@@ -1747,6 +1766,7 @@ public final class SharedAccountContextImpl: SharedAccountContext {
             }
             
             let allVoipSuccess = combineLatest(appliedVoipList)
+            let allWebPushComplete = combineLatest(appliedWebPushList)
             
             return combineLatest(
                 allApsSuccess,
@@ -1757,6 +1777,7 @@ public final class SharedAccountContextImpl: SharedAccountContext {
                         return Void()
                     }
                 )
+                |> then(allWebPushComplete |> map { _ -> Void in return Void() })
             )
             |> map { allApsSuccess, _ -> (Bool, Data?) in
                 return (allApsSuccess, apsNotificationToken)
@@ -1774,6 +1795,32 @@ public final class SharedAccountContextImpl: SharedAccountContext {
                 }
             }
         }))
+    }
+
+    public func setAfterGramWebPushSubscription(_ subscription: String?) {
+        let previousValue = UserDefaults.standard.string(forKey: "AfterGramWebPushSubscription")
+        if let previousValue, previousValue != subscription, let previousToken = previousValue.data(using: .utf8) {
+            let _ = (self.activeAccountContexts
+            |> take(1)
+            |> mapToSignal { active -> Signal<Never, NoError> in
+                let accounts = active.accounts.map { $0.1 }
+                let allProductionIds = accounts.filter({ !$0.account.testingEnvironment }).map({ $0.account.peerId.id })
+                let allTestingIds = accounts.filter({ $0.account.testingEnvironment }).map({ $0.account.peerId.id })
+                let cleanups: [Signal<Bool, NoError>] = accounts.map { account in
+                    let otherIds = account.account.testingEnvironment ? allTestingIds : allProductionIds
+                    return account.engine.accountData.unregisterNotificationToken(token: previousToken, type: .webPush, otherAccountUserIds: otherIds.filter({ $0 != account.account.peerId.id }))
+                    |> then(.single(true))
+                }
+                return combineLatest(cleanups) |> ignoreValues
+            }).startStandalone()
+        }
+        if let subscription, !subscription.isEmpty {
+            UserDefaults.standard.set(subscription, forKey: "AfterGramWebPushSubscription")
+            self.afterGramWebPushSubscription.set(.single(subscription.data(using: .utf8)))
+        } else {
+            UserDefaults.standard.removeObject(forKey: "AfterGramWebPushSubscription")
+            self.afterGramWebPushSubscription.set(.single(nil))
+        }
     }
     
     public func beginNewAuth(testingEnvironment: Bool) {

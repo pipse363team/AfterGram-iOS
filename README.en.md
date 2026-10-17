@@ -37,12 +37,18 @@ The engine supports native settings and dialogs, text and media operations, Tele
 
 ## Installation
 
-1. Download **AfterGram-13.0.ipa** from [Releases](https://github.com/pipse363team/AfterGram-iOS/releases).
+1. Download **TelegramRetention.ipa** from the [latest release](https://github.com/pipse363team/AfterGram-iOS/releases/tag/latest).
 2. Sign the IPA with your own signing certificate using a compatible installation tool, or use free Apple ID signing through [Sideloadly](https://sideloadly.io/) on Windows or macOS.
 3. Install the signed IPA on your iPhone or iPad.
 4. If prompted, trust the app in your device settings and enable Developer Mode.
 
 The release IPA needs to be re-signed before installation. App extensions and the Apple Watch app are disabled in this build. Push notification availability depends on the signing setup and provisioning profile.
+
+## Web Push
+
+On iOS/iPadOS 16.4 or later, you can receive push notifications through a PWA even when the AfterGram signing profile cannot use native push. Add [AfterGram Web Push](https://pipse363team.github.io/AfterGram-iOS/webpush/) to your Home Screen, allow notifications, copy the subscription, and import it in **Settings → Web Push** in AfterGram. The subscription is sent directly to Telegram to register the device; AfterGram never receives your password or login code. Tapping a notification opens the PWA.
+
+Keep the PWA installed and its notifications allowed in iOS. Delivery depends on system Web Push support and your Telegram notification settings.
 
 ## How retention works
 

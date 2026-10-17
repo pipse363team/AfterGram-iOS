@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#17191f">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <title>AfterGram Web Push</title>
+  <style>
+    :root { color-scheme: dark; font: 16px -apple-system, BlinkMacSystemFont, sans-serif; background: #111319; color: #f4f5f7 }
+    body { max-width: 560px; margin: 0 auto; padding: max(28px, env(safe-area-inset-top)) 22px max(24px, env(safe-area-inset-bottom)); }
+    main { margin-top: 12vh; } h1 { margin-bottom: 8px; font-size: 30px; } p { color: #b4b8c2; line-height: 1.5; }
+    button { width: 100%; min-height: 50px; margin: 12px 0; border: 0; border-radius: 13px; background: #4389f5; color: white; font-size: 16px; font-weight: 600; }
+    button.secondary { background: #292d36; } textarea { display: none; width: 100%; height: 130px; margin-top: 14px; box-sizing: border-box; border-radius: 10px; background: #1b1e26; color: #d8dbe2; }
+    #status { min-height: 24px; color: #a9d4ff; } small { color: #858a96; line-height: 1.5; display: block; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>AfterGram Web Push</h1>
+    <p id="intro">Create a private push subscription for Telegram. Add this page to your iPhone Home Screen first, then allow notifications.</p>
+    <button id="subscribe">Enable notifications</button>
+    <button id="copy" class="secondary" hidden>Copy subscription</button>
+    <textarea id="output" readonly aria-label="Push subscription"></textarea>
+    <p id="status" role="status"></p>
+    <small>The subscription is generated and kept in this browser. It is not uploaded to AfterGram or GitHub. Paste it into AfterGram → Settings → Web Push. iOS/iPadOS 16.4 or later is required.</small>
+  </main>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const isRu = navigator.language.toLowerCase().startsWith('ru');
+    if (isRu) {
+      document.documentElement.lang = 'ru';
+      $('intro').textContent = 'Создай приватную push-подписку Telegram. Сначала добавь эту страницу на экран «Домой», затем разреши уведомления.';
+      $('subscribe').textContent = 'Включить уведомления'; $('copy').textContent = 'Скопировать подписку';
+      $('output').setAttribute('aria-label', 'Push-подписка');
+      document.querySelector('small').textContent = 'Подписка создаётся и хранится в этом браузере. Она не отправляется AfterGram или GitHub. Вставь её в AfterGram → Настройки → Web Push. Требуется iOS/iPadOS 16.4 или новее.';
+    }
+    let subscriptionText = '';
+    async function register() {
+      try {
+        if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) throw new Error(isRu ? 'Этот браузер не поддерживает Web Push.' : 'Web Push is not supported by this browser.');
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') throw new Error(isRu ? 'Разреши уведомления в настройках iOS.' : 'Allow notifications in iOS settings.');
+        const registration = await navigator.serviceWorker.register('./service-worker.js', { scope: './' });
+        await navigator.serviceWorker.ready;
+        let subscription = await registration.pushManager.getSubscription();
+        if (!subscription) subscription = await registration.pushManager.subscribe({ userVisibleOnly: true });
+        const value = subscription.toJSON();
+        if (!value.endpoint || !value.keys || !value.keys.p256dh || !value.keys.auth) throw new Error(isRu ? 'Браузер вернул неполную подписку.' : 'The browser returned an incomplete subscription.');
+        subscriptionText = JSON.stringify({ endpoint: value.endpoint, keys: value.keys });
+        $('output').value = subscriptionText; $('output').style.display = 'block'; $('copy').hidden = false;
+        $('status').textContent = isRu ? 'Готово. Скопируй подписку и импортируй её в AfterGram.' : 'Ready. Copy the subscription and import it into AfterGram.';
+      } catch (error) { $('status').textContent = error.message || String(error); }
+    }
+    $('subscribe').addEventListener('click', register);
+    $('copy').addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(subscriptionText); $('status').textContent = isRu ? 'Скопировано. Теперь вставь в AfterGram → Настройки → Web Push.' : 'Copied. Now paste it in AfterGram → Settings → Web Push.'; }
+      catch { $('output').focus(); $('output').select(); $('status').textContent = isRu ? 'Выдели и скопируй текст подписки вручную.' : 'Select and copy the subscription text manually.'; }
+    });
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('./service-worker.js', { scope: './' }).catch(() => {});
+  </script>
+</body>
+</html>

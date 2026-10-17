@@ -9,7 +9,7 @@ on:
         default: true
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -58,3 +58,7 @@ jobs:
           path: build/artifacts/TelegramRetention.ipa
           if-no-files-found: error
           retention-days: 7
+      - name: Update Latest release IPA
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload latest build/artifacts/TelegramRetention.ipa --repo "$GITHUB_REPOSITORY" --clobber

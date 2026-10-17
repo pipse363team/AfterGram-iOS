@@ -161,6 +161,7 @@ enum PeerInfoSettingsSection {
     case stories
     case savedMessages
     case afterGramPlugins
+    case afterGramWebPush
     case deletedMessageArchive
     case recentCalls
     case devices

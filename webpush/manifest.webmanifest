@@ -1,0 +1,10 @@
+{
+  "name": "AfterGram Web Push",
+  "short_name": "AfterGram Push",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#111319",
+  "theme_color": "#17191f",
+  "icons": [{ "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" }]
+}

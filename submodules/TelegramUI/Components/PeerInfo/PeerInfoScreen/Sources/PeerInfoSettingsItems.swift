@@ -265,6 +265,9 @@ func settingsItems(data: PeerInfoScreenData?, context: AccountContext, presentat
     items[.advanced]!.append(PeerInfoScreenDisclosureItem(id: 8, text: presentationData.strings.baseLanguageCode.lowercased().hasPrefix("ru") ? "Плагины" : "Plugins", icon: PresentationResourcesSettings.savedMessages, action: {
         interaction.openSettings(.afterGramPlugins)
     }))
+    items[.advanced]!.append(PeerInfoScreenDisclosureItem(id: 9, text: presentationData.strings.baseLanguageCode.lowercased().hasPrefix("ru") ? "Web Push" : "Web Push", icon: PresentationResourcesSettings.notifications, action: {
+        interaction.openSettings(.afterGramWebPush)
+    }))
     items[.advanced]!.append(PeerInfoScreenDisclosureItem(id: 7, text: presentationData.strings.baseLanguageCode.lowercased().hasPrefix("ru") ? "Удалённые сообщения" : "Deleted Messages", icon: PresentationResourcesSettings.savedMessages, action: {
         interaction.openSettings(.deletedMessageArchive)
     }))
