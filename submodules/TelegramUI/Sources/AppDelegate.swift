@@ -2611,7 +2611,7 @@ private func extractAccountManagerState(records: AccountRecordsView<TelegramAcco
                   let rawPeerId = values["peer_id"].flatMap(Int64.init), rawPeerId > 0 else {
                 return
             }
-            let namespace: Int32
+            let namespace: PeerId.Namespace
             switch peerType {
             case "user": namespace = Namespaces.Peer.CloudUser
             case "group": namespace = Namespaces.Peer.CloudGroup
