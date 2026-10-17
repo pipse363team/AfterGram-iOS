@@ -23,6 +23,17 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: webpush-server/package-lock.json
+      - name: Install Web Push sender dependencies
+        run: npm ci --prefix webpush-server
+      - name: Test Web Push sender and setup page
+        run: |
+          npm test --prefix webpush-server
+          npm run check-page --prefix webpush-server
       - name: Fetch upstream submodules
         run: git submodule update --init --recursive --depth 1 --jobs 4
       - name: Restore build cache

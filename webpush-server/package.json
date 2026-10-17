@@ -1,0 +1,13 @@
+{
+  "name": "aftergram-webpush-server",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test",
+    "check-page": "node --check ../webpush/setup.js"
+  },
+  "dependencies": {
+    "web-push": "3.6.7"
+  }
+}
