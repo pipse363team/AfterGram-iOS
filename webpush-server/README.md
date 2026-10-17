@@ -26,7 +26,7 @@ npm start
 
 For a direct TLS listener, set `WEBPUSH_TLS_CERT` and `WEBPUSH_TLS_KEY` to readable certificate files and bind the selected public HTTPS port with `HOST=0.0.0.0`. The repository includes `aftergram-webpush.service` as the current VPS systemd example; it reads its bearer token from `/etc/aftergram-webpush.env` and uses systemd credentials for the TLS private key.
 
-The configured VPS endpoint is `https://chesterfield.space:9443`. Its API token is stored root-only in `/etc/aftergram-webpush.env`; retrieve it on the server with `sudo grep '^WEBPUSH_API_TOKEN=' /etc/aftergram-webpush.env` and enter it in the PWA setup page. Do not put that token in the repository or share it publicly.
+The configured VPS endpoint is `https://144.31.165.8:9443`, using the server's short-lived Let's Encrypt IP certificate. Certbot renews the certificate automatically; install `aftergram-webpush-certbot-deploy.sh` as a deploy hook so the service reloads the renewed certificate. The API token is stored root-only in `/etc/aftergram-webpush.env`; retrieve it on the server with `sudo grep '^WEBPUSH_API_TOKEN=' /etc/aftergram-webpush.env` and enter it in the PWA setup page. Do not put that token in the repository or share it publicly.
 
 ## API
 
