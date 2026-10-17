@@ -28,7 +28,7 @@
   if (isRu) {
     document.documentElement.lang = 'ru';
     document.getElementById('title').textContent = 'Чат найден';
-    document.getElementById('hint').textContent = 'iPhone не разрешает веб‑приложению запускать AfterGram автоматически. Нажми кнопку, чтобы открыть нужный чат.';
+    document.getElementById('hint').textContent = 'Если iPhone не открыл AfterGram автоматически, нажми кнопку ниже.';
     openLink.textContent = 'Открыть чат в AfterGram';
   }
 })();
