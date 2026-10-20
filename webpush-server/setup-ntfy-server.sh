@@ -93,7 +93,15 @@ if command -v ufw >/dev/null 2>&1 && ufw status | grep -q '^Status: active'; the
   ufw allow 9444/tcp
 fi
 
-if ! curl --fail --silent --show-error --max-time 10 "$SERVER_URL/v1/health" >/dev/null; then
+health_ready=false
+for attempt in {1..10}; do
+  if curl --fail --silent --max-time 3 "$SERVER_URL/v1/health" >/dev/null; then
+    health_ready=true
+    break
+  fi
+  sleep 1
+done
+if [[ "$health_ready" != true ]]; then
   echo "ntfy is running but its HTTPS health check failed; inspect: systemctl status aftergram-ntfy.service" >&2
   exit 1
 fi
