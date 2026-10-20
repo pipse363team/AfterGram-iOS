@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { timingSafeEqual } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
 import webpush from 'web-push';
+import { createNtfyPublisher, validateNtfyConfiguration } from './ntfy-publisher.mjs';
 
 const MAX_BODY_BYTES = 16 * 1024;
 
@@ -75,7 +76,7 @@ async function readSubscriptions(dataDirectory) {
   }
 }
 
-export async function createWebPushServer({ dataDirectory, apiToken, allowedOrigin, subject, tlsOptions, push = webpush }) {
+export async function createWebPushServer({ dataDirectory, apiToken, allowedOrigin, subject, tlsOptions, push = webpush, ntfy: ntfyConfig, ntfyFetch = fetch }) {
   if (!apiToken || apiToken.length < 32) throw new Error('WEBPUSH_API_TOKEN must contain at least 32 characters');
   if (!allowedOrigin) throw new Error('WEBPUSH_ALLOWED_ORIGIN must be an https origin');
   const originUrl = new URL(allowedOrigin);
@@ -89,6 +90,7 @@ export async function createWebPushServer({ dataDirectory, apiToken, allowedOrig
   const keys = await readOrCreateKeys(dataDirectory, push);
   if (typeof keys.publicKey !== 'string' || typeof keys.privateKey !== 'string') throw new Error('Invalid VAPID key file');
   push.setVapidDetails(subject, keys.publicKey, keys.privateKey);
+  const ntfyPublisher = ntfyConfig ? createNtfyPublisher(validateNtfyConfiguration(ntfyConfig), ntfyFetch) : undefined;
   let subscriptions = await readSubscriptions(dataDirectory);
   const saveSubscriptions = async () => {
     const path = join(dataDirectory, 'subscriptions.json');
@@ -116,6 +118,11 @@ export async function createWebPushServer({ dataDirectory, apiToken, allowedOrig
     if (!authorized(request, apiToken)) return json(response, 401, { error: 'Unauthorized' });
 
     try {
+      if (request.method === 'GET' && path === '/v1/ntfy-config') {
+        if (!ntfyPublisher) return json(response, 404, { error: 'ntfy is not configured' });
+        return json(response, 200, ntfyPublisher.getClientConfiguration());
+      }
+
       if (request.method === 'POST' && path === '/v1/subscriptions') {
         const subscription = await readJson(request);
         if (!validSubscription(subscription)) return json(response, 400, { error: 'Invalid push subscription' });
@@ -155,6 +162,22 @@ export async function createWebPushServer({ dataDirectory, apiToken, allowedOrig
             message_id: custom.message_id,
           } } : {}),
         });
+        if (ntfyPublisher) {
+          try {
+            await ntfyPublisher.send({
+              title: payload.title.slice(0, 120),
+              description: payload.description.slice(0, 500),
+              ...(custom ? { custom: {
+                peer_type: custom.peer_type,
+                peer_id: custom.peer_id,
+                message_id: custom.message_id,
+              } } : {}),
+            });
+          } catch {
+            return json(response, 502, { error: 'ntfy delivery failed' });
+          }
+          return json(response, 200, { sent: 1, failed: 0, provider: 'ntfy' });
+        }
         const results = await Promise.allSettled(subscriptions.map(subscription => push.sendNotification(subscription, body, { TTL: 60 })));
         const stale = new Set();
         let sent = 0;
@@ -194,6 +217,10 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     allowedOrigin: process.env.WEBPUSH_ALLOWED_ORIGIN,
     subject: process.env.WEBPUSH_SUBJECT,
     tlsOptions,
+    ntfy: process.env.NTFY_SERVER_URL || process.env.NTFY_TOPIC ? {
+      serverUrl: process.env.NTFY_SERVER_URL,
+      topic: process.env.NTFY_TOPIC,
+    } : undefined,
   });
   server.listen(port, host, () => process.stdout.write(`Web Push sender listening on ${host}:${port}${tlsOptions ? ' (HTTPS)' : ''}\n`));
 }

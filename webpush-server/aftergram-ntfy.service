@@ -1,0 +1,27 @@
+[Unit]
+Description=AfterGram private ntfy server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ntfy
+Group=ntfy
+StateDirectory=ntfy
+StateDirectoryMode=0750
+CacheDirectory=ntfy
+CacheDirectoryMode=0750
+LoadCredential=ntfy-tls-cert:/etc/letsencrypt/live/csqtt-ip-144-31-165-8/fullchain.pem
+LoadCredential=ntfy-tls-key:/etc/letsencrypt/live/csqtt-ip-144-31-165-8/privkey.pem
+ExecStart=@NTFY_BIN@ serve
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/ntfy /var/cache/ntfy
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+
+[Install]
+WantedBy=multi-user.target

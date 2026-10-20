@@ -2,6 +2,8 @@
 Description=AfterGram Web Push sender
 After=network-online.target
 Wants=network-online.target
+After=aftergram-ntfy.service
+Wants=aftergram-ntfy.service
 
 [Service]
 Type=simple
@@ -9,6 +11,7 @@ User=aftergram-webpush
 Group=aftergram-webpush
 WorkingDirectory=/opt/aftergram-webpush
 EnvironmentFile=/etc/aftergram-webpush.env
+EnvironmentFile=-/etc/aftergram-ntfy.env
 Environment=WEBPUSH_TLS_CERT=%d/webpush-tls-cert
 Environment=WEBPUSH_TLS_KEY=%d/webpush-tls-key
 LoadCredential=webpush-tls-cert:/etc/letsencrypt/live/csqtt-ip-144-31-165-8/fullchain.pem

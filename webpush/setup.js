@@ -1,145 +1,131 @@
-    const $ = (id) => document.getElementById(id);
-    const isRu = navigator.language.toLowerCase().startsWith('ru');
-    const savedServer = localStorage.getItem('aftergram.push.server');
-    const savedToken = localStorage.getItem('aftergram.push.apiToken');
-    if (savedServer) $('server').value = savedServer;
-    if (savedToken) $('apiToken').value = savedToken;
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const isRu = navigator.language.toLowerCase().startsWith('ru');
+  const savedServer = localStorage.getItem('aftergram.push.server');
+  const savedToken = localStorage.getItem('aftergram.push.apiToken');
+  if (savedServer) $('server').value = savedServer;
+  if (savedToken) $('apiToken').value = savedToken;
 
-    function takePendingChat() {
-      return new Promise((resolve) => {
-        const request = indexedDB.open('aftergram-webpush', 1);
-        request.onupgradeneeded = () => request.result.createObjectStore('handoff');
-        request.onerror = () => resolve(null);
-        request.onsuccess = () => {
-          const db = request.result;
-          const transaction = db.transaction('handoff', 'readwrite');
-          const store = transaction.objectStore('handoff');
-          const get = store.get('pending-chat');
-          let pending = null;
-          get.onsuccess = () => {
-            const value = get.result;
-            if (value && Date.now() - value.createdAt < 5 * 60 * 1000) pending = value;
-            if (value) store.delete('pending-chat');
-          };
-          transaction.oncomplete = () => { db.close(); resolve(pending); };
-          transaction.onerror = () => { db.close(); resolve(null); };
-        };
+  if (isRu) {
+    document.documentElement.lang = 'ru';
+    $('heading').textContent = 'Уведомления AfterGram';
+    $('intro').textContent = 'Установи ntfy на iPhone. Текст сообщений остаётся на твоём сервере; ntfy.sh передаёт только общий сигнал для пробуждения приложения.';
+    $('serverLabel').textContent = 'Сервер AfterGram';
+    $('tokenLabel').textContent = 'API-токен владельца';
+    $('apiToken').placeholder = 'Вставь API-токен сервера';
+    $('load').textContent = 'Получить настройки ntfy';
+    $('setupHeading').textContent = 'Настрой ntfy на iPhone';
+    $('stepInstall').textContent = 'Установи приложение ntfy.';
+    $('stepServer').textContent = 'Сервер ntfy:';
+    $('stepTopic').textContent = 'В ntfy подпишись по этой ссылке или добавь сервер и тему ниже:';
+    $('topicLabel').textContent = 'Закрытая тема:';
+    $('topicNote').textContent = 'Название темы — секрет. Не пересылай его другим.';
+    $('install').textContent = 'Установить ntfy из App Store';
+    $('copy').textContent = 'Скопировать сервер и тему';
+    $('test').textContent = 'Отправить тестовое уведомление';
+    $('disableOld').textContent = 'Отключить старые Web Push уведомления';
+    $('privacy').textContent = 'Эта страница сохраняет адрес сервера и API-токен только в браузере этого устройства. После настройки уведомления будут приходить через ntfy; нажатие должно открыть соответствующий чат AfterGram.';
+  }
+
+  function configuration() {
+    const serverUrl = $('server').value.trim().replace(/\/+$/, '');
+    const apiToken = $('apiToken').value.trim();
+    let parsed;
+    try { parsed = new URL(serverUrl); } catch { throw new Error(isRu ? 'Проверь адрес сервера.' : 'Check the server URL.'); }
+    if (parsed.protocol !== 'https:' || parsed.username || parsed.password) throw new Error(isRu ? 'Адрес сервера должен использовать HTTPS.' : 'The server URL must use HTTPS.');
+    if (!apiToken) throw new Error(isRu ? 'Введи API-токен владельца.' : 'Enter the owner API token.');
+    return { serverUrl, apiToken };
+  }
+
+  async function ownerFetch(path, options = {}) {
+    const config = configuration();
+    const response = await fetch(`${config.serverUrl}${path}`, {
+      ...options,
+      headers: { ...(options.headers || {}), authorization: `Bearer ${config.apiToken}` },
+      cache: 'no-store',
+    });
+    if (!response.ok) {
+      if (response.status === 401) throw new Error(isRu ? 'API-токен не подошёл.' : 'The API token was rejected.');
+      if (response.status === 404 && path === '/v1/ntfy-config') throw new Error(isRu ? 'Сервер ntfy ещё не настроен.' : 'ntfy is not configured on the server yet.');
+      throw new Error(isRu ? `Сервер вернул ошибку ${response.status}.` : `The server returned error ${response.status}.`);
+    }
+    localStorage.setItem('aftergram.push.server', config.serverUrl);
+    localStorage.setItem('aftergram.push.apiToken', config.apiToken);
+    return response;
+  }
+
+  let ntfyConfig;
+  $('load').addEventListener('click', async () => {
+    $('status').textContent = '';
+    try {
+      const response = await ownerFetch('/v1/ntfy-config');
+      ntfyConfig = await response.json();
+      if (typeof ntfyConfig.serverUrl !== 'string' || typeof ntfyConfig.topic !== 'string' ||
+        typeof ntfyConfig.subscriptionUrl !== 'string' || !/^[a-f0-9]{64}$/.test(ntfyConfig.topic)) {
+        throw new Error(isRu ? 'Сервер вернул некорректные настройки ntfy.' : 'The server returned invalid ntfy settings.');
+      }
+      $('ntfyServer').textContent = ntfyConfig.serverUrl;
+      $('ntfyTopic').textContent = ntfyConfig.topic;
+      $('subscriptionUrl').textContent = ntfyConfig.subscriptionUrl;
+      $('setup').hidden = false;
+      $('status').textContent = isRu ? 'Настройки загружены. Добавь сервер и тему в ntfy.' : 'Settings loaded. Add the server and topic in ntfy.';
+    } catch (error) {
+      $('status').textContent = error.message || String(error);
+    }
+  });
+
+  $('copy').addEventListener('click', async () => {
+    if (!ntfyConfig) return;
+    const value = ntfyConfig.subscriptionUrl;
+    try {
+      await navigator.clipboard.writeText(value);
+      $('status').textContent = isRu ? 'Ссылка скопирована. Добавь её в ntfy как подписку.' : 'Copied. Add this URL in ntfy as a subscription.';
+    } catch {
+      $('status').textContent = isRu ? 'Не удалось скопировать — выдели значения выше вручную.' : 'Could not copy; select the values above manually.';
+    }
+  });
+
+  $('test').addEventListener('click', async () => {
+    $('status').textContent = '';
+    try {
+      const response = await ownerFetch('/v1/send', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ title: 'AfterGram', description: isRu ? 'Тестовое уведомление ntfy' : 'ntfy test notification' }),
       });
+      const result = await response.json();
+      if (result.provider !== 'ntfy' || result.sent !== 1) throw new Error(isRu ? 'Сервер не подтвердил отправку через ntfy.' : 'The server did not confirm ntfy delivery.');
+      $('status').textContent = isRu ? 'Тест отправлен. Проверь уведомление от ntfy.' : 'Test sent. Check for an ntfy notification.';
+    } catch (error) {
+      $('status').textContent = error.message || String(error);
     }
-    void takePendingChat().then((pending) => {
-      if (!pending || !['user', 'group', 'channel'].includes(pending.peer_type) || !/^\d{1,20}$/.test(pending.peer_id || '')) return;
-      const target = new URL('open-chat.html', location.href);
-      target.search = new URLSearchParams({ peer_type: pending.peer_type, peer_id: pending.peer_id, message_id: pending.message_id || '0' });
-      location.replace(target.href);
-    });
-    if (isRu) {
-      document.documentElement.lang = 'ru';
-      $('intro').textContent = 'Подключи PWA к своему серверу push-уведомлений. Сначала добавь страницу на экран «Домой», затем укажи адрес сервера.';
-      $('server').setAttribute('aria-label', 'Адрес сервера push'); $('apiToken').setAttribute('aria-label', 'Токен API сервера');
-      $('server').placeholder = 'https://push.example.de'; $('apiToken').placeholder = 'API-токен сервера';
-      $('subscribe').textContent = 'Включить уведомления'; $('test').textContent = 'Отправить тестовое уведомление'; $('disable').textContent = 'Отключить уведомления'; $('copy').textContent = 'Скопировать JSON подписки';
-      $('output').setAttribute('aria-label', 'Push-подписка');
-      document.querySelector('small').textContent = 'Приватный VAPID-ключ остаётся на твоём сервере. Адрес сервера и API-токен сохраняются только на этом устройстве, чтобы не вводить их снова. Для перехода из уведомления в AfterGram нажми кнопку на странице перехода. Требуется iOS/iPadOS 16.4 или новее.';
-    }
-    let subscriptionText = '';
-    function decodeBase64Url(value) {
-      const padded = value.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - value.length % 4) % 4);
-      return Uint8Array.from(atob(padded), character => character.charCodeAt(0));
-    }
-    function sameBytes(left, right) {
-      return !!left && left.length === right.length && left.every((value, index) => value === right[index]);
-    }
-    function serverConfiguration() {
-      const value = $('server').value.trim().replace(/\/+$/, '');
-      const token = $('apiToken').value.trim();
-      const url = new URL(value);
-      if (url.protocol !== 'https:') throw new Error(isRu ? 'Адрес push-сервера должен использовать HTTPS.' : 'The push server URL must use HTTPS.');
-      if (!token) throw new Error(isRu ? 'Введи API-токен сервера.' : 'Enter the server API token.');
-      return { baseUrl: value, token };
-    }
-    function rememberServerConfiguration(server) {
-      localStorage.setItem('aftergram.push.server', server.baseUrl);
-      localStorage.setItem('aftergram.push.apiToken', server.token);
-    }
-    async function register() {
-      try {
-        if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) throw new Error(isRu ? 'Этот браузер не поддерживает Web Push.' : 'Web Push is not supported by this browser.');
-        const server = serverConfiguration();
-        const permission = await Notification.requestPermission();
-        if (permission !== 'granted') throw new Error(isRu ? 'Разреши уведомления в настройках iOS.' : 'Allow notifications in iOS settings.');
-        const registration = await navigator.serviceWorker.register('./service-worker.js', { scope: './' });
-        await navigator.serviceWorker.ready;
-        const keyResponse = await fetch(`${server.baseUrl}/v1/vapid-public-key`, { cache: 'no-store' });
-        if (!keyResponse.ok) throw new Error(isRu ? 'Не удалось получить VAPID-ключ с сервера.' : 'Could not get the VAPID key from the server.');
-        const { publicKey } = await keyResponse.json();
-        if (typeof publicKey !== 'string' || !publicKey) throw new Error(isRu ? 'Сервер вернул некорректный VAPID-ключ.' : 'The server returned an invalid VAPID key.');
-        const applicationServerKey = decodeBase64Url(publicKey);
-        if (applicationServerKey.length !== 65 || applicationServerKey[0] !== 4) throw new Error(isRu ? 'Некорректный публичный VAPID-ключ P-256.' : 'Invalid P-256 VAPID public key.');
-        let subscription = await registration.pushManager.getSubscription();
-        if (subscription && !sameBytes(subscription.options.applicationServerKey, applicationServerKey)) {
-          await subscription.unsubscribe();
-          subscription = null;
-        }
-        if (!subscription) subscription = await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey });
-        const saveResponse = await fetch(`${server.baseUrl}/v1/subscriptions`, {
-          method: 'POST',
-          headers: { 'content-type': 'application/json', authorization: `Bearer ${server.token}` },
-          body: JSON.stringify(subscription.toJSON()),
-        });
-        if (!saveResponse.ok) throw new Error(isRu ? 'Сервер не сохранил подписку. Проверь API-токен и настройки CORS.' : 'The server did not save the subscription. Check the API token and CORS settings.');
-        rememberServerConfiguration(server);
-        const value = subscription.toJSON();
-        if (!value.endpoint || !value.keys || !value.keys.p256dh || !value.keys.auth) throw new Error(isRu ? 'Браузер вернул неполную подписку.' : 'The browser returned an incomplete subscription.');
-        subscriptionText = JSON.stringify({ endpoint: value.endpoint, keys: value.keys });
-        $('output').value = subscriptionText; $('output').style.display = 'block'; $('copy').hidden = false;
-        $('test').hidden = false; $('disable').hidden = false;
-        $('status').textContent = isRu ? 'Готово. Подписка сохранена на твоём сервере.' : 'Ready. The subscription is saved on your server.';
-      } catch (error) { $('status').textContent = error.message || String(error); }
-    }
-    $('subscribe').addEventListener('click', register);
-    $('test').addEventListener('click', async () => {
-      try {
-        const server = serverConfiguration();
-        const response = await fetch(`${server.baseUrl}/v1/send`, {
-          method: 'POST',
-          headers: { 'content-type': 'application/json', authorization: `Bearer ${server.token}` },
-          body: JSON.stringify({ title: 'AfterGram', description: isRu ? 'Тестовое push-уведомление' : 'Test push notification' }),
-        });
-        if (!response.ok) throw new Error(isRu ? 'Сервер не отправил push-уведомление.' : 'The server could not send the push notification.');
-        rememberServerConfiguration(server);
-        const result = await response.json();
-        if (!Number.isInteger(result.sent) || !Number.isInteger(result.failed)) throw new Error(isRu ? 'Сервер вернул некорректный результат отправки.' : 'The server returned an invalid send result.');
-        if (result.sent === 0) {
-          const reason = result.failed ? (isRu ? ` Не удалось отправить: ${result.failed}.` : ` Failed: ${result.failed}.`) : (isRu ? ' На сервере нет сохранённых подписок.' : ' There are no subscriptions saved on the server.');
-          throw new Error((isRu ? 'Push не отправлен.' : 'Push was not sent.') + reason);
-        }
-        $('status').textContent = isRu
-          ? `Тестовый push принят сервисом уведомлений. Успешно: ${result.sent}; ошибок: ${result.failed}.`
-          : `Test push accepted by the notification service. Sent: ${result.sent}; failed: ${result.failed}.`;
-      } catch (error) { $('status').textContent = error.message || String(error); }
-    });
-    $('disable').addEventListener('click', async () => {
-      try {
-        const server = serverConfiguration();
-        const registration = await navigator.serviceWorker.ready;
-        const subscription = await registration.pushManager.getSubscription();
+  });
+
+  $('disableOld').addEventListener('click', async () => {
+    $('status').textContent = '';
+    try {
+      if (!('serviceWorker' in navigator)) throw new Error(isRu ? 'На этом браузере старая Web Push-подписка не найдена.' : 'No old Web Push subscription is available in this browser.');
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      const appScope = new URL('./', location.href).href;
+      let removed = 0;
+      for (const registration of registrations.filter(item => item.scope === appScope)) {
+        const subscription = await registration.pushManager?.getSubscription();
         if (subscription) {
-          const response = await fetch(`${server.baseUrl}/v1/unsubscribe`, {
+          await ownerFetch('/v1/unsubscribe', {
             method: 'POST',
-            headers: { 'content-type': 'application/json', authorization: `Bearer ${server.token}` },
+            headers: { 'content-type': 'application/json' },
             body: JSON.stringify({ endpoint: subscription.endpoint }),
           });
-          if (!response.ok) throw new Error(isRu ? 'Сервер не отключил подписку.' : 'The server could not remove the subscription.');
-          rememberServerConfiguration(server);
           await subscription.unsubscribe();
+          removed++;
         }
-        $('test').hidden = true; $('disable').hidden = true; $('copy').hidden = true;
-        $('output').style.display = 'none';
-        $('status').textContent = isRu ? 'Уведомления отключены.' : 'Notifications disabled.';
-      } catch (error) { $('status').textContent = error.message || String(error); }
-    });
-    $('copy').addEventListener('click', async () => {
-      try { await navigator.clipboard.writeText(subscriptionText); $('status').textContent = isRu ? 'JSON подписки скопирован как резервная копия.' : 'Subscription JSON copied as a backup.'; }
-      catch { $('output').focus(); $('output').select(); $('status').textContent = isRu ? 'Выдели и скопируй текст подписки вручную.' : 'Select and copy the subscription text manually.'; }
-    });
-    if ('serviceWorker' in navigator) navigator.serviceWorker.register('./service-worker.js', { scope: './' }).catch(() => {});
+        await registration.unregister();
+      }
+      $('status').textContent = isRu
+        ? (removed ? 'Старая Web Push-подписка удалена.' : 'Старых Web Push-подписок на этом устройстве нет.')
+        : (removed ? 'The old Web Push subscription was removed.' : 'There was no old Web Push subscription on this device.');
+    } catch (error) {
+      $('status').textContent = error.message || String(error);
+    }
+  });
+})();
