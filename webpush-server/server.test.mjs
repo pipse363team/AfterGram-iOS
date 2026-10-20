@@ -7,12 +7,15 @@ import webpush from 'web-push';
 import { createWebPushServer } from './server.mjs';
 
 const token = 'test-api-token-which-is-at-least-thirty-two-characters';
+const ntfyConfig = {
+  serverUrl: 'https://push.example.net:9444', topic: '0123456789abcdef'.repeat(4),
+};
 const subscription = {
   endpoint: 'https://push.example.net/send/abc',
   keys: { p256dh: 'browser-public-key', auth: 'browser-auth-secret' },
 };
 
-async function withServer(run) {
+async function withServer(run, options = {}) {
   const dataDirectory = await mkdtemp(join(tmpdir(), 'aftergram-webpush-'));
   const sends = [];
   const fakePush = {
@@ -26,6 +29,7 @@ async function withServer(run) {
     allowedOrigin: 'https://pipse363team.github.io',
     subject: 'mailto:push@example.net',
     push: fakePush,
+    ...options,
   });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   const baseUrl = `http://127.0.0.1:${server.address().port}`;
@@ -36,6 +40,73 @@ async function withServer(run) {
     await rm(dataDirectory, { recursive: true, force: true });
   }
 }
+
+test('keeps the private ntfy topic URL behind the owner API token', async () => {
+  await withServer(async ({ baseUrl }) => {
+    const denied = await fetch(`${baseUrl}/v1/ntfy-config`);
+    assert.equal(denied.status, 401);
+    const accepted = await fetch(`${baseUrl}/v1/ntfy-config`, { headers: { authorization: `Bearer ${token}` } });
+    assert.equal(accepted.status, 200);
+    assert.deepEqual(await accepted.json(), {
+      serverUrl: ntfyConfig.serverUrl,
+      topic: ntfyConfig.topic,
+      subscriptionUrl: `${ntfyConfig.serverUrl}/${ntfyConfig.topic}`,
+    });
+  }, { ntfy: ntfyConfig, ntfyFetch: async () => { throw new Error('unexpected send'); } });
+});
+
+test('sends Telegram notifications through ntfy with a validated AfterGram chat link', async () => {
+  let request;
+  await withServer(async ({ baseUrl, sends }) => {
+    const headers = { authorization: `Bearer ${token}`, 'content-type': 'application/json' };
+    const response = await fetch(`${baseUrl}/v1/send`, {
+      method: 'POST', headers,
+      body: JSON.stringify({
+        title: 'Friends & family', description: 'Привет 👋',
+        custom: { peer_type: 'group', peer_id: '12345', message_id: '67' },
+      }),
+    });
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), { sent: 1, failed: 0, provider: 'ntfy' });
+    assert.equal(sends.length, 0, 'ntfy mode must not also send duplicate Web Push notifications');
+  }, {
+    ntfy: ntfyConfig,
+    ntfyFetch: async (url, options) => {
+      request = { url, options };
+      return { ok: true, status: 200 };
+    },
+  });
+
+  assert.equal(request.url, ntfyConfig.serverUrl);
+  assert.equal(request.options.method, 'POST');
+  assert.deepEqual(JSON.parse(request.options.body), {
+    topic: ntfyConfig.topic,
+    title: 'Friends & family',
+    message: 'Привет 👋',
+    click: 'tgretention://open?peer_type=group&peer_id=12345&message_id=67',
+  });
+});
+
+test('returns an error when ntfy is unavailable and rejects untrusted chat links', async () => {
+  await withServer(async ({ baseUrl }) => {
+    const headers = { authorization: `Bearer ${token}`, 'content-type': 'application/json' };
+    const invalidRoute = await fetch(`${baseUrl}/v1/send`, {
+      method: 'POST', headers,
+      body: JSON.stringify({ title: 'Chat', description: 'Hello', custom: { peer_type: 'user', peer_id: 'https://bad', message_id: '1' } }),
+    });
+    assert.equal(invalidRoute.status, 400);
+
+    const unavailable = await fetch(`${baseUrl}/v1/send`, {
+      method: 'POST', headers,
+      body: JSON.stringify({ title: 'Chat', description: 'Hello' }),
+    });
+    assert.equal(unavailable.status, 502);
+    assert.deepEqual(await unavailable.json(), { error: 'ntfy delivery failed' });
+  }, {
+    ntfy: ntfyConfig,
+    ntfyFetch: async () => ({ ok: false, status: 503 }),
+  });
+});
 
 test('serves only the public VAPID key and persists the generated private key locally', async () => {
   await withServer(async ({ baseUrl, dataDirectory, fakePush }) => {

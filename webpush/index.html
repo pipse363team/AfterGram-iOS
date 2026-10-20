@@ -4,32 +4,47 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#17191f">
-  <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
-  <title>AfterGram Web Push</title>
+  <title>AfterGram notifications</title>
   <style>
     :root { color-scheme: dark; font: 16px -apple-system, BlinkMacSystemFont, sans-serif; background: #111319; color: #f4f5f7 }
     body { max-width: 560px; margin: 0 auto; padding: max(28px, env(safe-area-inset-top)) 22px max(24px, env(safe-area-inset-bottom)); }
-    main { margin-top: 12vh; } h1 { margin-bottom: 8px; font-size: 30px; } p { color: #b4b8c2; line-height: 1.5; }
-    button { width: 100%; min-height: 50px; margin: 12px 0; border: 0; border-radius: 13px; background: #4389f5; color: white; font-size: 16px; font-weight: 600; }
-    button.secondary { background: #292d36; } input, textarea { width: 100%; box-sizing: border-box; margin-top: 10px; padding: 12px; border: 1px solid #383c46; border-radius: 10px; background: #1b1e26; color: #d8dbe2; } textarea { display: none; height: 130px; }
+    main { margin-top: 8vh; } h1 { margin-bottom: 8px; font-size: 30px; } h2 { font-size: 20px; margin: 24px 0 8px; }
+    p, li { color: #b4b8c2; line-height: 1.5; } button, .link { display: block; width: 100%; box-sizing: border-box; min-height: 50px; margin: 12px 0; padding: 14px; border: 0; border-radius: 13px; background: #4389f5; color: white; text-align: center; text-decoration: none; font-size: 16px; font-weight: 600; }
+    button.secondary { background: #292d36; } input { width: 100%; box-sizing: border-box; margin-top: 10px; padding: 12px; border: 1px solid #383c46; border-radius: 10px; background: #1b1e26; color: #d8dbe2; }
+    code { display: block; overflow-wrap: anywhere; margin: 8px 0 16px; padding: 12px; border-radius: 9px; background: #1b1e26; color: #d8dbe2; }
     #status { min-height: 24px; color: #a9d4ff; } small { color: #858a96; line-height: 1.5; display: block; margin-top: 20px; }
   </style>
 </head>
 <body>
   <main>
-    <h1>AfterGram Web Push</h1>
-    <p id="intro">Connect this PWA to your personal push server. Add this page to your iPhone Home Screen first, then enter your server details.</p>
-    <input id="server" type="url" inputmode="url" autocomplete="url" value="https://144.31.165.8:9443" placeholder="https://144.31.165.8:9443" aria-label="Push server URL">
-    <input id="apiToken" type="password" autocomplete="off" placeholder="Server API token" aria-label="Server API token">
-    <button id="subscribe">Enable notifications</button>
-    <button id="test" class="secondary" hidden>Send test notification</button>
-    <button id="disable" class="secondary" hidden>Disable notifications</button>
-    <button id="copy" class="secondary" hidden>Copy subscription</button>
-    <textarea id="output" readonly aria-label="Push subscription"></textarea>
+    <h1 id="heading">AfterGram notifications</h1>
+    <p id="intro">Use the ntfy iPhone app for notifications. Your Telegram message stays on your server; ntfy.sh only relays a generic wake-up ping.</p>
+    <label id="serverLabel" for="server">AfterGram server</label>
+    <input id="server" type="url" inputmode="url" autocomplete="url" value="https://144.31.165.8:9443" aria-label="AfterGram server">
+    <label id="tokenLabel" for="apiToken">Owner API token</label>
+    <input id="apiToken" type="password" autocomplete="off" placeholder="Paste the server API token" aria-label="Owner API token">
+    <button id="load">Get ntfy setup</button>
+    <section id="setup" hidden>
+      <h2 id="setupHeading">Set up ntfy on your iPhone</h2>
+      <ol>
+        <li id="stepInstall">Install the ntfy app.</li>
+        <li id="stepTopic">In ntfy, subscribe using this URL or add the server and topic below:</li>
+      </ol>
+      <code id="subscriptionUrl"></code>
+      <p id="stepServer">Server:</p>
+      <code id="ntfyServer"></code>
+      <p id="topicLabel">Private topic:</p>
+      <code id="ntfyTopic"></code>
+      <p id="topicNote">The topic is a secret. Do not share it.</p>
+      <a id="install" class="link" href="https://apps.apple.com/app/ntfy/id1625396347" target="_blank" rel="noreferrer">Get ntfy from the App Store</a>
+      <button id="copy" class="secondary">Copy server and topic</button>
+      <button id="test" class="secondary">Send a test notification</button>
+      <button id="disableOld" class="secondary">Turn off old Web Push notifications</button>
+    </section>
     <p id="status" role="status"></p>
-    <small>The private VAPID key stays on your server. The PWA sends its subscription there and receives pushes directly; tapping a notification opens AfterGram. The API token is not stored by this page. iOS/iPadOS 16.4 or later is required.</small>
+    <small id="privacy">The setup page stores the server and owner token in this browser on this device only. After setup, new alerts come from ntfy; tapping an alert attempts to open the matching AfterGram chat.</small>
   </main>
   <script src="./setup.js"></script>
 </body>
