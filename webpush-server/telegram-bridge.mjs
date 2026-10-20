@@ -56,7 +56,28 @@ function mediaLabel(media) {
   return 'New message';
 }
 
-export async function formatTelegramNotification(event) {
+async function cachedProfilePhoto(client, entity, key, cache) {
+  if (!client?.downloadProfilePhoto || !entity || !cache) return undefined;
+  const now = Date.now();
+  const cached = cache.get(key);
+  if (cached && cached.expiresAt > now) return cached.promise;
+  const promise = (async () => {
+    try {
+      const photo = await client.downloadProfilePhoto(entity, { isBig: false });
+      if (!Buffer.isBuffer(photo) || photo.length > 128 * 1024) return undefined;
+      const isJpeg = photo.length >= 3 && photo[0] === 0xff && photo[1] === 0xd8 && photo[2] === 0xff;
+      const isPng = photo.length >= 8 && photo.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
+      return isJpeg || isPng ? photo.toString('base64') : undefined;
+    } catch {
+      return undefined;
+    }
+  })();
+  if (cache.size >= 500) cache.delete(cache.keys().next().value);
+  cache.set(key, { promise, expiresAt: now + 24 * 60 * 60 * 1000 });
+  return promise;
+}
+
+export async function formatTelegramNotification(event, { client, avatarCache } = {}) {
   const message = event?.message;
   if (!message || message.out || !Number.isSafeInteger(message.id) || message.id <= 0) return undefined;
   const custom = peerRoute(message.peerId);
@@ -73,7 +94,12 @@ export async function formatTelegramNotification(event) {
   const content = text || mediaLabel(message.media);
   const description = isPrivate || !senderName ? content : `${senderName}: ${content}`;
   custom.message_id = String(message.id);
-  return { title: title.slice(0, 120), description: description.slice(0, 500), custom };
+  const avatarEntity = isPrivate ? sender ?? chat : chat ?? sender;
+  let avatar = await cachedProfilePhoto(client, avatarEntity, `${custom.peer_type}:${custom.peer_id}`, avatarCache);
+  if (!avatar && sender && sender !== avatarEntity) {
+    avatar = await cachedProfilePhoto(client, sender, `sender:${String(sender.id ?? `${custom.peer_id}:${message.id}`)}`, avatarCache);
+  }
+  return { title: title.slice(0, 120), description: description.slice(0, 500), ...(avatar ? { avatar } : {}), custom };
 }
 
 export async function isTelegramChatMuted(client, event, { cache = new Map(), nowSeconds = Math.floor(Date.now() / 1000) } = {}) {
@@ -110,8 +136,8 @@ export async function isTelegramChatMuted(client, event, { cache = new Map(), no
   return Number(peerMuteUntil ?? defaultMuteUntil ?? 0) > nowSeconds;
 }
 
-export async function sendTelegramNotification(event, { endpoint, apiToken, fetchImpl = fetch }) {
-  const payload = await formatTelegramNotification(event);
+export async function sendTelegramNotification(event, { endpoint, apiToken, fetchImpl = fetch, client, avatarCache } = {}) {
+  const payload = await formatTelegramNotification(event, { client, avatarCache });
   if (!payload) return false;
   const response = await fetchImpl(`${endpoint.replace(/\/$/, '')}/v1/send`, {
     method: 'POST',
@@ -178,10 +204,11 @@ async function run() {
   if (!await client.isUserAuthorized()) throw new Error('Telegram session expired; run the login command again');
 
   const notificationSettingsCache = new Map();
+  const notificationAvatarCache = new Map();
   client.addEventHandler(event => {
     void (async () => {
       if (await isTelegramChatMuted(client, event, { cache: notificationSettingsCache })) return;
-      await sendTelegramNotification(event, { endpoint, apiToken });
+      await sendTelegramNotification(event, { endpoint, apiToken, client, avatarCache: notificationAvatarCache });
     })().catch(error => {
       stdout.write(`Telegram push delivery failed: ${error.message}\n`);
     });

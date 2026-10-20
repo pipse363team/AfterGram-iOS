@@ -87,6 +87,64 @@ test('sends Telegram notifications through ntfy with a validated AfterGram chat 
   });
 });
 
+test('serves a short-lived profile photo as a private unguessable ntfy attachment', async () => {
+  let published;
+  const image = Buffer.from([0xff, 0xd8, 0xff, 0xd9]);
+  const avatarBaseUrl = 'https://push.example.net:9443';
+  await withServer(async ({ baseUrl }) => {
+    const sent = await fetch(`${baseUrl}/v1/send`, {
+      method: 'POST',
+      headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+      body: JSON.stringify({ title: 'Alex', description: 'Hello', avatar: image.toString('base64') }),
+    });
+    assert.equal(sent.status, 200);
+    assert.deepEqual(await sent.json(), { sent: 1, failed: 0, provider: 'ntfy' });
+
+    const attach = JSON.parse(published.body).attach;
+    const url = new URL(attach);
+    assert.equal(url.origin, avatarBaseUrl);
+    assert.match(url.pathname, /^\/v1\/notification-images\/[a-f0-9]{64}$/);
+    const response = await fetch(`${baseUrl}${url.pathname}`);
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get('content-type'), 'image/jpeg');
+    assert.deepEqual(Buffer.from(await response.arrayBuffer()), image);
+  }, {
+    ntfy: ntfyConfig,
+    ntfyAttachmentBaseUrl: avatarBaseUrl,
+    ntfyFetch: async (url, options) => {
+      published = { url, body: options.body };
+      return { ok: true, status: 200 };
+    },
+  });
+});
+
+test('bounds the in-memory notification image cache', async () => {
+  const attachments = [];
+  const image = Buffer.from([0xff, 0xd8, 0xff, 0xd9]);
+  await withServer(async ({ baseUrl }) => {
+    for (let index = 0; index < 129; index++) {
+      const sent = await fetch(`${baseUrl}/v1/send`, {
+        method: 'POST',
+        headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+        body: JSON.stringify({ title: 'Alex', description: 'Hello', avatar: image.toString('base64') }),
+      });
+      assert.equal(sent.status, 200);
+    }
+
+    const firstImage = await fetch(`${baseUrl}${new URL(attachments[0]).pathname}`);
+    const lastImage = await fetch(`${baseUrl}${new URL(attachments.at(-1)).pathname}`);
+    assert.equal(firstImage.status, 404);
+    assert.equal(lastImage.status, 200);
+  }, {
+    ntfy: ntfyConfig,
+    ntfyAttachmentBaseUrl: 'https://push.example.net:9443',
+    ntfyFetch: async (_url, options) => {
+      attachments.push(JSON.parse(options.body).attach);
+      return { ok: true, status: 200 };
+    },
+  });
+});
+
 test('returns an error when ntfy is unavailable and rejects untrusted chat links', async () => {
   await withServer(async ({ baseUrl }) => {
     const headers = { authorization: `Bearer ${token}`, 'content-type': 'application/json' };

@@ -8,6 +8,7 @@ fi
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "$0")" && pwd)
 SERVER_URL=${NTFY_SERVER_URL:-https://144.31.165.8:9444}
+ATTACHMENT_BASE_URL=${NTFY_ATTACHMENT_BASE_URL:-https://144.31.165.8:9443}
 TLS_CERT=/etc/letsencrypt/live/csqtt-ip-144-31-165-8/fullchain.pem
 TLS_KEY=/etc/letsencrypt/live/csqtt-ip-144-31-165-8/privkey.pem
 ENV_FILE=/etc/aftergram-ntfy.env
@@ -22,8 +23,18 @@ if [[ -z ${NTFY_SERVER_URL:-} && -f "$ENV_FILE" ]]; then
     SERVER_URL=$saved_server_url
   fi
 fi
+if [[ -z ${NTFY_ATTACHMENT_BASE_URL:-} && -f "$ENV_FILE" ]]; then
+  saved_attachment_base_url=$(sed -n 's/^NTFY_ATTACHMENT_BASE_URL=//p' "$ENV_FILE" | head -n 1)
+  if [[ "$saved_attachment_base_url" == https://* && "$saved_attachment_base_url" != */ ]]; then
+    ATTACHMENT_BASE_URL=$saved_attachment_base_url
+  fi
+fi
 if [[ "$SERVER_URL" != https://* || "$SERVER_URL" == */ ]]; then
   echo "NTFY_SERVER_URL must be an HTTPS URL without a trailing slash" >&2
+  exit 1
+fi
+if [[ "$ATTACHMENT_BASE_URL" != https://* || "$ATTACHMENT_BASE_URL" == */ ]]; then
+  echo "NTFY_ATTACHMENT_BASE_URL must be an HTTPS URL without a trailing slash" >&2
   exit 1
 fi
 
@@ -80,7 +91,7 @@ sed "s|^ExecStart=@NTFY_BIN@ serve$|ExecStart=$NTFY_BIN serve|" "$SCRIPT_DIR/aft
 install -o root -g root -m 0644 "$temporary_unit" /etc/systemd/system/aftergram-ntfy.service
 temporary_env=$(mktemp)
 trap 'rm -f "$temporary_config" "$temporary_env" "$temporary_unit"' EXIT
-printf 'NTFY_SERVER_URL=%s\nNTFY_TOPIC=%s\n' "$SERVER_URL" "$topic" > "$temporary_env"
+printf 'NTFY_SERVER_URL=%s\nNTFY_TOPIC=%s\nNTFY_ATTACHMENT_BASE_URL=%s\n' "$SERVER_URL" "$topic" "$ATTACHMENT_BASE_URL" > "$temporary_env"
 install -o root -g root -m 0600 "$temporary_env" "$ENV_FILE"
 
 systemctl disable --now ntfy.service >/dev/null 2>&1 || true

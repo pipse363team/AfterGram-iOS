@@ -10,7 +10,16 @@ export function validateNtfyConfiguration(config) {
   if (typeof config.topic !== 'string' || !topicPattern.test(config.topic) || config.topic.length !== 64 || !/^[a-f0-9]{64}$/.test(config.topic)) {
     throw new Error('NTFY_TOPIC must be a 64-character lowercase hexadecimal secret');
   }
-  return { serverUrl, topic: config.topic };
+  const avatarBaseUrl = config?.avatarBaseUrl === undefined ? undefined : String(config.avatarBaseUrl).replace(/\/+$/, '');
+  if (avatarBaseUrl !== undefined) {
+    let parsedAvatarBase;
+    try { parsedAvatarBase = new URL(avatarBaseUrl); } catch { throw new Error('NTFY_ATTACHMENT_BASE_URL must be an HTTPS origin'); }
+    if (parsedAvatarBase.protocol !== 'https:' || parsedAvatarBase.username || parsedAvatarBase.password ||
+      parsedAvatarBase.search || parsedAvatarBase.hash || parsedAvatarBase.pathname !== '/') {
+      throw new Error('NTFY_ATTACHMENT_BASE_URL must be an HTTPS origin without credentials, path, query, or fragment');
+    }
+  }
+  return { serverUrl, topic: config.topic, ...(avatarBaseUrl ? { avatarBaseUrl } : {}) };
 }
 
 export function createNtfyPublisher(config, fetchImpl = fetch) {
@@ -48,10 +57,21 @@ export function createNtfyPublisher(config, fetchImpl = fetch) {
         click = target.href;
       }
 
+      let attach;
+      if (payload.avatarUrl !== undefined) {
+        if (!settings.avatarBaseUrl) throw new Error('NTFY_ATTACHMENT_BASE_URL is not configured');
+        let avatarUrl;
+        try { avatarUrl = new URL(payload.avatarUrl); } catch { throw new Error('Invalid notification avatar URL'); }
+        if (avatarUrl.origin !== settings.avatarBaseUrl || !/^\/v1\/notification-images\/[a-f0-9]{64}$/.test(avatarUrl.pathname)) {
+          throw new Error('Invalid notification avatar URL');
+        }
+        attach = avatarUrl.href;
+      }
+
       const response = await fetchImpl(settings.serverUrl, {
         method: 'POST',
         headers,
-        body: JSON.stringify({ topic: settings.topic, title, message: description, ...(click ? { click } : {}) }),
+        body: JSON.stringify({ topic: settings.topic, title, message: description, ...(click ? { click } : {}), ...(attach ? { attach } : {}) }),
       });
       if (!response.ok) throw new Error(`ntfy returned HTTP ${response.status}`);
       return { sent: 1, failed: 0 };
