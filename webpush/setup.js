@@ -8,20 +8,23 @@
 
   if (isRu) {
     document.documentElement.lang = 'ru';
-    document.title = 'Уведомления AfterGram';
-    $('eyebrow').textContent = 'Уведомления на iPhone';
-    $('connectionHeading').textContent = 'Подключи сервер AfterGram';
-    document.querySelector('.card-intro').textContent = 'Введи адрес сервера и токен владельца, чтобы получить закрытую тему ntfy.';
-    document.querySelector('#setup .card-intro').textContent = 'Выполни три шага. Настроить нужно только один раз.';
-    $('securityNote').textContent = 'Не сообщай никому токен владельца и имя закрытой темы. Чтобы удалить токен с этого устройства, очисти данные сайта в браузере.';
-    $('heading').textContent = 'Уведомления AfterGram';
-    $('intro').textContent = 'Установи ntfy на iPhone. Текст сообщений остаётся на твоём сервере; ntfy.sh передаёт только общий сигнал для пробуждения приложения.';
+    document.title = 'AfterGram · Уведомления';
+    $('brandCaption').textContent = 'ЛИЧНЫЕ УВЕДОМЛЕНИЯ';
+    $('eyebrow').textContent = 'Оставайся на связи без лишнего шума';
+    $('heading').textContent = 'Важные сообщения — вовремя.';
+    $('intro').textContent = 'Настрой ntfy один раз. Уведомления проходят через твой сервер; нажатие попробует открыть нужный чат AfterGram.';
+    $('privacyText').textContent = 'Адрес и токен владельца сохраняются в браузере на этом устройстве. В уведомлении виден текст сообщения, а фото чата сервер отдаёт временно.';
+    $('connectionHeading').textContent = 'Подключи свой сервер';
+    $('connectionCopy').textContent = 'Введи адрес сервера и токен владельца, чтобы открыть настройки ntfy.';
     $('serverLabel').textContent = 'Сервер AfterGram';
     $('tokenLabel').textContent = 'API-токен владельца';
     $('apiToken').placeholder = 'Вставь API-токен сервера';
-    $('load').textContent = 'Получить настройки ntfy';
+    $('tokenHelp').textContent = 'Сохраняется только в localStorage этого устройства.';
+    $('loadText').textContent = 'Показать настройки ntfy';
     $('setupHeading').textContent = 'Настрой ntfy на iPhone';
-    $('stepInstall').textContent = 'Установи приложение ntfy.';
+    $('setupCopy').textContent = 'Открой приложение ntfy и выполни три коротких шага.';
+    $('stepsTitle').textContent = 'В приложении ntfy';
+    $('stepInstallText').textContent = 'Установи приложение ntfy.';
     $('stepServer').textContent = 'В ntfy открой Настройки → Сервер по умолчанию и введи адрес ниже без «/» на конце:';
     $('stepTopic').textContent = 'Вернись, нажми «+» → добавь подписку и вставь только имя темы ниже, без адреса сервера:';
     $('topicLabel').textContent = 'Имя закрытой темы:';
@@ -29,8 +32,8 @@
     $('install').textContent = 'Установить ntfy из App Store';
     $('copy').textContent = 'Скопировать имя темы';
     $('test').textContent = 'Отправить тестовое уведомление';
-    $('disableOld').textContent = 'Отключить старые Web Push уведомления';
-    $('privacy').textContent = 'Эта страница сохраняет адрес сервера и API-токен только в браузере этого устройства. После настройки уведомления будут приходить через ntfy; нажатие должно открыть соответствующий чат AfterGram.';
+    $('disableOld').textContent = 'Отключить прежние Web Push-уведомления';
+    $('footer').textContent = 'Разреши уведомления для ntfy в настройках iPhone. Если чат не открылся по нажатию, открой уведомление из ntfy, когда AfterGram установлен.';
   }
 
   function configuration() {
