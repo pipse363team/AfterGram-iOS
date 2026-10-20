@@ -2,12 +2,16 @@ import { createServer as createHttpServer } from 'node:http';
 import { createServer as createHttpsServer } from 'node:https';
 import { chmod, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { timingSafeEqual } from 'node:crypto';
+import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
 import webpush from 'web-push';
 import { createNtfyPublisher, validateNtfyConfiguration } from './ntfy-publisher.mjs';
 
-const MAX_BODY_BYTES = 16 * 1024;
+const MAX_BODY_BYTES = 256 * 1024;
+const MAX_NOTIFICATION_IMAGE_BYTES = 128 * 1024;
+const MAX_NOTIFICATION_IMAGES = 128;
+const MAX_NOTIFICATION_IMAGE_STORAGE_BYTES = 16 * 1024 * 1024;
+const NOTIFICATION_IMAGE_TTL_MS = 2 * 60 * 60 * 1000;
 
 function json(response, status, value) {
   response.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' });
@@ -50,6 +54,16 @@ async function readJson(request) {
   }
 }
 
+function decodeNotificationImage(value) {
+  if (typeof value !== 'string' || value.length > Math.ceil(MAX_NOTIFICATION_IMAGE_BYTES * 4 / 3) + 4 ||
+    !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(value)) return undefined;
+  const data = Buffer.from(value, 'base64');
+  if (!data.length || data.length > MAX_NOTIFICATION_IMAGE_BYTES || data.toString('base64') !== value) return undefined;
+  if (data.length >= 3 && data[0] === 0xff && data[1] === 0xd8 && data[2] === 0xff) return { data, contentType: 'image/jpeg' };
+  if (data.length >= 8 && data.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))) return { data, contentType: 'image/png' };
+  return undefined;
+}
+
 async function readOrCreateKeys(dataDirectory, push) {
   const path = join(dataDirectory, 'vapid-keys.json');
   try {
@@ -76,7 +90,7 @@ async function readSubscriptions(dataDirectory) {
   }
 }
 
-export async function createWebPushServer({ dataDirectory, apiToken, allowedOrigin, subject, tlsOptions, push = webpush, ntfy: ntfyConfig, ntfyFetch = fetch }) {
+export async function createWebPushServer({ dataDirectory, apiToken, allowedOrigin, subject, tlsOptions, push = webpush, ntfy: ntfyConfig, ntfyFetch = fetch, ntfyAttachmentBaseUrl }) {
   if (!apiToken || apiToken.length < 32) throw new Error('WEBPUSH_API_TOKEN must contain at least 32 characters');
   if (!allowedOrigin) throw new Error('WEBPUSH_ALLOWED_ORIGIN must be an https origin');
   const originUrl = new URL(allowedOrigin);
@@ -90,7 +104,26 @@ export async function createWebPushServer({ dataDirectory, apiToken, allowedOrig
   const keys = await readOrCreateKeys(dataDirectory, push);
   if (typeof keys.publicKey !== 'string' || typeof keys.privateKey !== 'string') throw new Error('Invalid VAPID key file');
   push.setVapidDetails(subject, keys.publicKey, keys.privateKey);
-  const ntfyPublisher = ntfyConfig ? createNtfyPublisher(validateNtfyConfiguration(ntfyConfig), ntfyFetch) : undefined;
+  const ntfyPublisher = ntfyConfig ? createNtfyPublisher(validateNtfyConfiguration({ ...ntfyConfig, avatarBaseUrl: ntfyAttachmentBaseUrl }), ntfyFetch) : undefined;
+  const notificationImages = new Map();
+  let notificationImageBytes = 0;
+  const removeNotificationImage = imageId => {
+    const image = notificationImages.get(imageId);
+    if (!image) return;
+    notificationImageBytes -= image.data.length;
+    notificationImages.delete(imageId);
+  };
+  const storeNotificationImage = (imageId, image) => {
+    for (const [id, item] of notificationImages) {
+      if (item.expiresAt <= Date.now()) removeNotificationImage(id);
+    }
+    while (notificationImages.size >= MAX_NOTIFICATION_IMAGES ||
+      notificationImageBytes + image.data.length > MAX_NOTIFICATION_IMAGE_STORAGE_BYTES) {
+      removeNotificationImage(notificationImages.keys().next().value);
+    }
+    notificationImages.set(imageId, image);
+    notificationImageBytes += image.data.length;
+  };
   let subscriptions = await readSubscriptions(dataDirectory);
   const saveSubscriptions = async () => {
     const path = join(dataDirectory, 'subscriptions.json');
@@ -115,6 +148,22 @@ export async function createWebPushServer({ dataDirectory, apiToken, allowedOrig
     const path = new URL(request.url, 'http://localhost').pathname;
     if (request.method === 'GET' && path === '/healthz') return json(response, 200, { ok: true });
     if (request.method === 'GET' && path === '/v1/vapid-public-key') return json(response, 200, { publicKey: keys.publicKey });
+    const imageMatch = request.method === 'GET' && path.match(/^\/v1\/notification-images\/([a-f0-9]{64})$/);
+    if (imageMatch) {
+      const imageId = imageMatch[1];
+      const image = notificationImages.get(imageId);
+      if (!image || image.expiresAt <= Date.now()) {
+        removeNotificationImage(imageId);
+        return json(response, 404, { error: 'Image not found' });
+      }
+      response.writeHead(200, {
+        'content-type': image.contentType,
+        'content-length': image.data.length,
+        'cache-control': 'private, max-age=3600',
+        'x-content-type-options': 'nosniff',
+      });
+      return response.end(image.data);
+    }
     if (!authorized(request, apiToken)) return json(response, 401, { error: 'Unauthorized' });
 
     try {
@@ -153,6 +202,11 @@ export async function createWebPushServer({ dataDirectory, apiToken, allowedOrig
           typeof custom.message_id !== 'string' || !/^\d{1,12}$/.test(custom.message_id))) {
           return json(response, 400, { error: 'Invalid Telegram notification route' });
         }
+        let notificationImage;
+        if (payload.avatar !== undefined) {
+          notificationImage = decodeNotificationImage(payload.avatar);
+          if (!notificationImage) return json(response, 400, { error: 'Invalid notification avatar image' });
+        }
         const body = JSON.stringify({
           title: payload.title.slice(0, 120),
           description: payload.description.slice(0, 500),
@@ -164,9 +218,16 @@ export async function createWebPushServer({ dataDirectory, apiToken, allowedOrig
         });
         if (ntfyPublisher) {
           try {
+            let avatarUrl;
+            if (notificationImage && ntfyAttachmentBaseUrl) {
+              const imageId = randomBytes(32).toString('hex');
+              storeNotificationImage(imageId, { ...notificationImage, expiresAt: Date.now() + NOTIFICATION_IMAGE_TTL_MS });
+              avatarUrl = `${ntfyAttachmentBaseUrl.replace(/\/+$/, '')}/v1/notification-images/${imageId}`;
+            }
             await ntfyPublisher.send({
               title: payload.title.slice(0, 120),
               description: payload.description.slice(0, 500),
+              ...(avatarUrl ? { avatarUrl } : {}),
               ...(custom ? { custom: {
                 peer_type: custom.peer_type,
                 peer_id: custom.peer_id,
@@ -221,6 +282,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
       serverUrl: process.env.NTFY_SERVER_URL,
       topic: process.env.NTFY_TOPIC,
     } : undefined,
+    ntfyAttachmentBaseUrl: process.env.NTFY_ATTACHMENT_BASE_URL,
   });
   server.listen(port, host, () => process.stdout.write(`Web Push sender listening on ${host}:${port}${tlsOptions ? ' (HTTPS)' : ''}\n`));
 }

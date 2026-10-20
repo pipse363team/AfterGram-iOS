@@ -35,6 +35,34 @@ test('formats incoming group media without text', async () => {
   assert.deepEqual(payload.custom, { peer_type: 'channel', peer_id: '987654321', message_id: '7' });
 });
 
+test('adds a cached chat profile photo for richer iOS notifications', async () => {
+  const photo = Buffer.from([0xff, 0xd8, 0xff, 0xd9]);
+  const chat = { id: 42, title: 'Friends' };
+  let downloads = 0;
+  const client = {
+    downloadProfilePhoto: async entity => {
+      assert.equal(entity, chat);
+      downloads++;
+      return photo;
+    },
+  };
+  const avatarCache = new Map();
+  const event = {
+    getChat: async () => chat,
+    message: {
+      id: 7,
+      peerId: { className: 'PeerChat', chatId: 42n },
+      getSender: async () => ({ firstName: 'Sam' }),
+      message: 'hello',
+    },
+  };
+  const first = await formatTelegramNotification(event, { client, avatarCache });
+  const second = await formatTelegramNotification(event, { client, avatarCache });
+  assert.equal(first.avatar, photo.toString('base64'));
+  assert.equal(second.avatar, first.avatar);
+  assert.equal(downloads, 1);
+});
+
 test('does not notify for outgoing or unsupported peer messages', async () => {
   assert.equal(await formatTelegramNotification({ message: { out: true, id: 1 } }), undefined);
   assert.equal(await formatTelegramNotification({ message: { id: 1, peerId: { className: 'PeerSecret' } } }), undefined);
