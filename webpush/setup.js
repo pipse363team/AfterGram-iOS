@@ -8,6 +8,12 @@
 
   if (isRu) {
     document.documentElement.lang = 'ru';
+    document.title = 'Уведомления AfterGram';
+    $('eyebrow').textContent = 'Уведомления на iPhone';
+    $('connectionHeading').textContent = 'Подключи сервер AfterGram';
+    document.querySelector('.card-intro').textContent = 'Введи адрес сервера и токен владельца, чтобы получить закрытую тему ntfy.';
+    document.querySelector('#setup .card-intro').textContent = 'Выполни три шага. Настроить нужно только один раз.';
+    $('securityNote').textContent = 'Не сообщай никому токен владельца и имя закрытой темы. Чтобы удалить токен с этого устройства, очисти данные сайта в браузере.';
     $('heading').textContent = 'Уведомления AfterGram';
     $('intro').textContent = 'Установи ntfy на iPhone. Текст сообщений остаётся на твоём сервере; ntfy.sh передаёт только общий сигнал для пробуждения приложения.';
     $('serverLabel').textContent = 'Сервер AfterGram';
@@ -66,6 +72,8 @@
       $('ntfyServer').textContent = ntfyConfig.serverUrl;
       $('ntfyTopic').textContent = ntfyConfig.topic;
       $('setup').hidden = false;
+      $('setupHeading').focus({ preventScroll: true });
+      $('setup').scrollIntoView({ block: 'nearest' });
       $('status').textContent = isRu ? 'Настройки загружены. Добавь сервер и тему в ntfy.' : 'Settings loaded. Add the server and topic in ntfy.';
     } catch (error) {
       $('status').textContent = error.message || String(error);
