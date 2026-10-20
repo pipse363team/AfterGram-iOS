@@ -62,7 +62,7 @@ export function createNtfyPublisher(config, fetchImpl = fetch) {
         if (!settings.avatarBaseUrl) throw new Error('NTFY_ATTACHMENT_BASE_URL is not configured');
         let avatarUrl;
         try { avatarUrl = new URL(payload.avatarUrl); } catch { throw new Error('Invalid notification avatar URL'); }
-        if (avatarUrl.origin !== settings.avatarBaseUrl || !/^\/v1\/notification-images\/[a-f0-9]{64}$/.test(avatarUrl.pathname)) {
+        if (avatarUrl.origin !== settings.avatarBaseUrl || !/^\/v1\/notification-images\/[a-f0-9]{64}\.(?:jpg|png)$/.test(avatarUrl.pathname)) {
           throw new Error('Invalid notification avatar URL');
         }
         attach = avatarUrl.href;
