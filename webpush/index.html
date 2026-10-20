@@ -30,16 +30,16 @@
       <h2 id="setupHeading">Set up ntfy on your iPhone</h2>
       <ol>
         <li id="stepInstall">Install the ntfy app.</li>
-        <li id="stepTopic">In ntfy, subscribe using this URL or add the server and topic below:</li>
+        <li><span id="stepServer">In ntfy, open Settings → Default server and enter this address without a trailing slash:</span>
+          <code id="ntfyServer"></code>
+        </li>
+        <li id="stepTopic">Go back, tap + to add a subscription, and paste only the topic name below:</li>
       </ol>
-      <code id="subscriptionUrl"></code>
-      <p id="stepServer">Server:</p>
-      <code id="ntfyServer"></code>
-      <p id="topicLabel">Private topic:</p>
+      <p id="topicLabel">Private topic name:</p>
       <code id="ntfyTopic"></code>
       <p id="topicNote">The topic is a secret. Do not share it.</p>
       <a id="install" class="link" href="https://apps.apple.com/app/ntfy/id1625396347" target="_blank" rel="noreferrer">Get ntfy from the App Store</a>
-      <button id="copy" class="secondary">Copy server and topic</button>
+      <button id="copy" class="secondary">Copy topic name</button>
       <button id="test" class="secondary">Send a test notification</button>
       <button id="disableOld" class="secondary">Turn off old Web Push notifications</button>
     </section>

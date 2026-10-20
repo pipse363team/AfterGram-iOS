@@ -16,12 +16,12 @@
     $('load').textContent = 'Получить настройки ntfy';
     $('setupHeading').textContent = 'Настрой ntfy на iPhone';
     $('stepInstall').textContent = 'Установи приложение ntfy.';
-    $('stepServer').textContent = 'Сервер ntfy:';
-    $('stepTopic').textContent = 'В ntfy подпишись по этой ссылке или добавь сервер и тему ниже:';
-    $('topicLabel').textContent = 'Закрытая тема:';
+    $('stepServer').textContent = 'В ntfy открой Настройки → Сервер по умолчанию и введи адрес ниже без «/» на конце:';
+    $('stepTopic').textContent = 'Вернись, нажми «+» → добавь подписку и вставь только имя темы ниже, без адреса сервера:';
+    $('topicLabel').textContent = 'Имя закрытой темы:';
     $('topicNote').textContent = 'Название темы — секрет. Не пересылай его другим.';
     $('install').textContent = 'Установить ntfy из App Store';
-    $('copy').textContent = 'Скопировать сервер и тему';
+    $('copy').textContent = 'Скопировать имя темы';
     $('test').textContent = 'Отправить тестовое уведомление';
     $('disableOld').textContent = 'Отключить старые Web Push уведомления';
     $('privacy').textContent = 'Эта страница сохраняет адрес сервера и API-токен только в браузере этого устройства. После настройки уведомления будут приходить через ntfy; нажатие должно открыть соответствующий чат AfterGram.';
@@ -60,13 +60,11 @@
     try {
       const response = await ownerFetch('/v1/ntfy-config');
       ntfyConfig = await response.json();
-      if (typeof ntfyConfig.serverUrl !== 'string' || typeof ntfyConfig.topic !== 'string' ||
-        typeof ntfyConfig.subscriptionUrl !== 'string' || !/^[a-f0-9]{64}$/.test(ntfyConfig.topic)) {
+      if (typeof ntfyConfig.serverUrl !== 'string' || typeof ntfyConfig.topic !== 'string' || !/^[a-f0-9]{64}$/.test(ntfyConfig.topic)) {
         throw new Error(isRu ? 'Сервер вернул некорректные настройки ntfy.' : 'The server returned invalid ntfy settings.');
       }
       $('ntfyServer').textContent = ntfyConfig.serverUrl;
       $('ntfyTopic').textContent = ntfyConfig.topic;
-      $('subscriptionUrl').textContent = ntfyConfig.subscriptionUrl;
       $('setup').hidden = false;
       $('status').textContent = isRu ? 'Настройки загружены. Добавь сервер и тему в ntfy.' : 'Settings loaded. Add the server and topic in ntfy.';
     } catch (error) {
@@ -76,10 +74,10 @@
 
   $('copy').addEventListener('click', async () => {
     if (!ntfyConfig) return;
-    const value = ntfyConfig.subscriptionUrl;
+    const value = ntfyConfig.topic;
     try {
       await navigator.clipboard.writeText(value);
-      $('status').textContent = isRu ? 'Ссылка скопирована. Добавь её в ntfy как подписку.' : 'Copied. Add this URL in ntfy as a subscription.';
+      $('status').textContent = isRu ? 'Имя темы скопировано. Вставь его в форму подписки ntfy.' : 'Topic name copied. Paste it into the ntfy subscription form.';
     } catch {
       $('status').textContent = isRu ? 'Не удалось скопировать — выдели значения выше вручную.' : 'Could not copy; select the values above manually.';
     }
