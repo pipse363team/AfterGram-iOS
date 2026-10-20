@@ -95,7 +95,10 @@ export async function formatTelegramNotification(event, { client, avatarCache } 
   const description = isPrivate || !senderName ? content : `${senderName}: ${content}`;
   custom.message_id = String(message.id);
   const avatarEntity = isPrivate ? sender ?? chat : chat ?? sender;
-  const avatar = await cachedProfilePhoto(client, avatarEntity, `${custom.peer_type}:${custom.peer_id}`, avatarCache);
+  let avatar = await cachedProfilePhoto(client, avatarEntity, `${custom.peer_type}:${custom.peer_id}`, avatarCache);
+  if (!avatar && sender && sender !== avatarEntity) {
+    avatar = await cachedProfilePhoto(client, sender, `sender:${String(sender.id ?? `${custom.peer_id}:${message.id}`)}`, avatarCache);
+  }
   return { title: title.slice(0, 120), description: description.slice(0, 500), ...(avatar ? { avatar } : {}), custom };
 }
 

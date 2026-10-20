@@ -63,6 +63,31 @@ test('adds a cached chat profile photo for richer iOS notifications', async () =
   assert.equal(downloads, 1);
 });
 
+test('falls back to the message sender photo when a group has no chat photo', async () => {
+  const photo = Buffer.from([0xff, 0xd8, 0xff, 0xd9]);
+  const chat = { id: 42, title: 'Friends' };
+  const sender = { id: 15, firstName: 'Sam' };
+  const downloaded = [];
+  const client = {
+    downloadProfilePhoto: async entity => {
+      downloaded.push(entity);
+      return entity === sender ? photo : undefined;
+    },
+  };
+  const event = {
+    getChat: async () => chat,
+    message: {
+      id: 7,
+      peerId: { className: 'PeerChat', chatId: 42n },
+      getSender: async () => sender,
+      message: 'hello',
+    },
+  };
+  const payload = await formatTelegramNotification(event, { client, avatarCache: new Map() });
+  assert.equal(payload.avatar, photo.toString('base64'));
+  assert.deepEqual(downloaded, [chat, sender]);
+});
+
 test('does not notify for outgoing or unsupported peer messages', async () => {
   assert.equal(await formatTelegramNotification({ message: { out: true, id: 1 } }), undefined);
   assert.equal(await formatTelegramNotification({ message: { id: 1, peerId: { className: 'PeerSecret' } } }), undefined);
