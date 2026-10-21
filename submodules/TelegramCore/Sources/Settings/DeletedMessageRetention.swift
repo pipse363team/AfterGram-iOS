@@ -2,6 +2,27 @@ import Foundation
 import Postbox
 import SwiftSignalKit
 
+private let deletedMessageRetentionFileQueue = DispatchQueue(label: "org.telegram.deletedMessageRetention.files", qos: .utility)
+
+/// File-system work for retained media must not run on the UI queue. The result is
+/// returned on main so the prefetcher's state machine stays confined to that queue.
+func performDeletedMessageRetentionFileOperation<T>(_ operation: @escaping () -> T, completion: @escaping (T) -> Void) -> Disposable {
+    let cancelled = Atomic<Bool>(value: false)
+    let workItem = DispatchWorkItem {
+        guard !cancelled.with({ $0 }) else { return }
+        let result = operation()
+        DispatchQueue.main.async {
+            guard !cancelled.with({ $0 }) else { return }
+            completion(result)
+        }
+    }
+    deletedMessageRetentionFileQueue.async(execute: workItem)
+    return ActionDisposable {
+        _ = cancelled.swap(true)
+        workItem.cancel()
+    }
+}
+
 public struct DeletedMessageRetentionSettings: Codable, Equatable {
     public var enabled: Bool
     public static let defaultValue = DeletedMessageRetentionSettings(enabled: true)
@@ -230,6 +251,8 @@ public final class DeletedMessageMediaPrefetcher {
     private var known = Set<MediaResourceId>()
     private var waitingMessages: [MediaResourceId: Set<MessageId>] = [:]
     private var active: [MediaResourceId: DisposableSet] = [:]
+    private var fileOperations: [MediaResourceId: Disposable] = [:]
+    private var generation: Int = 0
 
     init(account: Account) {
         self.account = account
@@ -239,9 +262,12 @@ public final class DeletedMessageMediaPrefetcher {
             let initialMessages = self.initialMessages
             self.initialMessages.removeAll()
             if !settings.enabled {
+                self.generation &+= 1
                 self.pending.removeAll()
                 self.active.values.forEach { $0.dispose() }
                 self.active.removeAll()
+                self.fileOperations.values.forEach { $0.dispose() }
+                self.fileOperations.removeAll()
                 self.known.removeAll()
                 self.waitingMessages.removeAll()
             } else {
@@ -253,6 +279,7 @@ public final class DeletedMessageMediaPrefetcher {
     deinit {
         self.settingsDisposable.dispose()
         self.active.values.forEach { $0.dispose() }
+        self.fileOperations.values.forEach { $0.dispose() }
     }
 
     public func prepare(_ message: Message) {
@@ -272,12 +299,25 @@ public final class DeletedMessageMediaPrefetcher {
                     resources = image.representations.map { $0.resource }
                 }
                 for resource in resources where !(resource is LocalFileMediaResource) {
-                    if copyRetainedMedia(resource: resource, mediaBox: account.postbox.mediaBox) != nil { continue }
                     self.waitingMessages[resource.id, default: []].insert(message.id)
-                    if self.known.insert(resource.id).inserted { self.pending.append((message, media, resource)) }
+                    guard self.known.insert(resource.id).inserted else { continue }
+                    let generation = self.generation
+                    let operation = performDeletedMessageRetentionFileOperation({
+                        copyRetainedMedia(resource: resource, mediaBox: account.postbox.mediaBox) != nil
+                    }, completion: { [weak self] alreadyRetained in
+                        guard let self, self.generation == generation, self.enabled == true else { return }
+                        self.fileOperations.removeValue(forKey: resource.id)
+                        if alreadyRetained {
+                            self.known.remove(resource.id)
+                            self.waitingMessages.removeValue(forKey: resource.id)
+                        } else {
+                            self.pending.append((message, media, resource))
+                            self.advance()
+                        }
+                    })
+                    self.fileOperations[resource.id] = operation
                 }
             }
-            self.advance()
         }
     }
 
@@ -287,29 +327,40 @@ public final class DeletedMessageMediaPrefetcher {
             let (message, media, resource) = self.pending.removeFirst()
             let bag = DisposableSet()
             self.active[resource.id] = bag
+            let generation = self.generation
             bag.add((fetchedMediaResource(mediaBox: account.postbox.mediaBox, userLocation: .peer(message.id.peerId), userContentType: .other, reference: .media(media: .message(message: MessageReference(message), media: media), resource: resource)) |> deliverOnMainQueue).start(error: { [weak self] _ in
-                self?.finish(resource.id)
+                guard let self, self.generation == generation, self.enabled == true else { return }
+                self.finish(resource.id)
             }))
             bag.add((account.postbox.mediaBox.resourceData(resource) |> filter { $0.complete } |> take(1) |> deliverOnMainQueue).start(next: { [weak self, weak account] data in
-                guard let self, let account, self.enabled == true else { return }
-                let messageIds = Array(self.waitingMessages[resource.id] ?? [])
-                if copyRetainedMedia(resource: resource, mediaBox: account.postbox.mediaBox, source: data.path) != nil {
-                    let _ = account.postbox.transaction { transaction -> Void in
-                        for id in messageIds {
-                            guard let current = transaction.getMessage(id), current.isRemotelyDeleted else { continue }
-                            transaction.updateMessage(id, update: { current in
-                                return .update(retentionStoreMessage(current, attributes: current.attributes, media: retainedMessageMedia(current.media, mediaBox: account.postbox.mediaBox), groupingKey: current.groupingKey))
-                            })
-                        }
-                    }.start()
-                }
-                self.finish(resource.id)
+                guard let self, let account, self.generation == generation, self.enabled == true else { return }
+                let operation = performDeletedMessageRetentionFileOperation({
+                    copyRetainedMedia(resource: resource, mediaBox: account.postbox.mediaBox, source: data.path) != nil
+                }, completion: { [weak self, weak account] copied in
+                    guard let self, let account, self.generation == generation, self.enabled == true else { return }
+                    self.fileOperations.removeValue(forKey: resource.id)
+                    if copied {
+                        let messageIds = Array(self.waitingMessages[resource.id] ?? [])
+                        let _ = account.postbox.transaction { transaction -> Void in
+                            for id in messageIds {
+                                guard let current = transaction.getMessage(id), current.isRemotelyDeleted else { continue }
+                                transaction.updateMessage(id, update: { current in
+                                    return .update(retentionStoreMessage(current, attributes: current.attributes, media: retainedMessageMedia(current.media, mediaBox: account.postbox.mediaBox), groupingKey: current.groupingKey))
+                                })
+                            }
+                        }.start()
+                    }
+                    self.finish(resource.id)
+                })
+                self.fileOperations[resource.id] = operation
+                bag.add(operation)
             }))
         }
     }
 
     private func finish(_ id: MediaResourceId) {
         self.active.removeValue(forKey: id)?.dispose()
+        self.fileOperations.removeValue(forKey: id)?.dispose()
         self.known.remove(id)
         self.waitingMessages.removeValue(forKey: id)
         self.advance()

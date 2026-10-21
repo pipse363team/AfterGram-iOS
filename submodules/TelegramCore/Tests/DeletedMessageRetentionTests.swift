@@ -26,6 +26,30 @@ final class DeletedMessageRetentionTests: XCTestCase {
         super.tearDown()
     }
 
+    func testRetainedMediaFileOperationsRunSeriallyOffMainAndCompleteOnMain() {
+        let completed = expectation(description: "file operation callbacks")
+        completed.expectedFulfillmentCount = 3
+        var operationResults: [(Int, Bool)] = []
+        var callbackOrder: [Int] = []
+        var disposables: [Disposable] = []
+
+        for index in 0 ..< 3 {
+            disposables.append(performDeletedMessageRetentionFileOperation({
+                (index, Thread.isMainThread)
+            }, completion: { result in
+                XCTAssertTrue(Thread.isMainThread)
+                operationResults.append(result)
+                callbackOrder.append(result.0)
+                completed.fulfill()
+            }))
+        }
+
+        wait(for: [completed], timeout: 5)
+        XCTAssertEqual(callbackOrder, [0, 1, 2])
+        XCTAssertEqual(operationResults.map(\.1), [false, false, false])
+        disposables.forEach { $0.dispose() }
+    }
+
     func testRetainedBytesSurviveRemovalOfOriginalCacheFile() throws {
         let resource = LocalFileMediaResource(fileId: 321, size: 5)
         let original = self.directory + "/source"
