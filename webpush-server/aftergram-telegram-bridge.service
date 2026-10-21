@@ -11,7 +11,7 @@ Group=aftergram-webpush
 WorkingDirectory=/opt/aftergram-webpush
 EnvironmentFile=/etc/aftergram-webpush.env
 EnvironmentFile=/etc/aftergram-telegram.env
-Environment=WEBPUSH_API_URL=https://144.31.165.8:9443
+Environment=WEBPUSH_API_URL=https://your-server.example:9443
 Environment=TELEGRAM_SESSION_FILE=/var/lib/aftergram-telegram/telegram.session
 StateDirectory=aftergram-telegram
 StateDirectoryMode=0700
