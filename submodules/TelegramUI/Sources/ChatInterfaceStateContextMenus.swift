@@ -2187,6 +2187,44 @@ func contextMenuForChatPresentationInterfaceState(chatPresentationInterfaceState
             return false
         })
 
+        if !message.editedMessageRevisions.isEmpty {
+            let isRussian = chatPresentationInterfaceState.strings.baseLanguageCode.lowercased().hasPrefix("ru")
+            let title = isRussian ? "История изменений" : "Edit History"
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateStyle = .medium
+            dateFormatter.timeStyle = .short
+            let entries = message.editedMessageRevisions.reversed().map { revision -> String in
+                let date = dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(revision.timestamp)))
+                let mediaLabels = revision.media.compactMap { item -> String? in
+                    if item is TelegramMediaImage { return isRussian ? "Фото" : "Photo" }
+                    if let file = item as? TelegramMediaFile {
+                        if file.isInstantVideo { return isRussian ? "Видеосообщение" : "Video message" }
+                        if file.isVideo { return isRussian ? "Видео" : "Video" }
+                        if file.isVoice { return isRussian ? "Голосовое сообщение" : "Voice message" }
+                        return isRussian ? "Файл" : "File"
+                    }
+                    return nil
+                }
+                let body = revision.text.isEmpty ? mediaLabels.joined(separator: ", ") : revision.text
+                let attachmentLine = !revision.text.isEmpty && !mediaLabels.isEmpty ? "\n\(mediaLabels.joined(separator: ", "))" : ""
+                return "\(date)\n\(body)\(attachmentLine)"
+            }
+            let text = entries.joined(separator: "\n\n")
+            actions.append(.action(ContextMenuActionItem(text: title, icon: { theme in
+                return generateTintedImage(image: UIImage(systemName: "clock.arrow.circlepath"), color: theme.actionSheet.primaryTextColor)
+            }, action: { c, _ in
+                c?.dismiss(completion: {
+                    let presentationData = context.sharedContext.currentPresentationData.with { $0 }
+                    controllerInteraction.presentController(textAlertController(
+                        context: context,
+                        title: title,
+                        text: text,
+                        actions: [TextAlertAction(type: .defaultAction, title: presentationData.strings.Common_OK, action: {})]
+                    ), nil)
+                })
+            })))
+        }
+
         if canViewAuthor {
             actions.insert(.custom(ChatMessageAuthorContextItem(context: context, message: message, action: { c, f, peer in
                 c.dismiss(completion: {

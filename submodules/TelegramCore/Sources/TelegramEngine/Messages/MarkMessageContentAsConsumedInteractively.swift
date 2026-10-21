@@ -208,19 +208,8 @@ func markMessageContentAsConsumedRemotely(transaction: Transaction, messageId: M
                     if message.id.peerId.namespace == Namespaces.Peer.SecretChat {
                     } else {
                         if attribute.timeout == viewOnceTimeout || timestamp >= autoremoveExpiryTimestamp(countdownBeginTime: countdownBeginTime, timeout: attribute.timeout) {
-                            for i in 0 ..< updatedMedia.count {
-                                if let _ = updatedMedia[i] as? TelegramMediaImage {
-                                    updatedMedia[i] = TelegramMediaExpiredContent(data: .image)
-                                } else if let file = updatedMedia[i] as? TelegramMediaFile {
-                                    if file.isInstantVideo {
-                                        updatedMedia[i] = TelegramMediaExpiredContent(data: .videoMessage)
-                                    } else if file.isVoice {
-                                        updatedMedia[i] = TelegramMediaExpiredContent(data: .voiceMessage)
-                                    } else {
-                                        updatedMedia[i] = TelegramMediaExpiredContent(data: .file)
-                                    }
-                                }
-                            }
+                            let settings = transaction.getPreferencesEntry(key: deletedMessageRetentionKey)?.get(DeletedMessageRetentionSettings.self) ?? .defaultValue
+                            updatedMedia = retainedOrExpiredSecretMedia(updatedMedia, enabled: settings.enabled, mediaBox: postbox.mediaBox)
                         }
                     }
                 }
@@ -231,20 +220,9 @@ func markMessageContentAsConsumedRemotely(transaction: Transaction, messageId: M
                     
                     if message.id.peerId.namespace == Namespaces.Peer.SecretChat {
                     } else {
-                        for i in 0 ..< updatedMedia.count {
-                            if attribute.timeout == viewOnceTimeout || timestamp >= autoremoveExpiryTimestamp(countdownBeginTime: countdownBeginTime, timeout: attribute.timeout) {
-                                if let _ = updatedMedia[i] as? TelegramMediaImage {
-                                    updatedMedia[i] = TelegramMediaExpiredContent(data: .image)
-                                } else if let file = updatedMedia[i] as? TelegramMediaFile {
-                                    if file.isInstantVideo {
-                                        updatedMedia[i] = TelegramMediaExpiredContent(data: .videoMessage)
-                                    } else if file.isVoice {
-                                        updatedMedia[i] = TelegramMediaExpiredContent(data: .voiceMessage)
-                                    } else {
-                                        updatedMedia[i] = TelegramMediaExpiredContent(data: .file)
-                                    }
-                                }
-                            }
+                        if attribute.timeout == viewOnceTimeout || timestamp >= autoremoveExpiryTimestamp(countdownBeginTime: countdownBeginTime, timeout: attribute.timeout) {
+                            let settings = transaction.getPreferencesEntry(key: deletedMessageRetentionKey)?.get(DeletedMessageRetentionSettings.self) ?? .defaultValue
+                            updatedMedia = retainedOrExpiredSecretMedia(updatedMedia, enabled: settings.enabled, mediaBox: postbox.mediaBox)
                         }
                     }
                 }

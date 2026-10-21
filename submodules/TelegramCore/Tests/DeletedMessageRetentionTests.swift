@@ -42,6 +42,36 @@ final class DeletedMessageRetentionTests: XCTestCase {
         XCTAssertNil(copyRetainedMedia(resource: LocalFileMediaResource(fileId: 999), mediaBox: self.mediaBox))
     }
 
+    func testViewOncePhotoKeepsAvailableBytesWhenRetentionIsEnabled() throws {
+        let resource = LocalFileMediaResource(fileId: 654, size: 4)
+        self.mediaBox.storeResourceData(resource.id, data: Data([4, 3, 2, 1]), synchronous: true)
+        let image = TelegramMediaImage(
+            imageId: MediaId(namespace: Namespaces.Media.CloudImage, id: 654),
+            representations: [TelegramMediaImageRepresentation(dimensions: PixelDimensions(width: 10, height: 10), resource: resource, progressiveSizes: [], immediateThumbnailData: nil)],
+            immediateThumbnailData: nil,
+            reference: nil,
+            partialReference: nil,
+            flags: []
+        )
+
+        let result = try XCTUnwrap(retainedOrExpiredSecretMedia([image], enabled: true, mediaBox: self.mediaBox).first as? TelegramMediaImage)
+        XCTAssertTrue(hasRetainedMediaBytes(result, mediaBox: self.mediaBox))
+        XCTAssertTrue(result.representations[0].resource is LocalFileMediaResource)
+    }
+
+    func testViewOnceMediaWithoutSavedBytesExpiresAndDisabledRetentionDoesNotCopy() throws {
+        let resource = LocalFileMediaResource(fileId: 655, size: 4)
+        self.mediaBox.storeResourceData(resource.id, data: Data([4, 3, 2, 1]), synchronous: true)
+        let file = TelegramMediaFile(fileId: MediaId(namespace: Namespaces.Media.CloudFile, id: 655), partialReference: nil, resource: resource, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: 4, attributes: [.Video(duration: 1, size: PixelDimensions(width: 10, height: 10), flags: [], preloadSize: nil, coverTime: nil, videoCodec: nil)], alternativeRepresentations: [])
+
+        let disabled = try XCTUnwrap(retainedOrExpiredSecretMedia([file], enabled: false, mediaBox: self.mediaBox).first as? TelegramMediaExpiredContent)
+        XCTAssertEqual(disabled.data, .file)
+
+        let missing = TelegramMediaFile(fileId: MediaId(namespace: Namespaces.Media.CloudFile, id: 656), partialReference: nil, resource: LocalFileMediaResource(fileId: 656), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: 4, attributes: [.Video(duration: 1, size: PixelDimensions(width: 10, height: 10), flags: [], preloadSize: nil, coverTime: nil, videoCodec: nil)], alternativeRepresentations: [])
+        let expiredMissing = try XCTUnwrap(retainedOrExpiredSecretMedia([missing], enabled: true, mediaBox: self.mediaBox).first as? TelegramMediaExpiredContent)
+        XCTAssertEqual(expiredMissing.data, .file)
+    }
+
     func testGifVideoAndRoundVideoKeepTheirPlaybackMetadata() throws {
         let cases: [[TelegramMediaFileAttribute]] = [
             [.Animated, .Video(duration: 3, size: PixelDimensions(width: 320, height: 240), flags: [], preloadSize: nil, coverTime: nil, videoCodec: nil)],
@@ -78,6 +108,25 @@ final class DeletedMessageRetentionTests: XCTestCase {
         XCTAssertEqual(stored.text, "original text")
         XCTAssertNil(stored.groupingKey)
         XCTAssertEqual(stored.timestamp, message.timestamp)
+    }
+
+    func testEditedMessageHistoryCapturesPreviousTextAndIgnoresNoOpEdits() throws {
+        let previous = SparseFixtures.message(SparseFixtures.channelId, 77, timestamp: 100).withUpdatedText("before edit")
+        let attributes = editedMessageHistoryAttributes(previousMessage: previous, updatedText: "after edit", updatedAttributes: [], updatedMedia: [], mediaBox: self.mediaBox)
+        let history = try XCTUnwrap(attributes.first(where: { $0 is EditedMessageHistoryAttribute }) as? EditedMessageHistoryAttribute)
+        XCTAssertEqual(history.revisions.count, 1)
+        XCTAssertEqual(history.revisions[0].text, "before edit")
+
+        let updated = previous.withUpdatedText("after edit").withUpdatedAttributes(attributes)
+        let repeatedAttributes = editedMessageHistoryAttributes(previousMessage: updated, updatedText: "after edit", updatedAttributes: updated.attributes, updatedMedia: updated.media, mediaBox: self.mediaBox)
+        let repeatedHistory = try XCTUnwrap(repeatedAttributes.first(where: { $0 is EditedMessageHistoryAttribute }) as? EditedMessageHistoryAttribute)
+        XCTAssertEqual(repeatedHistory.revisions.count, 1)
+        XCTAssertEqual(repeatedHistory.revisions[0].text, "before edit")
+
+        let encoder = PostboxEncoder()
+        history.encode(encoder)
+        let decoded = EditedMessageHistoryAttribute(decoder: PostboxDecoder(buffer: MemoryBuffer(data: encoder.makeData())))
+        XCTAssertEqual(decoded.revisions.map(\.text), ["before edit"])
     }
 
     func testRemoteDeleteRetainsRowAndManualDeleteStillRemovesIt() throws {

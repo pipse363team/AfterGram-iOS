@@ -9,6 +9,85 @@ public struct DeletedMessageRetentionSettings: Codable, Equatable {
 
 public let deletedMessageRetentionKey = applicationSpecificPreferencesKey(0x574741)
 
+public final class EditedMessageRevision: PostboxCoding {
+    public let timestamp: Int32
+    public let text: String
+    public let entities: [MessageTextEntity]
+    public let media: [Media]
+
+    public init(timestamp: Int32, text: String, entities: [MessageTextEntity], media: [Media]) {
+        self.timestamp = timestamp
+        self.text = text
+        self.entities = entities
+        self.media = media
+    }
+
+    public init(decoder: PostboxDecoder) {
+        self.timestamp = decoder.decodeInt32ForKey("t", orElse: 0)
+        self.text = decoder.decodeStringForKey("x", orElse: "")
+        self.entities = decoder.decodeObjectArrayForKey("e")
+        let decodedMedia: [PostboxCoding] = decoder.decodeObjectArrayForKey("m")
+        self.media = decodedMedia.compactMap { $0 as? Media }
+    }
+
+    public func encode(_ encoder: PostboxEncoder) {
+        encoder.encodeInt32(self.timestamp, forKey: "t")
+        encoder.encodeString(self.text, forKey: "x")
+        encoder.encodeObjectArray(self.entities, forKey: "e")
+        encoder.encodeObjectArrayWithEncoder(self.media, forKey: "m", encoder: { media, encoder in
+            media.encode(encoder)
+        })
+    }
+}
+
+public final class EditedMessageHistoryAttribute: MessageAttribute {
+    public let revisions: [EditedMessageRevision]
+
+    public init(revisions: [EditedMessageRevision]) {
+        self.revisions = revisions
+    }
+
+    public required init(decoder: PostboxDecoder) {
+        self.revisions = decoder.decodeObjectArrayForKey("r")
+    }
+
+    public func encode(_ encoder: PostboxEncoder) {
+        encoder.encodeObjectArray(self.revisions, forKey: "r")
+    }
+}
+
+public extension Message {
+    var editedMessageRevisions: [EditedMessageRevision] {
+        return (self.attributes.first(where: { $0 is EditedMessageHistoryAttribute }) as? EditedMessageHistoryAttribute)?.revisions ?? []
+    }
+}
+
+/// Keep the prior content on the current message row before applying a server edit.
+/// Repeated edit updates with identical content are ignored.
+func editedMessageHistoryAttributes(previousMessage: Message, updatedText: String, updatedAttributes: [MessageAttribute], updatedMedia: [Media], mediaBox: MediaBox) -> [MessageAttribute] {
+    let existing = previousMessage.editedMessageRevisions
+    let previousEntities = previousMessage.textEntitiesAttribute?.entities ?? []
+    let updatedEntities = (updatedAttributes.first(where: { $0 is TextEntitiesMessageAttribute }) as? TextEntitiesMessageAttribute)?.entities ?? []
+    let contentChanged = previousMessage.text != updatedText || previousEntities != updatedEntities || !areMediaArraysSemanticallyEqual(previousMessage.media, updatedMedia)
+    var revisions = existing
+    if contentChanged {
+        let timestamp = previousMessage.editedTime ?? previousMessage.timestamp
+        let revision = EditedMessageRevision(timestamp: timestamp, text: previousMessage.text, entities: previousEntities, media: retainedMessageMedia(previousMessage.media, mediaBox: mediaBox))
+        let duplicate = revisions.last.map { $0.text == revision.text && $0.entities == revision.entities && areMediaArraysSemanticallyEqual($0.media, revision.media) } ?? false
+        if !duplicate {
+            revisions.append(revision)
+            if revisions.count > 20 {
+                revisions.removeFirst(revisions.count - 20)
+            }
+        }
+    }
+    var result = updatedAttributes.filter { !($0 is EditedMessageHistoryAttribute) }
+    if !revisions.isEmpty {
+        result.append(EditedMessageHistoryAttribute(revisions: revisions))
+    }
+    return result
+}
+
 public func deletedMessageRetentionSettings(postbox: Postbox) -> Signal<DeletedMessageRetentionSettings, NoError> {
     return postbox.preferencesView(keys: [deletedMessageRetentionKey])
     |> map { $0.values[deletedMessageRetentionKey]?.get(DeletedMessageRetentionSettings.self) ?? .defaultValue }
@@ -109,6 +188,30 @@ func retainedMessageMedia(_ media: [Media], mediaBox: MediaBox) -> [Media] {
             return TelegramMediaImage(imageId: image.imageId, representations: image.representations.map { retainedImageRepresentation($0, mediaBox: mediaBox) }, videoRepresentations: image.videoRepresentations, immediateThumbnailData: image.immediateThumbnailData, emojiMarkup: image.emojiMarkup, reference: image.reference, partialReference: image.partialReference, flags: image.flags, video: image.video)
         }
         return media
+    }
+}
+
+/// Expire view-once media from the normal cache while keeping a separate copy when
+/// the retained-message setting is enabled and the bytes have already arrived.
+func retainedOrExpiredSecretMedia(_ media: [Media], enabled: Bool, mediaBox: MediaBox) -> [Media] {
+    return media.map { item in
+        if enabled,
+           let retained = retainedMessageMedia([item], mediaBox: mediaBox).first,
+           hasRetainedMediaBytes(retained, mediaBox: mediaBox) {
+            return retained
+        }
+        if item is TelegramMediaImage {
+            return TelegramMediaExpiredContent(data: .image)
+        } else if let file = item as? TelegramMediaFile {
+            if file.isInstantVideo {
+                return TelegramMediaExpiredContent(data: .videoMessage)
+            } else if file.isVoice {
+                return TelegramMediaExpiredContent(data: .voiceMessage)
+            } else {
+                return TelegramMediaExpiredContent(data: .file)
+            }
+        }
+        return item
     }
 }
 
