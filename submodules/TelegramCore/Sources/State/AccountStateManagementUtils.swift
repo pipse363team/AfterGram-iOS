@@ -5255,11 +5255,11 @@ func replayFinalState(
 
                 if let peerId = peerId {
                     for id in messageIds {
-                        markMessageContentAsConsumedRemotely(transaction: transaction, messageId: MessageId(peerId: peerId, namespace: Namespaces.Message.Cloud, id: id), consumeDate: date)
+                        markMessageContentAsConsumedRemotely(transaction: transaction, mediaBox: postbox.mediaBox, messageId: MessageId(peerId: peerId, namespace: Namespaces.Message.Cloud, id: id), consumeDate: date)
                     }
                 } else {
                     for messageId in transaction.messageIdsForGlobalIds(messageIds) {
-                        markMessageContentAsConsumedRemotely(transaction: transaction, messageId: messageId, consumeDate: date)
+                        markMessageContentAsConsumedRemotely(transaction: transaction, mediaBox: postbox.mediaBox, messageId: messageId, consumeDate: date)
                     }
                 }
             case let .UpdateMessageImpressionCount(id, count):

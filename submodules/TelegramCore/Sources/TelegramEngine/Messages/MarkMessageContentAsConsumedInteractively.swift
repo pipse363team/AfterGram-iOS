@@ -173,7 +173,7 @@ func _internal_markReactionsOrPollVotesAsSeenInteractively(postbox: Postbox, mes
     }
 }
 
-func markMessageContentAsConsumedRemotely(transaction: Transaction, messageId: MessageId, consumeDate: Int32?) {
+func markMessageContentAsConsumedRemotely(transaction: Transaction, mediaBox: MediaBox, messageId: MessageId, consumeDate: Int32?) {
     if let message = transaction.getMessage(messageId) {
         var updateMessage = false
         var updatedAttributes = message.attributes
@@ -209,7 +209,7 @@ func markMessageContentAsConsumedRemotely(transaction: Transaction, messageId: M
                     } else {
                         if attribute.timeout == viewOnceTimeout || timestamp >= autoremoveExpiryTimestamp(countdownBeginTime: countdownBeginTime, timeout: attribute.timeout) {
                             let settings = transaction.getPreferencesEntry(key: deletedMessageRetentionKey)?.get(DeletedMessageRetentionSettings.self) ?? .defaultValue
-                            updatedMedia = retainedOrExpiredSecretMedia(updatedMedia, enabled: settings.enabled, mediaBox: postbox.mediaBox)
+                            updatedMedia = retainedOrExpiredSecretMedia(updatedMedia, enabled: settings.enabled, mediaBox: mediaBox)
                         }
                     }
                 }
@@ -222,7 +222,7 @@ func markMessageContentAsConsumedRemotely(transaction: Transaction, messageId: M
                     } else {
                         if attribute.timeout == viewOnceTimeout || timestamp >= autoremoveExpiryTimestamp(countdownBeginTime: countdownBeginTime, timeout: attribute.timeout) {
                             let settings = transaction.getPreferencesEntry(key: deletedMessageRetentionKey)?.get(DeletedMessageRetentionSettings.self) ?? .defaultValue
-                            updatedMedia = retainedOrExpiredSecretMedia(updatedMedia, enabled: settings.enabled, mediaBox: postbox.mediaBox)
+                            updatedMedia = retainedOrExpiredSecretMedia(updatedMedia, enabled: settings.enabled, mediaBox: mediaBox)
                         }
                     }
                 }
