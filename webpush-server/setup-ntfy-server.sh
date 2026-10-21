@@ -7,27 +7,30 @@ if [[ ${EUID} -ne 0 ]]; then
 fi
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "$0")" && pwd)
-SERVER_URL=${NTFY_SERVER_URL:-https://144.31.165.8:9444}
-ATTACHMENT_BASE_URL=${NTFY_ATTACHMENT_BASE_URL:-https://144.31.165.8:9443}
-TLS_CERT=/etc/letsencrypt/live/csqtt-ip-144-31-165-8/fullchain.pem
-TLS_KEY=/etc/letsencrypt/live/csqtt-ip-144-31-165-8/privkey.pem
 ENV_FILE=/etc/aftergram-ntfy.env
+SERVER_URL=${NTFY_SERVER_URL:-}
+ATTACHMENT_BASE_URL=${NTFY_ATTACHMENT_BASE_URL:-}
+TLS_CERT=${NTFY_TLS_CERT:-}
+TLS_KEY=${NTFY_TLS_KEY:-}
 
-if [[ ! -r "$TLS_CERT" || ! -r "$TLS_KEY" ]]; then
-  echo "The existing Let's Encrypt IP certificate was not found at $TLS_CERT" >&2
+read_saved_setting() {
+  sed -n "s/^$1=//p" "$ENV_FILE" | head -n 1
+}
+
+if [[ -f "$ENV_FILE" ]]; then
+  [[ -n "$SERVER_URL" ]] || SERVER_URL=$(read_saved_setting NTFY_SERVER_URL)
+  [[ -n "$ATTACHMENT_BASE_URL" ]] || ATTACHMENT_BASE_URL=$(read_saved_setting NTFY_ATTACHMENT_BASE_URL)
+  [[ -n "$TLS_CERT" ]] || TLS_CERT=$(read_saved_setting NTFY_TLS_CERT)
+  [[ -n "$TLS_KEY" ]] || TLS_KEY=$(read_saved_setting NTFY_TLS_KEY)
+fi
+
+if [[ -z "$SERVER_URL" || -z "$ATTACHMENT_BASE_URL" || -z "$TLS_CERT" || -z "$TLS_KEY" ]]; then
+  echo "Set NTFY_SERVER_URL, NTFY_ATTACHMENT_BASE_URL, NTFY_TLS_CERT, and NTFY_TLS_KEY before running this installer." >&2
   exit 1
 fi
-if [[ -z ${NTFY_SERVER_URL:-} && -f "$ENV_FILE" ]]; then
-  saved_server_url=$(sed -n 's/^NTFY_SERVER_URL=//p' "$ENV_FILE" | head -n 1)
-  if [[ "$saved_server_url" == https://* && "$saved_server_url" != */ ]]; then
-    SERVER_URL=$saved_server_url
-  fi
-fi
-if [[ -z ${NTFY_ATTACHMENT_BASE_URL:-} && -f "$ENV_FILE" ]]; then
-  saved_attachment_base_url=$(sed -n 's/^NTFY_ATTACHMENT_BASE_URL=//p' "$ENV_FILE" | head -n 1)
-  if [[ "$saved_attachment_base_url" == https://* && "$saved_attachment_base_url" != */ ]]; then
-    ATTACHMENT_BASE_URL=$saved_attachment_base_url
-  fi
+if [[ ! -r "$TLS_CERT" || ! -r "$TLS_KEY" ]]; then
+  echo "The configured TLS certificate or key is not readable." >&2
+  exit 1
 fi
 if [[ "$SERVER_URL" != https://* || "$SERVER_URL" == */ ]]; then
   echo "NTFY_SERVER_URL must be an HTTPS URL without a trailing slash" >&2
@@ -87,11 +90,15 @@ enable-signup: false
 EOF
 install -o root -g ntfy -m 0640 "$temporary_config" /etc/ntfy/server.yml
 temporary_unit=$(mktemp)
-sed "s|^ExecStart=@NTFY_BIN@ serve$|ExecStart=$NTFY_BIN serve|" "$SCRIPT_DIR/aftergram-ntfy.service" > "$temporary_unit"
+sed \
+  -e "s|^ExecStart=@NTFY_BIN@ serve$|ExecStart=$NTFY_BIN serve|" \
+  -e "s|^LoadCredential=ntfy-tls-cert:.*|LoadCredential=ntfy-tls-cert:$TLS_CERT|" \
+  -e "s|^LoadCredential=ntfy-tls-key:.*|LoadCredential=ntfy-tls-key:$TLS_KEY|" \
+  "$SCRIPT_DIR/aftergram-ntfy.service" > "$temporary_unit"
 install -o root -g root -m 0644 "$temporary_unit" /etc/systemd/system/aftergram-ntfy.service
 temporary_env=$(mktemp)
 trap 'rm -f "$temporary_config" "$temporary_env" "$temporary_unit"' EXIT
-printf 'NTFY_SERVER_URL=%s\nNTFY_TOPIC=%s\nNTFY_ATTACHMENT_BASE_URL=%s\n' "$SERVER_URL" "$topic" "$ATTACHMENT_BASE_URL" > "$temporary_env"
+printf 'NTFY_SERVER_URL=%s\nNTFY_TOPIC=%s\nNTFY_ATTACHMENT_BASE_URL=%s\nNTFY_TLS_CERT=%s\nNTFY_TLS_KEY=%s\n' "$SERVER_URL" "$topic" "$ATTACHMENT_BASE_URL" "$TLS_CERT" "$TLS_KEY" > "$temporary_env"
 install -o root -g root -m 0600 "$temporary_env" "$ENV_FILE"
 
 systemctl disable --now ntfy.service >/dev/null 2>&1 || true

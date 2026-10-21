@@ -14,8 +14,8 @@ EnvironmentFile=/etc/aftergram-webpush.env
 EnvironmentFile=-/etc/aftergram-ntfy.env
 Environment=WEBPUSH_TLS_CERT=%d/webpush-tls-cert
 Environment=WEBPUSH_TLS_KEY=%d/webpush-tls-key
-LoadCredential=webpush-tls-cert:/etc/letsencrypt/live/csqtt-ip-144-31-165-8/fullchain.pem
-LoadCredential=webpush-tls-key:/etc/letsencrypt/live/csqtt-ip-144-31-165-8/privkey.pem
+LoadCredential=webpush-tls-cert:/etc/letsencrypt/live/your-server.example/fullchain.pem
+LoadCredential=webpush-tls-key:/etc/letsencrypt/live/your-server.example/privkey.pem
 ExecStart=/usr/bin/node /opt/aftergram-webpush/server.mjs
 Restart=on-failure
 RestartSec=3
