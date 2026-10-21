@@ -37,7 +37,7 @@ public func deletedMessageArchiveController(context: AccountContext) -> ViewCont
     |> map { presentationData, settings -> (ItemListControllerState, (ItemListNodeState, Any)) in
         let ru = presentationData.strings.baseLanguageCode.lowercased().hasPrefix("ru")
         let state = ItemListControllerState(presentationData: ItemListPresentationData(presentationData), title: .text(ru ? "Удалённые сообщения" : "Deleted Messages"), leftNavigationButton: nil, rightNavigationButton: nil, backNavigationButton: ItemListBackButton(title: presentationData.strings.Common_Back))
-        let list = ItemListNodeState(presentationData: ItemListPresentationData(presentationData), entries: [.enabled(settings.enabled, ru)], style: .blocks, animateChanges: false)
+        let list = ItemListNodeState(presentationData: ItemListPresentationData(presentationData), entries: [RetentionSettingsEntry.enabled(settings.enabled, ru)], style: .blocks, animateChanges: false)
         return (state, (list, update))
     }
     return ItemListController(context: context, state: signal)
