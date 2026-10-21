@@ -9,6 +9,14 @@ import ItemListUI
 import PresentationDataUtils
 import AppBundle
 
+private func localizedCustomIconName(_ strings: PresentationStrings, english: String, russian: String) -> String {
+    let languageCode = strings.primaryComponent.languageCode.lowercased()
+    if languageCode == "ru" || languageCode.hasPrefix("ru-") || languageCode.hasPrefix("ru_") {
+        return russian
+    }
+    return english
+}
+
 private func generateBorderImage(theme: PresentationTheme, bordered: Bool, selected: Bool) -> UIImage? {
     return generateImage(CGSize(width: 30.0, height: 30.0), rotatedContext: { size, context in
         let bounds = CGRect(origin: CGPoint(), size: size)
@@ -371,23 +379,23 @@ class ThemeSettingsAppIconItemNode: ListViewItemNode, ItemListItemNode {
                         imageNode.lockNode.image = strongSelf.lockImage
                         
                         if let image = UIImage(named: icon.imageName, in: getAppBundle(), compatibleWith: nil) {
-                            let selected = icon.name == item.currentIconName
+                            let selected = icon.isDefault ? item.currentIconName == nil : icon.name == item.currentIconName
 
                             var name = "Icon"
                             var bordered = true
                             switch icon.name {
-                                case "BlueIcon":
+                                case "Blue":
                                     name = item.strings.Appearance_AppIconDefault
-                                case "BlackIcon":
+                                case "Black":
                                     name = item.strings.Appearance_AppIconDefaultX
-                                case "BlueClassicIcon":
+                                case "BlueClassic":
                                     name = item.strings.Appearance_AppIconClassic
-                                case "BlackClassicIcon":
+                                case "BlackClassic":
                                     name = item.strings.Appearance_AppIconClassicX
-                                case "BlueFilledIcon":
+                                case "BlueFilled":
                                     name = item.strings.Appearance_AppIconFilled
                                     bordered = false
-                                case "BlackFilledIcon":
+                                case "BlackFilled":
                                     name = item.strings.Appearance_AppIconFilledX
                                     bordered = false
                                 case "WhiteFilled":
@@ -396,6 +404,12 @@ class ThemeSettingsAppIconItemNode: ListViewItemNode, ItemListItemNode {
                                     name = item.strings.Appearance_AppIconNew1
                                 case "New2":
                                     name = item.strings.Appearance_AppIconNew2
+                                case "AfterGramClassic":
+                                    name = localizedCustomIconName(item.strings, english: item.strings.Appearance_AppIconAfterGramClassic, russian: "Классика")
+                                case "AfterGramMidnight":
+                                    name = localizedCustomIconName(item.strings, english: item.strings.Appearance_AppIconAfterGramMidnight, russian: "Полночь")
+                                case "AfterGramSunset":
+                                    name = localizedCustomIconName(item.strings, english: item.strings.Appearance_AppIconAfterGramSunset, russian: "Закат")
                                 case "Premium":
                                     name = item.strings.Appearance_AppIconPremium
                                 case "PremiumBlack":

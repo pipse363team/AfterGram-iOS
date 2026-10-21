@@ -537,7 +537,7 @@ public func themeSettingsController(context: AccountContext, focusOnItemTag: The
     
     let availableAppIcons: Signal<[PresentationAppIcon], NoError> = .single(appIcons)
     let currentAppIconName = ValuePromise<String?>()
-    currentAppIconName.set(currentAppIcon?.name ?? "Blue")
+    currentAppIconName.set(currentAppIcon?.isDefault == true ? nil : currentAppIcon?.name)
     
     let cloudThemes = Promise<[TelegramTheme]>()
     let updatedCloudThemes = context.engine.themes.themes(accountManager: context.sharedContext.accountManager)
@@ -634,8 +634,10 @@ public func themeSettingsController(context: AccountContext, focusOnItemTag: The
                 }
                 pushControllerImpl?(controller)
             } else {
-                currentAppIconName.set(icon.name)
-                context.sharedContext.applicationBindings.requestSetAlternateIconName(icon.isDefault ? nil : icon.name, { _ in
+                context.sharedContext.applicationBindings.requestSetAlternateIconName(icon.isDefault ? nil : icon.name, { success in
+                    if success {
+                        currentAppIconName.set(icon.isDefault ? nil : icon.name)
+                    }
                 })
             }
         })

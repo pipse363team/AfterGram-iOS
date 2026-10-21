@@ -4583,6 +4583,9 @@ Sorry for the inconvenience.";
 "Appearance.AppIconFilledX" = "Filled X";
 "Appearance.AppIconNew1" = "Sunset";
 "Appearance.AppIconNew2" = "Aqua";
+"Appearance.AppIconAfterGramClassic" = "AfterGram Classic";
+"Appearance.AppIconAfterGramMidnight" = "AfterGram Midnight";
+"Appearance.AppIconAfterGramSunset" = "AfterGram Sunset";
 
 "Appearance.ThemeCarouselClassic" = "Classic";
 "Appearance.ThemeCarouselDay" = "Day";
