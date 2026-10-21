@@ -103,11 +103,13 @@ test('serves a short-lived profile photo as a private unguessable ntfy attachmen
     const attach = JSON.parse(published.body).attach;
     const url = new URL(attach);
     assert.equal(url.origin, avatarBaseUrl);
-    assert.match(url.pathname, /^\/v1\/notification-images\/[a-f0-9]{64}$/);
+    assert.match(url.pathname, /^\/v1\/notification-images\/[a-f0-9]{64}\.jpg$/);
     const response = await fetch(`${baseUrl}${url.pathname}`);
     assert.equal(response.status, 200);
     assert.equal(response.headers.get('content-type'), 'image/jpeg');
     assert.deepEqual(Buffer.from(await response.arrayBuffer()), image);
+    const wrongExtension = await fetch(`${baseUrl}${url.pathname.replace(/\.jpg$/, '.png')}`);
+    assert.equal(wrongExtension.status, 404);
   }, {
     ntfy: ntfyConfig,
     ntfyAttachmentBaseUrl: avatarBaseUrl,

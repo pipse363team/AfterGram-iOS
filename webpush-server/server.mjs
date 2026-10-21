@@ -148,12 +148,16 @@ export async function createWebPushServer({ dataDirectory, apiToken, allowedOrig
     const path = new URL(request.url, 'http://localhost').pathname;
     if (request.method === 'GET' && path === '/healthz') return json(response, 200, { ok: true });
     if (request.method === 'GET' && path === '/v1/vapid-public-key') return json(response, 200, { publicKey: keys.publicKey });
-    const imageMatch = request.method === 'GET' && path.match(/^\/v1\/notification-images\/([a-f0-9]{64})$/);
+    const imageMatch = request.method === 'GET' && path.match(/^\/v1\/notification-images\/([a-f0-9]{64})\.(jpg|png)$/);
     if (imageMatch) {
       const imageId = imageMatch[1];
+      const extension = imageMatch[2];
       const image = notificationImages.get(imageId);
       if (!image || image.expiresAt <= Date.now()) {
         removeNotificationImage(imageId);
+        return json(response, 404, { error: 'Image not found' });
+      }
+      if ((extension === 'png') !== (image.contentType === 'image/png')) {
         return json(response, 404, { error: 'Image not found' });
       }
       response.writeHead(200, {
@@ -222,7 +226,8 @@ export async function createWebPushServer({ dataDirectory, apiToken, allowedOrig
             if (notificationImage && ntfyAttachmentBaseUrl) {
               const imageId = randomBytes(32).toString('hex');
               storeNotificationImage(imageId, { ...notificationImage, expiresAt: Date.now() + NOTIFICATION_IMAGE_TTL_MS });
-              avatarUrl = `${ntfyAttachmentBaseUrl.replace(/\/+$/, '')}/v1/notification-images/${imageId}`;
+              const extension = notificationImage.contentType === 'image/png' ? 'png' : 'jpg';
+              avatarUrl = `${ntfyAttachmentBaseUrl.replace(/\/+$/, '')}/v1/notification-images/${imageId}.${extension}`;
             }
             await ntfyPublisher.send({
               title: payload.title.slice(0, 120),

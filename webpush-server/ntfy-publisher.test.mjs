@@ -43,9 +43,9 @@ test('adds a validated avatar attachment for the iOS notification preview', asyn
   });
   await publisher.send({
     title: 'Family chat', description: 'Sam: hello',
-    avatarUrl: `${avatarBaseUrl}/v1/notification-images/${'a'.repeat(64)}`,
+    avatarUrl: `${avatarBaseUrl}/v1/notification-images/${'a'.repeat(64)}.png`,
   });
-  assert.equal(JSON.parse(request.options.body).attach, `${avatarBaseUrl}/v1/notification-images/${'a'.repeat(64)}`);
+  assert.equal(JSON.parse(request.options.body).attach, `${avatarBaseUrl}/v1/notification-images/${'a'.repeat(64)}.png`);
   await assert.rejects(publisher.send({
     title: 'Family chat', description: 'hello', avatarUrl: 'https://evil.example/image.jpg',
   }), /Invalid notification avatar URL/);
