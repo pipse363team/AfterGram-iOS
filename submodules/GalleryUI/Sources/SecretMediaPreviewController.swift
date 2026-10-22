@@ -268,7 +268,7 @@ public final class SecretMediaPreviewController: ViewController {
             if let strongSelf = self {
                 if let _ = strongSelf.controllerNode.pager.centralItemNode(), let presentationArguments = strongSelf.presentationArguments as? GalleryControllerPresentationArguments {
                     if let message = strongSelf.messageView?.message {
-                        if let media = self.previewMedia(message), let transitionArguments = presentationArguments.transitionArguments(message.id, media) {
+                        if let media = strongSelf.previewMedia(message), let transitionArguments = presentationArguments.transitionArguments(message.id, media) {
                             return (transitionArguments.transitionNode, transitionArguments.addToTransitionSurface)
                         }
                     }
