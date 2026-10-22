@@ -7,6 +7,7 @@ import SwiftSignalKit
 import TelegramCore
 import TelegramPresentationData
 import TelegramUIPreferences
+import AlertUI
 
 private enum AfterGramOption {
     case profileTab

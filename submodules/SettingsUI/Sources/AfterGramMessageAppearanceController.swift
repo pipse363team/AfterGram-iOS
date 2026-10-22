@@ -53,7 +53,7 @@ private enum AfterGramMessageAppearanceEntry: ItemListNodeEntry, Equatable {
         }
         switch self {
         case .intro:
-            return ItemListInfoItem(presentationData: presentationData, systemStyle: .glass, title: isRussian ? "Локальное оформление" : "Local appearance", text: .plain(isRussian ? "Цвет и свечение применяются только на этом устройстве и не требуют API AfterGram." : "Color and glow are applied on this device and do not use the AfterGram API."), style: .blocks, sectionId: self.section)
+            return ItemListInfoItem(presentationData: presentationData, systemStyle: .glass, title: isRussian ? "Локальное оформление" : "Local appearance", text: .plain(isRussian ? "Цвет и свечение применяются только на этом устройстве и не требуют API AfterGram." : "Color and glow are applied on this device and do not use the AfterGram API."), style: .blocks, sectionId: self.section, closeAction: nil)
         case let .palette(index, _):
             let safeIndex = max(0, min(AfterGramBubblePalette.all.count - 1, Int(index)))
             let title = isRussian ? "Цветовая гамма" : "Color palette"
