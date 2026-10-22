@@ -155,6 +155,6 @@ public func afterGramOptionsController(context: AccountContext) -> ViewControlle
     }
 
     let controller = ItemListController(context: context, state: signal)
-    controllerReference.modify { $0 = controller }
+    let _ = controllerReference.swap(controller)
     return controller
 }
