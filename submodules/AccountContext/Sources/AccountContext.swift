@@ -1447,6 +1447,7 @@ public protocol SharedAccountContext: AnyObject {
     
     func updateNotificationTokensRegistration()
     func setAfterGramWebPushSubscription(_ subscription: String?)
+    func addBotAccount(token: String, completion: @escaping (Bool, String?) -> Void)
     func setAccountUserInterfaceInUse(_ id: AccountRecordId) -> Disposable
     func handleTextLinkAction(context: AccountContext, peerId: EnginePeer.Id?, navigateDisposable: MetaDisposable, controller: ViewController, action: TextLinkItemActionType, itemLink: TextLinkItem)
     func openSearch(filter: ChatListSearchFilter, query: String?)

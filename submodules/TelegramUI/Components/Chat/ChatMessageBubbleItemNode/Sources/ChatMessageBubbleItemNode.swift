@@ -4016,6 +4016,13 @@ public class ChatMessageBubbleItemNode: ChatMessageItemView, ChatMessagePreviewI
         strongSelf.backgroundNode.setType(type: backgroundType, highlighted: false, graphics: graphics, maskMode: strongSelf.backgroundMaskMode, hasWallpaper: hasWallpaper, transition: legacyTransition, backgroundNode: presentationContext.backgroundNode)
         strongSelf.backgroundWallpaperNode.setType(type: backgroundType, theme: item.presentationData.theme, essentialGraphics: graphics, maskMode: strongSelf.backgroundMaskMode, backgroundNode: presentationContext.backgroundNode)
         strongSelf.shadowNode.setType(type: backgroundType, hasWallpaper: hasWallpaper, graphics: graphics)
+        let afterGramSettings = item.context.sharedContext.immediateExperimentalUISettings
+        if case .outgoing = backgroundType, afterGramSettings.afterGramMessageGlow {
+            let glowColor = UIColor(rgb: ExperimentalUISettings.afterGramMessageGlowColor(palette: afterGramSettings.afterGramMessagePalette))
+            strongSelf.shadowNode.setGlow(color: glowColor, intensity: afterGramSettings.afterGramMessageIntensity)
+        } else {
+            strongSelf.shadowNode.setGlow(color: nil, intensity: 0)
+        }
         
         strongSelf.backgroundType = backgroundType
         

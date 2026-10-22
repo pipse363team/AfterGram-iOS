@@ -220,6 +220,19 @@ public func chatMessageGalleryControllerData(
         default:
             break
     }
+
+    if message.containsSecretMedia {
+        // Secret media must use the one-shot preview even when the item is a video
+        // file. Generic file/audio gallery routes do not perform Telegram's consume
+        // and expiry lifecycle.
+        guard let secretMediaIndex = galleryMedia.flatMap({ selectedMedia in
+            message.media.firstIndex(where: { $0.id == selectedMedia.id })
+        }) else {
+            return nil
+        }
+        let gallery = SecretMediaPreviewController(context: context, messageId: message.id, mediaIndex: secretMediaIndex)
+        return .secretGallery(gallery)
+    }
     
     if let (webPage, instantPageMedia) = instantPageMedia, let galleryMedia = galleryMedia {
         var centralIndex: Int = 0
@@ -314,9 +327,6 @@ public func chatMessageGalleryControllerData(
                 }, baseNavigationController: navigationController, actionInteraction: actionInteraction)
                 gallery.temporaryDoNotWaitForReady = autoplayingVideo
                 return .gallery(.single(gallery))
-            } else if message.containsSecretMedia {
-                let gallery = SecretMediaPreviewController(context: context, messageId: message.id)
-                return .secretGallery(gallery)
             } else {
                 let startState: Signal<(timecode: Double?, rate: Double), NoError>
                 if let timecode = timecode {

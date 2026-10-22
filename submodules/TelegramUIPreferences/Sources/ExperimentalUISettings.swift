@@ -3,6 +3,15 @@ import TelegramCore
 import SwiftSignalKit
 
 public struct ExperimentalUISettings: Codable, Equatable {
+    public static func afterGramMessageGlowColor(palette: Int32) -> UInt32 {
+        switch palette {
+        case 1: return 0xffa276ff
+        case 2: return 0xff50c9ed
+        case 3: return 0xffff8a79
+        default: return 0xff6e72ed
+        }
+    }
+
     public struct AccountReactionOverrides: Equatable, Codable {
         public struct Item: Equatable, Codable {
             public var key: MessageReaction.Reaction
@@ -77,6 +86,9 @@ public struct ExperimentalUISettings: Codable, Equatable {
     public var afterGramShowProfileTab: Bool
     public var afterGramShowOnlineMarkers: Bool
     public var afterGramGiftGlow: Bool
+    public var afterGramMessageGlow: Bool
+    public var afterGramMessagePalette: Int32
+    public var afterGramMessageIntensity: Int32
     public var debugRipple: Bool
     public var forceNewTextInput: Bool
     public var coreListChatBackend: Bool
@@ -135,6 +147,9 @@ public struct ExperimentalUISettings: Codable, Equatable {
             afterGramShowProfileTab: false,
             afterGramShowOnlineMarkers: true,
             afterGramGiftGlow: false,
+            afterGramMessageGlow: false,
+            afterGramMessagePalette: 0,
+            afterGramMessageIntensity: 1,
             debugRipple: false,
             forceNewTextInput: false,
             coreListChatBackend: false,
@@ -194,6 +209,9 @@ public struct ExperimentalUISettings: Codable, Equatable {
         afterGramShowProfileTab: Bool = false,
         afterGramShowOnlineMarkers: Bool = true,
         afterGramGiftGlow: Bool = false,
+        afterGramMessageGlow: Bool = false,
+        afterGramMessagePalette: Int32 = 0,
+        afterGramMessageIntensity: Int32 = 1,
         debugRipple: Bool,
         forceNewTextInput: Bool,
         coreListChatBackend: Bool,
@@ -250,6 +268,9 @@ public struct ExperimentalUISettings: Codable, Equatable {
         self.afterGramShowProfileTab = afterGramShowProfileTab
         self.afterGramShowOnlineMarkers = afterGramShowOnlineMarkers
         self.afterGramGiftGlow = afterGramGiftGlow
+        self.afterGramMessageGlow = afterGramMessageGlow
+        self.afterGramMessagePalette = afterGramMessagePalette
+        self.afterGramMessageIntensity = afterGramMessageIntensity
         self.debugRipple = debugRipple
         self.forceNewTextInput = forceNewTextInput
         self.coreListChatBackend = coreListChatBackend
@@ -310,6 +331,9 @@ public struct ExperimentalUISettings: Codable, Equatable {
         self.afterGramShowProfileTab = try container.decodeIfPresent(Bool.self, forKey: "afterGramShowProfileTab") ?? false
         self.afterGramShowOnlineMarkers = try container.decodeIfPresent(Bool.self, forKey: "afterGramShowOnlineMarkers") ?? true
         self.afterGramGiftGlow = try container.decodeIfPresent(Bool.self, forKey: "afterGramGiftGlow") ?? false
+        self.afterGramMessageGlow = try container.decodeIfPresent(Bool.self, forKey: "afterGramMessageGlow") ?? false
+        self.afterGramMessagePalette = try container.decodeIfPresent(Int32.self, forKey: "afterGramMessagePalette") ?? 0
+        self.afterGramMessageIntensity = try container.decodeIfPresent(Int32.self, forKey: "afterGramMessageIntensity") ?? 1
         self.debugRipple = try container.decodeIfPresent(Bool.self, forKey: "debugRipple") ?? false
         self.forceNewTextInput = try container.decodeIfPresent(Bool.self, forKey: "forceNewTextInput") ?? false
         self.coreListChatBackend = try container.decodeIfPresent(Bool.self, forKey: "coreListChatBackend") ?? false
@@ -370,6 +394,9 @@ public struct ExperimentalUISettings: Codable, Equatable {
         try container.encode(self.afterGramShowProfileTab, forKey: "afterGramShowProfileTab")
         try container.encode(self.afterGramShowOnlineMarkers, forKey: "afterGramShowOnlineMarkers")
         try container.encode(self.afterGramGiftGlow, forKey: "afterGramGiftGlow")
+        try container.encode(self.afterGramMessageGlow, forKey: "afterGramMessageGlow")
+        try container.encode(self.afterGramMessagePalette, forKey: "afterGramMessagePalette")
+        try container.encode(self.afterGramMessageIntensity, forKey: "afterGramMessageIntensity")
         try container.encodeIfPresent(self.debugRipple, forKey: "debugRipple")
         try container.encodeIfPresent(self.forceNewTextInput, forKey: "forceNewTextInput")
         try container.encodeIfPresent(self.coreListChatBackend, forKey: "coreListChatBackend")

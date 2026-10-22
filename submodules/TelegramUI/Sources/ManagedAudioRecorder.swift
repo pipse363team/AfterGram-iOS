@@ -17,7 +17,7 @@ private let kInputBus: UInt32 = 1
 
 /// Streaming effects run on the recorder's serial queue. `.off` is an exact pass-through.
 private final class AfterGramVoiceEffectProcessor {
-    private let effect: AfterGramVoiceEffect
+    private var effect: AfterGramVoiceEffect
     private var lowPass: Double = 0.0
     private var highPassInput: Double = 0.0
     private var highPassOutput: Double = 0.0
@@ -31,6 +31,17 @@ private final class AfterGramVoiceEffectProcessor {
     init(effect: AfterGramVoiceEffect) {
         self.effect = effect
         self.updateCoefficients()
+    }
+
+    func setEffect(_ effect: AfterGramVoiceEffect) {
+        guard self.effect != effect else {
+            return
+        }
+        self.effect = effect
+        self.lowPass = 0.0
+        self.highPassInput = 0.0
+        self.highPassOutput = 0.0
+        self.phase = 0.0
     }
 
     func setSampleRate(_ sampleRate: Double) {
@@ -507,6 +518,10 @@ final class ManagedAudioRecorderContext {
     
     func start() {
         assert(self.queue.isCurrent())
+
+        // The chat controller can keep its recorder alive while Settings is open. Refresh the
+        // effect at each recording start so the latest selection is used without recreating chat.
+        self.voiceEffectProcessor.setEffect(AfterGramVoiceEffect.selected)
         
         self.paused = false
     

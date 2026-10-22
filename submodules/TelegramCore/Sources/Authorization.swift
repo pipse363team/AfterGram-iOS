@@ -38,6 +38,44 @@ func switchToAuthorizedAccount(transaction: AccountManagerModifier<TelegramAccou
     transaction.removeAuth()
 }
 
+public enum BotAuthorizationError: Error {
+    case invalidToken
+    case generic
+}
+
+public func authorizeWithBotToken(accountManager: AccountManager<TelegramAccountManagerTypes>, account: UnauthorizedAccount, token: String, apiId: Int32, apiHash: String) -> Signal<Void, BotAuthorizationError> {
+    let token = token.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard token.range(of: "^[0-9]{5,}:[A-Za-z0-9_-]{20,}$", options: .regularExpression) != nil else {
+        return .fail(.invalidToken)
+    }
+
+    return account.network.request(Api.functions.auth.importBotAuthorization(flags: 0, apiId: apiId, apiHash: apiHash, botAuthToken: token), automaticFloodWait: false)
+    |> mapError { _ -> BotAuthorizationError in .generic }
+    |> mapToSignal { _ -> Signal<[Api.User], BotAuthorizationError> in
+        return account.network.request(Api.functions.users.getUsers(id: [.inputUserSelf]), automaticFloodWait: false)
+        |> mapError { _ -> BotAuthorizationError in .generic }
+    }
+    |> mapToSignal { users -> Signal<Void, BotAuthorizationError> in
+        guard let apiUser = users.first else {
+            return .fail(.generic)
+        }
+        let user = TelegramUser(user: apiUser)
+        guard user.botInfo != nil else {
+            return .fail(.generic)
+        }
+        return account.postbox.transaction { transaction -> Void in
+            transaction.setState(AuthorizedAccountState(isTestingEnvironment: account.testingEnvironment, masterDatacenterId: account.masterDatacenterId, peerId: user.id, state: nil, invalidatedChannels: []))
+        }
+        |> castError(BotAuthorizationError.self)
+        |> mapToSignal { _ -> Signal<Void, BotAuthorizationError> in
+            return accountManager.transaction { transaction -> Void in
+                switchToAuthorizedAccount(transaction: transaction, account: account, isSupportUser: false)
+            }
+            |> castError(BotAuthorizationError.self)
+        }
+    }
+}
+
 private struct Regex {
     let pattern: String
     let options: NSRegularExpression.Options!

@@ -193,6 +193,7 @@ public final class SharedAccountContextImpl: SharedAccountContext {
         return self.activeAccountsPromise.get()
     }
     private let managedAccountDisposables = DisposableDict<AccountRecordId>()
+    private let afterGramBotAuthorizationDisposable = MetaDisposable()
     private let activeAccountsWithInfoPromise = Promise<(primary: AccountRecordId?, accounts: [AccountWithInfo])>()
     public var activeAccountsWithInfo: Signal<(primary: AccountRecordId?, accounts: [AccountWithInfo]), NoError> {
         return self.activeAccountsWithInfoPromise.get()
@@ -1826,6 +1827,46 @@ public final class SharedAccountContextImpl: SharedAccountContext {
         let _ = self.accountManager.transaction({ transaction -> Void in
             let _ = transaction.createAuth([.environment(AccountEnvironmentAttribute(environment: testingEnvironment ? .test : .production))])
         }).start()
+    }
+
+    public func addBotAccount(token: String, completion: @escaping (Bool, String?) -> Void) {
+        let normalizedToken = token.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard normalizedToken.range(of: "^[0-9]{5,}:[A-Za-z0-9_-]{20,}$", options: .regularExpression) != nil else {
+            completion(false, "Invalid bot token")
+            return
+        }
+
+        let addAccount = self.accountManager.transaction { transaction -> AccountRecordId? in
+            return transaction.createAuth([.environment(AccountEnvironmentAttribute(environment: .production))])?.id
+        }
+        |> mapToSignal { id -> Signal<UnauthorizedAccount, BotAuthorizationError> in
+            guard let id else {
+                return .fail(.generic)
+            }
+            return self.activeAccountContexts
+            |> filter { $0.currentAuth?.id == id }
+            |> take(1)
+            |> map { $0.currentAuth! }
+            |> castError(BotAuthorizationError.self)
+        }
+        |> mapToSignal { account -> Signal<Void, BotAuthorizationError> in
+            return authorizeWithBotToken(accountManager: self.accountManager, account: account, token: normalizedToken, apiId: self.networkArguments.apiId, apiHash: self.networkArguments.apiHash)
+        }
+        |> deliverOnMainQueue
+
+        self.afterGramBotAuthorizationDisposable.set(addAccount.start(error: { error in
+            let _ = self.accountManager.transaction { transaction -> Void in
+                transaction.removeAuth()
+            }.start()
+            switch error {
+            case .invalidToken:
+                completion(false, "Invalid bot token")
+            case .generic:
+                completion(false, "Telegram rejected the token or the network request failed")
+            }
+        }, completed: {
+            completion(true, nil)
+        }))
     }
     
     public func switchToAccount(id: AccountRecordId, fromSettingsController settingsController: ViewController? = nil, withChatListController chatListController: ViewController? = nil) {

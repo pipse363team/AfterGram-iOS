@@ -27,6 +27,7 @@ private let redactChildrenOfType: [String: Set<String>] = [
 ]
 
 private let redactFunctionParameters: [String: Set<String>] = [
+    "auth.importBotAuthorization": Set(["botAuthToken"]),
     "messages.sendMessage": Set(["message"]),
     "messages.sendMedia": Set(["message"]),
     "messages.saveDraft": Set(["message"]),
@@ -52,7 +53,7 @@ func apiFunctionDescription(of desc: FunctionDescription) -> String {
                 redactParam = redactParams.contains(param.0)
             }
             
-            if redactParam, Logger.shared.redactSensitiveData {
+            if redactParam && (desc.name == "auth.importBotAuthorization" || Logger.shared.redactSensitiveData) {
                 result.append("[[redacted]]")
             } else {
                 result.append(recursiveDescription(redact: Logger.shared.redactSensitiveData, of: param.1))

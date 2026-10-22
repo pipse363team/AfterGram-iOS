@@ -481,6 +481,20 @@ public final class ChatMessageShadowNode: ASDisplayNode {
         
         self.contentNode.image = shadowImage
     }
+
+    public func setGlow(color: UIColor?, intensity: Int32) {
+        guard let color else {
+            self.contentNode.layer.shadowColor = nil
+            self.contentNode.layer.shadowOpacity = 0.0
+            self.contentNode.layer.shadowRadius = 0.0
+            self.contentNode.layer.shadowOffset = .zero
+            return
+        }
+        self.contentNode.layer.shadowColor = color.cgColor
+        self.contentNode.layer.shadowOpacity = intensity == 0 ? 0.24 : (intensity == 2 ? 0.64 : 0.42)
+        self.contentNode.layer.shadowRadius = intensity == 0 ? 5.0 : (intensity == 2 ? 12.0 : 8.0)
+        self.contentNode.layer.shadowOffset = .zero
+    }
     
     public func updateLayout(backgroundFrame: CGRect, animator: ControlledTransitionAnimator) {
         animator.updateFrame(layer: self.contentNode.layer, frame: CGRect(origin: CGPoint(x: backgroundFrame.minX - 10.0, y: backgroundFrame.minY - 10.0), size: CGSize(width: backgroundFrame.width + 20.0, height: backgroundFrame.height + 20.0)), completion: nil)

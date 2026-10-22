@@ -29,32 +29,6 @@ private func galleryMediaForMedia(media: Media) -> Media? {
     return nil
 }
 
-private func mediaForMessage(message: Message) -> Media? {
-    for media in message.effectiveMedia {
-        if let result = galleryMediaForMedia(media: media) {
-            return result
-        } else if let webpage = media as? TelegramMediaWebpage {
-            switch webpage.content {
-            case let .Loaded(content):
-                if let embedUrl = content.embedUrl, !embedUrl.isEmpty {
-                    return webpage
-                } else if let image = content.image {
-                    if let result = galleryMediaForMedia(media: image) {
-                        return result
-                    }
-                } else if let file = content.file {
-                    if let result = galleryMediaForMedia(media: file) {
-                        return result
-                    }
-                }
-            case .Pending:
-                break
-            }
-        }
-    }
-    return nil
-}
-
 private final class SecretMediaPreviewControllerNode: GalleryControllerNode {
     fileprivate var timeoutNode: RadialStatusNode?
     
@@ -147,6 +121,7 @@ private final class SecretMediaPreviewControllerNode: GalleryControllerNode {
 public final class SecretMediaPreviewController: ViewController {
     private let context: AccountContext
     private let messageId: MessageId
+    private let mediaIndex: Int
     
     private let _ready = Promise<Bool>()
     override public var ready: Promise<Bool> {
@@ -159,6 +134,20 @@ public final class SecretMediaPreviewController: ViewController {
     
     private var controllerNode: SecretMediaPreviewControllerNode {
         return self.displayNode as! SecretMediaPreviewControllerNode
+    }
+
+    private func previewMedia(_ message: Message) -> Media? {
+        guard self.mediaIndex >= 0, self.mediaIndex < message.media.count else {
+            return nil
+        }
+        return galleryMediaForMedia(media: message.media[self.mediaIndex])
+    }
+
+    private func previewMessage(_ message: Message) -> Message? {
+        guard let media = self.previewMedia(message) else {
+            return nil
+        }
+        return message.withUpdatedMedia([media])
     }
     
     private var messageView: MessageView?
@@ -180,9 +169,10 @@ public final class SecretMediaPreviewController: ViewController {
     
     private weak var tooltipController: TooltipScreen?
     
-    public init(context: AccountContext, messageId: MessageId) {
+    public init(context: AccountContext, messageId: MessageId, mediaIndex: Int = 0) {
         self.context = context
         self.messageId = messageId
+        self.mediaIndex = mediaIndex
         self.presentationData = context.sharedContext.currentPresentationData.with { $0 }
         
         super.init(navigationBarPresentationData: NavigationBarPresentationData(theme: GalleryController.darkNavigationTheme, strings: NavigationBarStrings(presentationStrings: self.presentationData.strings)))
@@ -278,7 +268,7 @@ public final class SecretMediaPreviewController: ViewController {
             if let strongSelf = self {
                 if let _ = strongSelf.controllerNode.pager.centralItemNode(), let presentationArguments = strongSelf.presentationArguments as? GalleryControllerPresentationArguments {
                     if let message = strongSelf.messageView?.message {
-                        if let media = mediaForMessage(message: message), let transitionArguments = presentationArguments.transitionArguments(message.id, media) {
+                        if let media = self.previewMedia(message), let transitionArguments = presentationArguments.transitionArguments(message.id, media) {
                             return (transitionArguments.transitionNode, transitionArguments.addToTransitionSurface)
                         }
                     }
@@ -311,7 +301,7 @@ public final class SecretMediaPreviewController: ViewController {
             if let strongSelf = self {
                 var hiddenItem: (MessageId, Media)?
                 if let _ = index {
-                    if let message = strongSelf.messageView?.message, let media = mediaForMessage(message: message) {
+                    if let message = strongSelf.messageView?.message, let media = strongSelf.previewMedia(message) {
                         var beginTimeAndTimeout: (Double, Double, Bool)?
                         var videoDuration: Double?
                         for media in message.media {
@@ -433,7 +423,7 @@ public final class SecretMediaPreviewController: ViewController {
         var nodeAnimatesItself = false
         
         if let centralItemNode = self.controllerNode.pager.centralItemNode(), let message = self.messageView?.message {
-            if let media = mediaForMessage(message: message) {
+            if let media = self.previewMedia(message) {
                 if let presentationArguments = self.presentationArguments as? GalleryControllerPresentationArguments, let transitionArguments = presentationArguments.transitionArguments(message.id, media) {
                     nodeAnimatesItself = true
                     centralItemNode.activateAsInitial()
@@ -483,7 +473,7 @@ public final class SecretMediaPreviewController: ViewController {
         }
         
         if let centralItemNode = self.controllerNode.pager.centralItemNode(), let presentationArguments = self.presentationArguments as? GalleryControllerPresentationArguments, let message = self.messageView?.message {
-            if let media = mediaForMessage(message: message), let transitionArguments = presentationArguments.transitionArguments(message.id, media), !forceAway {
+            if let media = self.previewMedia(message), let transitionArguments = presentationArguments.transitionArguments(message.id, media), !forceAway {
                 animatedOutNode = false
                 centralItemNode.animateOut(to: transitionArguments.transitionNode, addToTransitionSurface: transitionArguments.addToTransitionSurface, completion: {
                     animatedOutNode = true
@@ -501,7 +491,15 @@ public final class SecretMediaPreviewController: ViewController {
     private func applyMessageView() {
         var message: Message?
         if let messageView = self.messageView, let m = messageView.message {
-            message = m
+            // The tapped message ID and media slot are fixed for the lifetime of this
+            // one-shot viewer. Consuming the message can replace media IDs locally;
+            // selecting by the original slot keeps that replacement attached to the
+            // media the user actually opened.
+            message = self.previewMessage(m)
+            guard message != nil else {
+                self._ready.set(.single(true))
+                return
+            }
             for media in m.media {
                 if media is TelegramMediaExpiredContent {
                     message = nil
