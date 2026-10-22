@@ -81,6 +81,62 @@ final class DeletedMessageRetentionTests: XCTestCase {
         let result = try XCTUnwrap(retainedOrExpiredSecretMedia([image], enabled: true, mediaBox: self.mediaBox).first as? TelegramMediaImage)
         XCTAssertTrue(hasRetainedMediaBytes(result, mediaBox: self.mediaBox))
         XCTAssertTrue(result.representations[0].resource is LocalFileMediaResource)
+        XCTAssertEqual(result.imageId.namespace, Namespaces.Media.LocalImage)
+        XCTAssertNotEqual(result.imageId, image.imageId)
+
+        let retainedResource = try XCTUnwrap(result.representations[0].resource as? LocalFileMediaResource)
+        let retainedPath = retainedMediaPath(fileId: retainedResource.fileId, mediaBox: self.mediaBox)
+        XCTAssertEqual(try Data(contentsOf: URL(fileURLWithPath: retainedPath)), Data([4, 3, 2, 1]))
+    }
+
+    func testTwoRetainedViewOncePhotosKeepTheirOwnBytesAndLocalIdentity() throws {
+        var originals: [Data] = []
+        var images: [TelegramMediaImage] = []
+        for index in 0 ..< 2 {
+            let bytes = Data([UInt8(index + 11), UInt8(index + 21), UInt8(index + 31)])
+            originals.append(bytes)
+            let resource = LocalFileMediaResource(fileId: Int64(700 + index), size: Int64(bytes.count))
+            self.mediaBox.storeResourceData(resource.id, data: bytes, synchronous: true)
+            images.append(TelegramMediaImage(
+                imageId: MediaId(namespace: Namespaces.Media.CloudImage, id: Int64(900 + index)),
+                representations: [TelegramMediaImageRepresentation(dimensions: PixelDimensions(width: 10, height: 10), resource: resource, progressiveSizes: [], immediateThumbnailData: nil)],
+                immediateThumbnailData: nil,
+                reference: nil,
+                partialReference: nil,
+                flags: []
+            ))
+        }
+
+        let retained = retainedOrExpiredSecretMedia(images, enabled: true, mediaBox: self.mediaBox).compactMap { $0 as? TelegramMediaImage }
+        XCTAssertEqual(retained.count, 2)
+        XCTAssertEqual(retained[0].imageId.namespace, Namespaces.Media.LocalImage)
+        XCTAssertEqual(retained[1].imageId.namespace, Namespaces.Media.LocalImage)
+        XCTAssertNotEqual(retained[0].imageId, retained[1].imageId)
+        for index in retained.indices {
+            let resource = try XCTUnwrap(retained[index].representations.first?.resource as? LocalFileMediaResource)
+            let path = retainedMediaPath(fileId: resource.fileId, mediaBox: self.mediaBox)
+            XCTAssertEqual(try Data(contentsOf: URL(fileURLWithPath: path)), originals[index])
+        }
+    }
+
+    func testViewOncePhotoDoesNotRetainMixedLocalAndUncachedRepresentations() throws {
+        let available = LocalFileMediaResource(fileId: 710, size: 1)
+        self.mediaBox.storeResourceData(available.id, data: Data([1]), synchronous: true)
+        let missing = LocalFileMediaResource(fileId: 711, size: 1)
+        let image = TelegramMediaImage(
+            imageId: MediaId(namespace: Namespaces.Media.CloudImage, id: 711),
+            representations: [
+                TelegramMediaImageRepresentation(dimensions: PixelDimensions(width: 10, height: 10), resource: available, progressiveSizes: [], immediateThumbnailData: nil),
+                TelegramMediaImageRepresentation(dimensions: PixelDimensions(width: 100, height: 100), resource: missing, progressiveSizes: [], immediateThumbnailData: nil)
+            ],
+            immediateThumbnailData: nil,
+            reference: nil,
+            partialReference: nil,
+            flags: []
+        )
+
+        let result = try XCTUnwrap(retainedOrExpiredSecretMedia([image], enabled: true, mediaBox: self.mediaBox).first as? TelegramMediaExpiredContent)
+        XCTAssertEqual(result.data, .image)
     }
 
     func testViewOnceMediaWithoutSavedBytesExpiresAndDisabledRetentionDoesNotCopy() throws {

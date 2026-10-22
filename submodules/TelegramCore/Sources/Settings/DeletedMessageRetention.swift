@@ -172,7 +172,10 @@ func hasRetainedMediaBytes(_ media: Media, mediaBox: MediaBox) -> Bool {
     if let file = media as? TelegramMediaFile {
         return hasRetainedResource(file.resource)
     } else if let image = media as? TelegramMediaImage {
-        return image.representations.contains(where: { hasRetainedResource($0.resource) })
+        // Every size may be selected later by the gallery based on its layout.
+        // Keeping only one size can make it fall back to an unrelated/stale cloud
+        // cache entry when the user opens the retained one-time photo.
+        return !image.representations.isEmpty && image.representations.allSatisfy { hasRetainedResource($0.resource) }
     }
     return false
 }
@@ -216,10 +219,15 @@ func retainedMessageMedia(_ media: [Media], mediaBox: MediaBox) -> [Media] {
 /// the retained-message setting is enabled and the bytes have already arrived.
 func retainedOrExpiredSecretMedia(_ media: [Media], enabled: Bool, mediaBox: MediaBox) -> [Media] {
     return media.map { item in
-        if enabled,
-           let retained = retainedMessageMedia([item], mediaBox: mediaBox).first,
-           hasRetainedMediaBytes(retained, mediaBox: mediaBox) {
-            return retained
+        if enabled {
+            if let image = item as? TelegramMediaImage,
+               let retained = retainedViewOnceImage(image, mediaBox: mediaBox) {
+                return retained
+            } else if let file = item as? TelegramMediaFile,
+                      let retained = retainedMessageMedia([file], mediaBox: mediaBox).first,
+                      hasRetainedMediaBytes(retained, mediaBox: mediaBox) {
+                return retained
+            }
         }
         if item is TelegramMediaImage {
             return TelegramMediaExpiredContent(data: .image)
@@ -234,6 +242,45 @@ func retainedOrExpiredSecretMedia(_ media: [Media], enabled: Bool, mediaBox: Med
         }
         return item
     }
+}
+
+/// A retained view-once image gets a local identity and only local representations.
+/// This prevents gallery caches keyed by the original cloud image id from showing
+/// another image, and prevents a missing size from being fetched after expiry.
+private func retainedViewOnceImage(_ image: TelegramMediaImage, mediaBox: MediaBox) -> TelegramMediaImage? {
+    guard !image.representations.isEmpty else { return nil }
+
+    let representations = image.representations.compactMap { representation -> TelegramMediaImageRepresentation? in
+        guard let resource = copyRetainedMedia(resource: representation.resource, mediaBox: mediaBox) else { return nil }
+        return TelegramMediaImageRepresentation(dimensions: representation.dimensions, resource: resource, progressiveSizes: representation.progressiveSizes, immediateThumbnailData: representation.immediateThumbnailData, hasVideo: representation.hasVideo, isPersonal: representation.isPersonal, typeHint: representation.typeHint)
+    }
+    guard representations.count == image.representations.count else { return nil }
+
+    var flags = image.flags
+    var videoRepresentations: [TelegramMediaImage.VideoRepresentation] = []
+    if image.videoRepresentations.count == 0 || image.videoRepresentations.allSatisfy({ representation in
+        guard let resource = copyRetainedMedia(resource: representation.resource, mediaBox: mediaBox) else { return false }
+        videoRepresentations.append(TelegramMediaImage.VideoRepresentation(dimensions: representation.dimensions, resource: resource, startTimestamp: representation.startTimestamp))
+        return true
+    }) {
+        // All companion video resources, when present, are retained as well.
+    } else {
+        videoRepresentations.removeAll()
+        flags.remove(.isLivePhoto)
+    }
+
+    var video: TelegramMediaFile?
+    if let sourceVideo = image.video,
+       let retained = retainedMessageMedia([sourceVideo], mediaBox: mediaBox).first as? TelegramMediaFile,
+       hasRetainedMediaBytes(retained, mediaBox: mediaBox) {
+        video = retained
+    } else if image.video != nil {
+        flags.remove(.isLivePhoto)
+    }
+
+    let identityResource = image.representations[0].resource
+    let localImageId = MediaId(namespace: Namespaces.Media.LocalImage, id: retainedMediaFileId(identityResource))
+    return TelegramMediaImage(imageId: localImageId, representations: representations, videoRepresentations: videoRepresentations, immediateThumbnailData: image.immediateThumbnailData, emojiMarkup: image.emojiMarkup, reference: nil, partialReference: nil, flags: flags, video: video)
 }
 
 private func retainedImageRepresentation(_ representation: TelegramMediaImageRepresentation, mediaBox: MediaBox) -> TelegramMediaImageRepresentation {
