@@ -150,6 +150,8 @@ extension PeerInfoScreenNode {
             push(dataAndStorageController(context: self.context))
         case .afterGramPlugins:
             push(afterGramPluginsController(context: self.context))
+        case .afterGramOptions:
+            push(afterGramOptionsController(context: self.context))
         case .deletedMessageArchive:
             push(deletedMessageArchiveController(context: self.context))
         case .appearance:

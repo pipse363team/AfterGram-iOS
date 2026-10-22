@@ -10,9 +10,74 @@ import OpusBinding
 import ChatPresentationInterfaceState
 import AudioWaveform
 import FFMpegBinding
+import TelegramUIPreferences
 
 private let kOutputBus: UInt32 = 0
 private let kInputBus: UInt32 = 1
+
+/// Streaming effects run on the recorder's serial queue. `.off` is an exact pass-through.
+private final class AfterGramVoiceEffectProcessor {
+    private let effect: AfterGramVoiceEffect
+    private var lowPass: Double = 0.0
+    private var highPassInput: Double = 0.0
+    private var highPassOutput: Double = 0.0
+    private var phase: Double = 0.0
+    private var sampleRate: Double = 48000.0
+    private var radioHighPassAlpha: Double = 0.0
+    private var radioLowPassAlpha: Double = 0.0
+    private var bassLowPassAlpha: Double = 0.0
+    private var modulationStep: Double = 0.0
+
+    init(effect: AfterGramVoiceEffect) {
+        self.effect = effect
+        self.updateCoefficients()
+    }
+
+    func setSampleRate(_ sampleRate: Double) {
+        if sampleRate.isFinite && sampleRate > 0.0 {
+            self.sampleRate = sampleRate
+            self.updateCoefficients()
+        }
+    }
+
+    private func updateCoefficients() {
+        self.radioHighPassAlpha = exp(-2.0 * Double.pi * 350.0 / self.sampleRate)
+        self.radioLowPassAlpha = 1.0 - exp(-2.0 * Double.pi * 2800.0 / self.sampleRate)
+        self.bassLowPassAlpha = 1.0 - exp(-2.0 * Double.pi * 260.0 / self.sampleRate)
+        self.modulationStep = 2.0 * Double.pi * 85.0 / self.sampleRate
+    }
+
+    func process(_ samples: UnsafeMutablePointer<Int16>, count: Int) {
+        guard self.effect != .off else {
+            return
+        }
+
+        for index in 0 ..< count {
+            let input = Double(samples[index])
+            let output: Double
+            switch self.effect {
+            case .off:
+                continue
+            case .radio:
+                let highPassed = self.radioHighPassAlpha * (self.highPassOutput + input - self.highPassInput)
+                self.highPassInput = input
+                self.highPassOutput = highPassed
+                self.lowPass += (highPassed - self.lowPass) * self.radioLowPassAlpha
+                output = max(-30000.0, min(30000.0, self.lowPass * 1.5))
+            case .robot:
+                self.phase += self.modulationStep
+                if self.phase >= 2.0 * Double.pi {
+                    self.phase -= 2.0 * Double.pi
+                }
+                output = input * (0.22 + 0.78 * abs(sin(self.phase)))
+            case .bass:
+                self.lowPass += (input - self.lowPass) * self.bassLowPassAlpha
+                output = max(-32768.0, min(32767.0, input * 0.68 + self.lowPass * 0.72))
+            }
+            samples[index] = Int16(output)
+        }
+    }
+}
 
 private func audioRecorderNativeStreamDescription(sampleRate: Float64) -> AudioStreamBasicDescription {
     var canonicalBasicStreamDescription = AudioStreamBasicDescription()
@@ -186,6 +251,7 @@ final class ManagedAudioRecorderContext {
     private var toneRendererAudioSessionActivated = false
     
     private var processSamples = false
+    private let voiceEffectProcessor = AfterGramVoiceEffectProcessor(effect: AfterGramVoiceEffect.selected)
     
     private var toneTimer: SwiftSignalKit.Timer?
     private var idleTimerExtensionDisposable: Disposable?
@@ -429,6 +495,12 @@ final class ManagedAudioRecorderContext {
             AudioComponentInstanceDispose(audioUnit)
             return
         }
+
+        var activeInputFormat = AudioStreamBasicDescription()
+        var activeInputFormatSize = UInt32(MemoryLayout<AudioStreamBasicDescription>.size)
+        if AudioUnitGetProperty(audioUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, kInputBus, &activeInputFormat, &activeInputFormatSize) == noErr {
+            self.voiceEffectProcessor.setSampleRate(activeInputFormat.mSampleRate)
+        }
         
         let _ = self.audioUnit.swap(audioUnit)
     }
@@ -624,6 +696,7 @@ final class ManagedAudioRecorderContext {
                 self.audioBuffer.append(currentEncoderPacket.assumingMemoryBound(to: UInt8.self), count: currentEncoderPacketSize)
                 break
             } else {
+                self.voiceEffectProcessor.process(currentEncoderPacket.assumingMemoryBound(to: Int16.self), count: currentEncoderPacketSize / MemoryLayout<Int16>.size)
                 self.processWaveformPreview(samples: currentEncoderPacket.assumingMemoryBound(to: Int16.self), count: currentEncoderPacketSize / 2)
                 
                 self.oggWriter.writeFrame(currentEncoderPacket.assumingMemoryBound(to: UInt8.self), frameByteCount: UInt(currentEncoderPacketSize))

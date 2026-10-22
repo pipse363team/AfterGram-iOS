@@ -79,6 +79,9 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
     public var callListController: CallListController?
     public var chatListController: ChatListController?
     public var accountSettingsController: PeerInfoScreen?
+    private var accountProfileController: PeerInfoScreenImpl?
+    private var rootShowCallsTab = false
+    private var profileTabPreferenceDisposable: Disposable?
     
     private var permissionsDisposable: Disposable?
     private var presentationDataDisposable: Disposable?
@@ -102,8 +105,22 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
         self.context = context
         
         self.presentationData = context.sharedContext.currentPresentationData.with { $0 }
-        
+
         super.init(mode: .automaticMasterDetail, theme: NavigationControllerTheme(presentationTheme: self.presentationData.theme))
+
+        self.profileTabPreferenceDisposable = (context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.experimentalUISettings])
+        |> deliverOnMainQueue).start(next: { [weak self] sharedData in
+            guard let self, let rootTabController = self.rootTabController else {
+                return
+            }
+            let settings = sharedData.entries[ApplicationSpecificSharedDataKeys.experimentalUISettings]?.get(ExperimentalUISettings.self) ?? .defaultSettings
+            let currentlyHasProfileTab = self.accountProfileController.map { profileController in
+                (rootTabController as? TabBarControllerImpl)?.controllers.contains(where: { $0 === profileController }) ?? false
+            } ?? false
+            if settings.afterGramShowProfileTab != currentlyHasProfileTab {
+                self.updateRootControllers(showCallsTab: self.rootShowCallsTab, showProfileTab: settings.afterGramShowProfileTab)
+            }
+        })
         
         self.presentationDataDisposable = (context.sharedContext.presentationData
         |> deliverOnMainQueue).startStrict(next: { [weak self] presentationData in
@@ -146,6 +163,7 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
         self.presentationDataDisposable?.dispose()
         self.applicationInFocusDisposable?.dispose()
         self.storyUploadEventsDisposable?.dispose()
+        self.profileTabPreferenceDisposable?.dispose()
     }
     
     public func getContactsController() -> ViewController? {
@@ -195,6 +213,7 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
     }
     
     public func addRootControllers(showCallsTab: Bool) {
+        self.rootShowCallsTab = showCallsTab
         let tabBarController = TabBarControllerImpl(theme: self.presentationData.theme, strings: self.presentationData.strings)
         tabBarController.navigationPresentation = .master
         let chatListController = self.context.sharedContext.makeChatListController(context: self.context, location: .chatList(groupId: .root), controlsHistoryPreload: true, hideNetworkActivityStatus: false, previewing: false, enableDebugActions: !GlobalExperimentalSettings.isAppStoreBuild)
@@ -215,6 +234,14 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
             controllers.append(callListController)
         }
         controllers.append(chatListController)
+
+        let showProfileTab = self.context.sharedContext.immediateExperimentalUISettings.afterGramShowProfileTab
+        if showProfileTab {
+            let accountProfileController = PeerInfoScreenImpl(context: self.context, updatedPresentationData: nil, peerId: self.context.account.peerId, avatarInitiallyExpanded: false, isOpenedFromChat: false, reactionSourceMessageId: nil, callMessages: [], isMyProfile: true)
+            accountProfileController.parentController = self
+            self.accountProfileController = accountProfileController
+            controllers.append(accountProfileController)
+        }
         
         var restoreSettignsController: (ViewController & SettingsController)?
         if let sharedContext = self.context.sharedContext as? SharedAccountContextImpl {
@@ -235,7 +262,7 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
         accountSettingsController.parentController = self
         controllers.append(accountSettingsController)
                 
-        tabBarController.setControllers(controllers, selectedIndex: restoreSettignsController != nil ? (controllers.count - 1) : (controllers.count - 2))
+        tabBarController.setControllers(controllers, selectedIndex: restoreSettignsController != nil ? (controllers.count - 1) : (controllers.count - (showProfileTab ? 3 : 2)))
         
         self.contactsController = contactsController
         self.callListController = callListController
@@ -245,7 +272,8 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
         self.pushViewController(tabBarController, animated: false)
     }
         
-    public func updateRootControllers(showCallsTab: Bool) {
+    public func updateRootControllers(showCallsTab: Bool, showProfileTab: Bool? = nil) {
+        self.rootShowCallsTab = showCallsTab
         guard let rootTabController = self.rootTabController as? TabBarControllerImpl else {
             return
         }
@@ -255,6 +283,18 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
             controllers.append(self.callListController!)
         }
         controllers.append(self.chatListController!)
+        if showProfileTab ?? self.context.sharedContext.immediateExperimentalUISettings.afterGramShowProfileTab {
+            if self.accountProfileController == nil {
+                let accountProfileController = PeerInfoScreenImpl(context: self.context, updatedPresentationData: nil, peerId: self.context.account.peerId, avatarInitiallyExpanded: false, isOpenedFromChat: false, reactionSourceMessageId: nil, callMessages: [], isMyProfile: true)
+                accountProfileController.parentController = self
+                self.accountProfileController = accountProfileController
+            }
+            if let accountProfileController = self.accountProfileController {
+                controllers.append(accountProfileController)
+            }
+        } else {
+            self.accountProfileController = nil
+        }
         controllers.append(self.accountSettingsController!)
         
         rootTabController.setControllers(controllers, selectedIndex: nil)

@@ -503,7 +503,7 @@ private final class BubbleSettingsToolbarNode: ASDisplayNode {
             self?.updateMergeBubbleCorners?(value)
         })
         let cornerRadiusItem = BubbleSettingsRadiusItem(theme: self.presentationData.theme, value: Int(self.presentationData.chatBubbleCorners.mainRadius), enabled: true, disableLeadingInset: false, displayIcons: false, disableDecorations: true, force: false, sectionId: 0, updated: { [weak self] value in
-            self?.updateCornerRadius?(Int32(max(8, min(16, value))))
+            self?.updateCornerRadius?(Int32(max(8, min(20, value))))
         })
         
         /*switchItem.updateNode(async: { f in

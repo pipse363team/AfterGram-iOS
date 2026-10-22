@@ -8,6 +8,7 @@ import AnimationCache
 import MultiAnimationRenderer
 import TelegramCore
 import AccountContext
+import TelegramUIPreferences
 import SwiftSignalKit
 import EmojiTextAttachmentView
 import LokiRng
@@ -317,7 +318,7 @@ public final class PeerInfoGiftsCoverComponent: Component {
                     iconLayer = current
                 } else {
                     iconTransition = .immediate
-                    iconLayer = GiftIconLayer(context: component.context, gift: gift, size: iconSize, glowing: component.hasBackground)
+                    iconLayer = GiftIconLayer(context: component.context, gift: gift, size: iconSize, glowing: component.hasBackground || component.context.sharedContext.immediateExperimentalUISettings.afterGramGiftGlow)
                     self.iconLayers[id] = iconLayer
                     self.layer.addSublayer(iconLayer)
                     
@@ -330,7 +331,7 @@ public final class PeerInfoGiftsCoverComponent: Component {
                     
                     iconLayer.startAnimations(index: index)
                 }
-                iconLayer.glowing = component.hasBackground
+                iconLayer.glowing = component.hasBackground || component.context.sharedContext.immediateExperimentalUISettings.afterGramGiftGlow
                 
                 let itemDistanceFraction = max(0.0, min(0.5, (iconPosition.distance - component.avatarSize.width / 2.0) / 144.0))
                 let itemScaleFraction = patternScaleValueAt(fraction: min(1.0, component.avatarTransitionFraction * 1.33), t: itemDistanceFraction, reverse: false)

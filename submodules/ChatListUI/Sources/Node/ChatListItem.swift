@@ -4043,6 +4043,10 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
                 peerRevealOptions = []
                 peerLeftRevealOptions = []
             }
+
+            if !item.context.sharedContext.immediateExperimentalUISettings.afterGramShowOnlineMarkers {
+                online = false
+            }
             
             let (onlineLayout, onlineApply) = onlineLayout(online, onlineIsVoiceChat)
             var animateContent = false

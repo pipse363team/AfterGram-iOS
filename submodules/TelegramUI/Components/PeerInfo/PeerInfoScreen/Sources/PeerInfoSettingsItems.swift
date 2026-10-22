@@ -265,7 +265,10 @@ func settingsItems(data: PeerInfoScreenData?, context: AccountContext, presentat
     items[.advanced]!.append(PeerInfoScreenDisclosureItem(id: 8, text: presentationData.strings.baseLanguageCode.lowercased().hasPrefix("ru") ? "Плагины" : "Plugins", icon: PresentationResourcesSettings.savedMessages, action: {
         interaction.openSettings(.afterGramPlugins)
     }))
-    items[.advanced]!.append(PeerInfoScreenDisclosureItem(id: 7, text: presentationData.strings.baseLanguageCode.lowercased().hasPrefix("ru") ? "Удалённые сообщения" : "Deleted Messages", icon: PresentationResourcesSettings.savedMessages, action: {
+    items[.advanced]!.append(PeerInfoScreenDisclosureItem(id: 10, text: presentationData.strings.baseLanguageCode.lowercased().hasPrefix("ru") ? "Настройки AfterGram" : "AfterGram Settings", icon: PresentationResourcesSettings.appearance, action: {
+        interaction.openSettings(.afterGramOptions)
+    }))
+    items[.advanced]!.append(PeerInfoScreenDisclosureItem(id: 7, text: presentationData.strings.baseLanguageCode.lowercased().hasPrefix("ru") ? "История сообщений" : "Message history", icon: PresentationResourcesSettings.savedMessages, action: {
         interaction.openSettings(.deletedMessageArchive)
     }))
     items[.advanced]!.append(PeerInfoScreenDisclosureItem(id: 3, text: presentationData.strings.Settings_Appearance, icon: PresentationResourcesSettings.appearance, action: {

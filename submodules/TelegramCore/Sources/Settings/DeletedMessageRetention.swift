@@ -28,6 +28,25 @@ public struct DeletedMessageRetentionSettings: Codable, Equatable {
     public static let defaultValue = DeletedMessageRetentionSettings(enabled: true)
 }
 
+public struct AfterGramEditHistorySettings: Codable, Equatable {
+    public var enabled: Bool
+    public static let defaultValue = AfterGramEditHistorySettings(enabled: true)
+}
+
+public let afterGramEditHistoryKey = applicationSpecificPreferencesKey(0x574742)
+
+public func afterGramEditHistorySettings(postbox: Postbox) -> Signal<AfterGramEditHistorySettings, NoError> {
+    return postbox.preferencesView(keys: [afterGramEditHistoryKey])
+    |> map { $0.values[afterGramEditHistoryKey]?.get(AfterGramEditHistorySettings.self) ?? .defaultValue }
+}
+
+public func updateAfterGramEditHistorySettings(postbox: Postbox, enabled: Bool) -> Signal<Never, NoError> {
+    return postbox.transaction { transaction -> Void in
+        transaction.setPreferencesEntry(key: afterGramEditHistoryKey, value: PreferencesEntry(AfterGramEditHistorySettings(enabled: enabled)))
+    }
+    |> ignoreValues
+}
+
 public let deletedMessageRetentionKey = applicationSpecificPreferencesKey(0x574741)
 
 public final class EditedMessageRevision: PostboxCoding {
@@ -85,13 +104,13 @@ public extension Message {
 
 /// Keep the prior content on the current message row before applying a server edit.
 /// Repeated edit updates with identical content are ignored.
-func editedMessageHistoryAttributes(previousMessage: Message, updatedText: String, updatedAttributes: [MessageAttribute], updatedMedia: [Media], mediaBox: MediaBox) -> [MessageAttribute] {
+func editedMessageHistoryAttributes(previousMessage: Message, updatedText: String, updatedAttributes: [MessageAttribute], updatedMedia: [Media], mediaBox: MediaBox, enabled: Bool = true) -> [MessageAttribute] {
     let existing = previousMessage.editedMessageRevisions
     let previousEntities = previousMessage.textEntitiesAttribute?.entities ?? []
     let updatedEntities = (updatedAttributes.first(where: { $0 is TextEntitiesMessageAttribute }) as? TextEntitiesMessageAttribute)?.entities ?? []
     let contentChanged = previousMessage.text != updatedText || previousEntities != updatedEntities || !areMediaArraysSemanticallyEqual(previousMessage.media, updatedMedia)
     var revisions = existing
-    if contentChanged {
+    if contentChanged && enabled {
         let timestamp = previousMessage.editedTime ?? previousMessage.timestamp
         let revision = EditedMessageRevision(timestamp: timestamp, text: previousMessage.text, entities: previousEntities, media: retainedMessageMedia(previousMessage.media, mediaBox: mediaBox))
         let duplicate = revisions.last.map { $0.text == revision.text && $0.entities == revision.entities && areMediaArraysSemanticallyEqual($0.media, revision.media) } ?? false

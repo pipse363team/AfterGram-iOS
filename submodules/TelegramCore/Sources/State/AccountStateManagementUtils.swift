@@ -4678,7 +4678,8 @@ func replayFinalState(
                         }
                     }
 
-                    updatedAttributes = editedMessageHistoryAttributes(previousMessage: previousMessage, updatedText: message.text, updatedAttributes: updatedAttributes, updatedMedia: message.media, mediaBox: mediaBox)
+                    let editHistoryEnabled = transaction.getPreferencesEntry(key: afterGramEditHistoryKey)?.get(AfterGramEditHistorySettings.self)?.enabled ?? AfterGramEditHistorySettings.defaultValue.enabled
+                    updatedAttributes = editedMessageHistoryAttributes(previousMessage: previousMessage, updatedText: message.text, updatedAttributes: updatedAttributes, updatedMedia: message.media, mediaBox: mediaBox, enabled: editHistoryEnabled)
                     
                     if let previousFactCheckAttribute = previousMessage.attributes.first(where: { $0 is FactCheckMessageAttribute }) as? FactCheckMessageAttribute, let updatedFactCheckAttribute = message.attributes.first(where: { $0 is FactCheckMessageAttribute }) as? FactCheckMessageAttribute {
                         if case .Pending = updatedFactCheckAttribute.content, updatedFactCheckAttribute.hash == previousFactCheckAttribute.hash {

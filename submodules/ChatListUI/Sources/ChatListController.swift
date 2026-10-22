@@ -63,6 +63,63 @@ import AlertComponent
 import AlertHeaderComponent
 import AvatarComponent
 
+private final class AfterGramNavigationMarkComponent: Component {
+    let color: UIColor
+
+    init(color: UIColor) {
+        self.color = color
+    }
+
+    static func == (lhs: AfterGramNavigationMarkComponent, rhs: AfterGramNavigationMarkComponent) -> Bool {
+        return lhs.color == rhs.color
+    }
+
+    final class View: UIView {
+        private let iconView = UIImageView(image: UIImage(named: "AfterGramClassic", in: getAppBundle(), compatibleWith: nil))
+        private let titleView = UILabel()
+
+        override init(frame: CGRect) {
+            super.init(frame: frame)
+
+            self.iconView.contentMode = .scaleAspectFit
+            self.iconView.clipsToBounds = true
+            self.iconView.layer.cornerRadius = 4.0
+            self.addSubview(self.iconView)
+
+            self.titleView.font = UIFont.systemFont(ofSize: 17.0, weight: .semibold)
+            self.titleView.lineBreakMode = .byTruncatingTail
+            self.titleView.text = "AfterGram"
+            self.addSubview(self.titleView)
+        }
+
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+
+        func update(component: AfterGramNavigationMarkComponent, availableSize: CGSize, state: EmptyComponentState, environment: Environment<Empty>, transition: ComponentTransition) -> CGSize {
+            self.titleView.textColor = component.color
+
+            let iconSize: CGFloat = self.iconView.image == nil ? 0.0 : 18.0
+            let spacing: CGFloat = iconSize == 0.0 ? 0.0 : 6.0
+            let titleSize = self.titleView.sizeThatFits(CGSize(width: max(1.0, availableSize.width - iconSize - spacing), height: availableSize.height))
+            let size = CGSize(width: min(availableSize.width, iconSize + spacing + titleSize.width), height: min(availableSize.height, max(iconSize, titleSize.height)))
+
+            self.iconView.frame = CGRect(x: 0.0, y: floor((size.height - iconSize) * 0.5), width: iconSize, height: iconSize)
+            self.titleView.frame = CGRect(x: iconSize + spacing, y: floor((size.height - titleSize.height) * 0.5), width: max(0.0, size.width - iconSize - spacing), height: titleSize.height)
+
+            return size
+        }
+    }
+
+    func makeView() -> View {
+        return View(frame: .zero)
+    }
+
+    func update(view: View, availableSize: CGSize, state: EmptyComponentState, environment: Environment<Empty>, transition: ComponentTransition) -> CGSize {
+        return view.update(component: self, availableSize: availableSize, state: state, environment: environment, transition: transition)
+    }
+}
+
 private final class ContextControllerContentSourceImpl: ContextControllerContentSource {
     let controller: ViewController
     weak var sourceNode: ASDisplayNode?
@@ -2894,10 +2951,19 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
             if case .chatList(.archive) = self.location {
                 navigationBackTitle = self.presentationData.strings.Common_Back
             }
+            var titleComponent = primaryContext.chatTitleComponent.flatMap { AnyComponent<Empty>($0) }
+            if titleComponent == nil,
+               case .chatList(.root) = self.location,
+               let chatListTitle = primaryContext.chatListTitle,
+               chatListTitle.text == "AfterGram",
+               !chatListTitle.isPasscodeSet,
+               chatListTitle.peerStatus == nil {
+                titleComponent = AnyComponent(AfterGramNavigationMarkComponent(color: self.presentationData.theme.rootController.navigationBar.primaryTextColor))
+            }
             primaryContent = ChatListHeaderComponent.Content(
                 title: self.plainTitle,
                 navigationBackTitle: navigationBackTitle,
-                titleComponent: primaryContext.chatTitleComponent.flatMap { AnyComponent<Empty>($0) },
+                titleComponent: titleComponent,
                 chatListTitle: primaryContext.chatListTitle,
                 leftButton: primaryContext.leftButton,
                 rightButtons: primaryContext.rightButtons,
@@ -7168,7 +7234,9 @@ private final class ChatListLocationContext {
         switch location {
         case let .chatList(groupId):
             if groupId == .root {
-                defaultTitle = presentationData.strings.DialogList_Title
+                // Keep app branding inside the navigation header, below the system status bar.
+                // This leaves time, Dynamic Island and landscape status-bar layout untouched.
+                defaultTitle = "AfterGram"
             } else {
                 defaultTitle = presentationData.strings.ChatList_ArchivedChatsTitle
             }

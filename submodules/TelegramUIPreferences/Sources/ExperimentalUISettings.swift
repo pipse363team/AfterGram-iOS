@@ -74,6 +74,9 @@ public struct ExperimentalUISettings: Codable, Equatable {
     public var enableUpdates: Bool
     public var enablePWA: Bool
     public var forceClearGlass: Bool
+    public var afterGramShowProfileTab: Bool
+    public var afterGramShowOnlineMarkers: Bool
+    public var afterGramGiftGlow: Bool
     public var debugRipple: Bool
     public var forceNewTextInput: Bool
     public var coreListChatBackend: Bool
@@ -129,6 +132,9 @@ public struct ExperimentalUISettings: Codable, Equatable {
             enableUpdates: false,
             enablePWA: false,
             forceClearGlass: false,
+            afterGramShowProfileTab: false,
+            afterGramShowOnlineMarkers: true,
+            afterGramGiftGlow: false,
             debugRipple: false,
             forceNewTextInput: false,
             coreListChatBackend: false,
@@ -185,6 +191,9 @@ public struct ExperimentalUISettings: Codable, Equatable {
         enableUpdates: Bool,
         enablePWA: Bool,
         forceClearGlass: Bool,
+        afterGramShowProfileTab: Bool = false,
+        afterGramShowOnlineMarkers: Bool = true,
+        afterGramGiftGlow: Bool = false,
         debugRipple: Bool,
         forceNewTextInput: Bool,
         coreListChatBackend: Bool,
@@ -238,6 +247,9 @@ public struct ExperimentalUISettings: Codable, Equatable {
         self.enableUpdates = enableUpdates
         self.enablePWA = enablePWA
         self.forceClearGlass = forceClearGlass
+        self.afterGramShowProfileTab = afterGramShowProfileTab
+        self.afterGramShowOnlineMarkers = afterGramShowOnlineMarkers
+        self.afterGramGiftGlow = afterGramGiftGlow
         self.debugRipple = debugRipple
         self.forceNewTextInput = forceNewTextInput
         self.coreListChatBackend = coreListChatBackend
@@ -295,6 +307,9 @@ public struct ExperimentalUISettings: Codable, Equatable {
         self.enableUpdates = try container.decodeIfPresent(Bool.self, forKey: "enableUpdates") ?? false
         self.enablePWA = try container.decodeIfPresent(Bool.self, forKey: "enablePWA") ?? false
         self.forceClearGlass = try container.decodeIfPresent(Bool.self, forKey: "forceClearGlass") ?? false
+        self.afterGramShowProfileTab = try container.decodeIfPresent(Bool.self, forKey: "afterGramShowProfileTab") ?? false
+        self.afterGramShowOnlineMarkers = try container.decodeIfPresent(Bool.self, forKey: "afterGramShowOnlineMarkers") ?? true
+        self.afterGramGiftGlow = try container.decodeIfPresent(Bool.self, forKey: "afterGramGiftGlow") ?? false
         self.debugRipple = try container.decodeIfPresent(Bool.self, forKey: "debugRipple") ?? false
         self.forceNewTextInput = try container.decodeIfPresent(Bool.self, forKey: "forceNewTextInput") ?? false
         self.coreListChatBackend = try container.decodeIfPresent(Bool.self, forKey: "coreListChatBackend") ?? false
@@ -352,6 +367,9 @@ public struct ExperimentalUISettings: Codable, Equatable {
         try container.encodeIfPresent(self.enableUpdates, forKey: "enableUpdates")
         try container.encodeIfPresent(self.enablePWA, forKey: "enablePWA")
         try container.encodeIfPresent(self.forceClearGlass, forKey: "forceClearGlass")
+        try container.encode(self.afterGramShowProfileTab, forKey: "afterGramShowProfileTab")
+        try container.encode(self.afterGramShowOnlineMarkers, forKey: "afterGramShowOnlineMarkers")
+        try container.encode(self.afterGramGiftGlow, forKey: "afterGramGiftGlow")
         try container.encodeIfPresent(self.debugRipple, forKey: "debugRipple")
         try container.encodeIfPresent(self.forceNewTextInput, forKey: "forceNewTextInput")
         try container.encodeIfPresent(self.coreListChatBackend, forKey: "coreListChatBackend")
