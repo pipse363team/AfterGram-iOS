@@ -1839,6 +1839,7 @@ public final class SharedAccountContextImpl: SharedAccountContext {
         let addAccount = self.accountManager.transaction { transaction -> AccountRecordId? in
             return transaction.createAuth([.environment(AccountEnvironmentAttribute(environment: .production))])?.id
         }
+        |> castError(BotAuthorizationError.self)
         |> mapToSignal { id -> Signal<UnauthorizedAccount, BotAuthorizationError> in
             guard let id else {
                 return .fail(.generic)
